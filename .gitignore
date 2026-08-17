@@ -1,0 +1,42 @@
+# macOS
+.DS_Store
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+.venv/
+venv/
+
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+.coverage
+.coverage.*
+htmlcov/
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Local uploaded files
+backend/uploads/*
+!backend/uploads/avatars/
+!backend/uploads/offerings/
+!backend/uploads/avatars/.gitkeep
+!backend/uploads/offerings/.gitkeep

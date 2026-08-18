@@ -6,9 +6,11 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import (
@@ -25,6 +27,17 @@ if TYPE_CHECKING:
 
 class OfferingImage(Base):
     __tablename__ = "offering_images"
+
+    __table_args__ = (
+        Index(
+            "uq_offering_images_one_primary",
+            "offering_id",
+            unique=True,
+            postgresql_where=text(
+                "is_primary = true"
+            ),
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

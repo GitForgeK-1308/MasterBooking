@@ -12,6 +12,7 @@ pytest_plugins = [
     "tests.fixtures.offering_images",
     "tests.fixtures.master_schedule",
     "tests.fixtures.bookings",
+    "tests.fixtures.reviews",
 ]
 
 

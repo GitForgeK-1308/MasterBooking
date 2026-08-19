@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.password import hash_password
+from src.auth.token import create_access_token
 from src.users.models import User
 
 TEST_USER_PASSWORD = "StrongPassword123!"
@@ -49,3 +50,29 @@ async def inactive_user(
     await db_session.refresh(user)
 
     return user
+
+
+@pytest.fixture
+def auth_headers(
+    user: User,
+) -> dict[str, str]:
+    token = create_access_token(
+        user_id=user.id
+    )
+
+    return {
+        "Authorization": f"Bearer {token}",
+    }
+
+
+@pytest.fixture
+def inactive_auth_headers(
+    inactive_user: User,
+) -> dict[str, str]:
+    token = create_access_token(
+        user_id=inactive_user.id
+    )
+
+    return {
+        "Authorization": f"Bearer {token}",
+    }

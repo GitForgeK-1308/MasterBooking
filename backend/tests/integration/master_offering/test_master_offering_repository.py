@@ -1,9 +1,11 @@
 import uuid
+from datetime import date, time
 from decimal import Decimal
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.bookings.models import Booking, BookingStatus
 from src.categories.models import Category
 from src.locations.models import City, District
 from src.master_offering.models import MasterOffering
@@ -349,6 +351,23 @@ async def test_has_bookings_false(
 
 
 @pytest.mark.anyio
+async def test_has_bookings_true(
+    db_session: AsyncSession,
+    offering: MasterOffering,
+    booking: Booking,
+):
+    repository = MasterOfferingRepository(
+        db_session
+    )
+
+    result = await repository.has_bookings(
+        offering.id
+    )
+
+    assert result is True
+
+
+@pytest.mark.anyio
 async def test_public_offerings_exclude_inactive_entities(
     db_session: AsyncSession,
     master: Master,
@@ -597,6 +616,71 @@ async def test_public_offerings_price_sort(
         item.title
         for item in result
     ] == expected_order
+
+
+@pytest.mark.anyio
+async def test_public_offerings_popular_sort_excludes_cancelled_bookings(
+    db_session: AsyncSession,
+    offering: MasterOffering,
+    second_master_offering: MasterOffering,
+    child_category_offering: MasterOffering,
+    booking: Booking,
+    second_booking: Booking,
+    future_booking_date: date,
+):
+    repository = MasterOfferingRepository(
+        db_session
+    )
+
+    booking.status = BookingStatus.CANCELLED
+    second_booking.status = BookingStatus.CANCELLED
+
+    active_booking = Booking(
+        client_id=booking.client_id,
+        master_id=second_master_offering.master_id,
+        offering_id=second_master_offering.id,
+        booking_date=future_booking_date,
+        start_time=time(
+            10,
+            0,
+        ),
+        end_time=time(
+            11,
+            30,
+        ),
+        client_name="Test Client",
+        client_phone="+79990000000",
+        client_email="client@example.com",
+        status=BookingStatus.PENDING,
+    )
+
+    db_session.add(
+        active_booking
+    )
+
+    await db_session.commit()
+
+    result, total = (
+        await repository.get_public_offerings(
+            sort=OfferingSort.POPULAR,
+        )
+    )
+
+    assert total == 3
+
+    assert (
+        result[0].id
+        == second_master_offering.id
+    )
+
+    assert {
+        item.id
+        for item in result
+    } == {
+        offering.id,
+        second_master_offering.id,
+        child_category_offering.id,
+    }
 
 
 @pytest.mark.anyio

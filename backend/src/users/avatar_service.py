@@ -79,9 +79,12 @@ class UserAvatarService:
             )
 
         except Exception:
+            user.avatar_storage_key = old_avatar
+
             await self.storage.delete(
                 new_storage_key
             )
+
             raise
 
         if old_avatar is not None:

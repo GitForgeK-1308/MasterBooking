@@ -3,11 +3,6 @@ from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-from src.offering_images.repository import (
-    OfferingImageRepository,
-)
-from src.offering_images.storage import LocalImageStorage
-
 import pytest
 
 from src.categories.exceptions import (
@@ -31,6 +26,10 @@ from src.master_offering.schemas import (
 from src.master_offering.service import (
     MasterOfferingService,
 )
+from src.offering_images.repository import (
+    OfferingImageRepository,
+)
+from src.offering_images.storage import LocalImageStorage
 from src.tags.exceptions import (
     TagInactiveError,
     TagNotFoundError,

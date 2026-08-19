@@ -117,7 +117,7 @@ async def create_booking(
 
     except BookingInPastError:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Нельзя создать запись на прошедшее время!",
         ) from None
 
@@ -132,7 +132,7 @@ async def create_booking(
 
     except InvalidBookingStartTimeError:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=(
                 "Выбранное время не соответствует "
                 "доступному шагу записи!"
@@ -371,6 +371,6 @@ async def get_available_slots(
 
     except BookingInPastError:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Нельзя получить слоты на прошедшую дату!",
         ) from None

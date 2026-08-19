@@ -109,7 +109,7 @@ async def upload_offering_image(
 
     except OfferingImageTooLargeError:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail=(
                 "Размер фотографии не должен "
                 "превышать 5 MB!"

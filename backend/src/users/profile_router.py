@@ -82,7 +82,7 @@ async def upload_my_avatar(
         )
     except AvatarTooLargeError:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail="Файл слишком большой. Максимальный размер — 5 МБ.",
         ) from None
     except InvalidAvatarTypeError:

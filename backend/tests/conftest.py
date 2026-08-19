@@ -6,6 +6,7 @@ pytest_plugins = [
     "tests.fixtures.users",
     "tests.fixtures.locations",
     "tests.fixtures.categories",
+    "tests.fixtures.tags",
 ]
 
 

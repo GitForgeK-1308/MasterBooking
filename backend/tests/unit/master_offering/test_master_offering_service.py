@@ -3,6 +3,11 @@ from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+from src.offering_images.repository import (
+    OfferingImageRepository,
+)
+from src.offering_images.storage import LocalImageStorage
+
 import pytest
 
 from src.categories.exceptions import (
@@ -98,15 +103,37 @@ def tag_repository() -> AsyncMock:
 
 
 @pytest.fixture
+def image_repository() -> AsyncMock:
+    repository = AsyncMock(
+        spec=OfferingImageRepository
+    )
+
+    repository.get_by_offering_id.return_value = []
+
+    return repository
+
+
+@pytest.fixture
+def image_storage() -> AsyncMock:
+    return AsyncMock(
+        spec=LocalImageStorage
+    )
+
+
+@pytest.fixture
 def offering_service(
     offering_repository: AsyncMock,
     category_repository: AsyncMock,
     tag_repository: AsyncMock,
+    image_repository: AsyncMock,
+    image_storage: AsyncMock,
 ) -> MasterOfferingService:
     return MasterOfferingService(
         repository=offering_repository,
         category_repository=category_repository,
         tag_repository=tag_repository,
+        image_repository=image_repository,
+        image_storage=image_storage,
     )
 
 
@@ -742,6 +769,8 @@ async def test_delete_offering_access_denied(
 async def test_delete_offering_without_bookings_hard_deletes(
     offering_service: MasterOfferingService,
     offering_repository: AsyncMock,
+    image_repository: AsyncMock,
+    image_storage: AsyncMock,
 ):
     master_id = uuid.uuid4()
 
@@ -749,11 +778,24 @@ async def test_delete_offering_without_bookings_hard_deletes(
         master_id=master_id
     )
 
+    first_image = SimpleNamespace(
+        storage_key="offerings/first.jpg"
+    )
+
+    second_image = SimpleNamespace(
+        storage_key="offerings/second.webp"
+    )
+
     offering_repository.get_by_id.return_value = (
         offering
     )
 
     offering_repository.has_bookings.return_value = False
+
+    image_repository.get_by_offering_id.return_value = [
+        first_image,
+        second_image,
+    ]
 
     result = await offering_service.delete_offering(
         offering_id=offering.id,
@@ -766,8 +808,22 @@ async def test_delete_offering_without_bookings_hard_deletes(
         offering.id
     )
 
+    image_repository.get_by_offering_id.assert_awaited_once_with(
+        offering.id
+    )
+
     offering_repository.hard_delete.assert_awaited_once_with(
         offering
+    )
+
+    assert image_storage.delete.await_count == 2
+
+    image_storage.delete.assert_any_await(
+        "offerings/first.jpg"
+    )
+
+    image_storage.delete.assert_any_await(
+        "offerings/second.webp"
     )
 
     offering_repository.update.assert_not_awaited()

@@ -21,6 +21,10 @@ from src.master_offering.schemas import (
     MasterOfferingUpdate,
     OfferingSort,
 )
+from src.offering_images.repository import (
+    OfferingImageRepository,
+)
+from src.offering_images.storage import LocalImageStorage
 from src.tags.exceptions import (
     TagInactiveError,
     TagNotFoundError,
@@ -35,10 +39,14 @@ class MasterOfferingService:
         repository: MasterOfferingRepository,
         category_repository: CategoryRepository,
         tag_repository: TagRepository,
+        image_repository: OfferingImageRepository,
+        image_storage: LocalImageStorage,
     ) -> None:
         self.repository = repository
         self.category_repository = category_repository
         self.tag_repository = tag_repository
+        self.image_repository = image_repository
+        self.image_storage = image_storage
 
     async def get_offering_by_id(
         self,
@@ -178,9 +186,25 @@ class MasterOfferingService:
             await self.repository.update(
                 offering
             )
-        else:
-            await self.repository.hard_delete(
-                offering
+
+            return
+
+        images = await self.image_repository.get_by_offering_id(
+            offering.id
+        )
+
+        storage_keys = [
+            image.storage_key
+            for image in images
+        ]
+
+        await self.repository.hard_delete(
+            offering
+        )
+
+        for storage_key in storage_keys:
+            await self.image_storage.delete(
+                storage_key
             )
 
     async def get_master_offerings(

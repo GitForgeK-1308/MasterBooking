@@ -3,6 +3,11 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
+from src.redis.manager import (
+    close_redis,
+    create_redis,
+)
 
 from src.bookings.router import router as bookings_router
 from src.categories.router import router as categories_router
@@ -16,6 +21,16 @@ from src.reviews.router import router as reviews_router
 from src.tags.router import router as tags_router
 from src.users.profile_router import router as user_profile_router
 from src.users.router import router as users_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_redis()
+
+    yield
+
+    await close_redis()
+
 
 UPLOADS_DIR = Path("uploads")
 AVATARS_DIR = UPLOADS_DIR / "avatars"
@@ -35,6 +50,7 @@ OFFERINGS_DIR.mkdir(
 app = FastAPI(
     title="MasterBooking",
     debug=settings.debug,
+    lifespan=lifespan,
 )
 
 

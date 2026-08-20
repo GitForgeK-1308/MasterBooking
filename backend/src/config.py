@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
 
     database_url: str
+    redis_url: str
     debug: bool = False
 
     cors_origins: list[str] = [

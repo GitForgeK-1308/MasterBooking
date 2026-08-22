@@ -17,3 +17,16 @@ def send_password_reset_email(
         email=email,
         token=token,
     )
+
+
+@celery_app.task
+def send_booking_reminder_email(
+    email: str,
+    booking_id: str,
+) -> None:
+    email_service = EmailService()
+
+    email_service.send_booking_reminder_email(
+        email=email,
+        booking_id=booking_id,
+    )

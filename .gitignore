@@ -40,3 +40,6 @@ backend/uploads/*
 !backend/uploads/offerings/
 !backend/uploads/avatars/.gitkeep
 !backend/uploads/offerings/.gitkeep
+
+#Celery Beat
+celerybeat-schedule.db

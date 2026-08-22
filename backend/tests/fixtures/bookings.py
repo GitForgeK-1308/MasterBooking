@@ -1,4 +1,4 @@
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -251,6 +251,51 @@ async def foreign_booking(
     )
 
     db_session.add(booking)
+    await db_session.commit()
+    await db_session.refresh(
+        booking
+    )
+
+    return booking
+
+
+@pytest.fixture
+async def reminder_booking(
+    db_session: AsyncSession,
+    user: User,
+    master: Master,
+    offering: MasterOffering,
+) -> Booking:
+    reminder_time = (
+        datetime.now()
+        + timedelta(hours=1)
+    ).replace(
+        second=0,
+        microsecond=0,
+    )
+
+    booking = Booking(
+        client_id=user.id,
+        master_id=master.id,
+        offering_id=offering.id,
+        booking_date=reminder_time.date(),
+        start_time=reminder_time.time(),
+        end_time=(
+            reminder_time
+            + timedelta(minutes=60)
+        ).time(),
+        client_name=(
+            f"{user.first_name} "
+            f"{user.last_name}"
+        ),
+        client_phone=user.phone,
+        client_email=user.email,
+        status=BookingStatus.CONFIRMED,
+        reminder_sent=False,
+    )
+
+    db_session.add(booking)
+
     await db_session.commit()
     await db_session.refresh(
         booking

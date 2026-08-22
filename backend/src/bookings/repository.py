@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, time
+from datetime import date, datetime, time
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -130,3 +130,30 @@ class BookingRepository:
         )
 
         return booking
+
+    async def get_bookings_for_reminder(
+        self,
+        target_datetime: datetime,
+    ) -> list[Booking]:
+        target_date = target_datetime.date()
+
+        target_time = target_datetime.time().replace(
+            microsecond=0,
+        )
+
+        result = await self.session.scalars(
+            select(Booking)
+            .where(
+                Booking.booking_date == target_date,
+                Booking.start_time == target_time,
+                Booking.status.in_(
+                    [
+                        BookingStatus.PENDING,
+                        BookingStatus.CONFIRMED,
+                    ]
+                ),
+                Booking.reminder_sent.is_(False),
+            )
+        )
+
+        return list(result.all())

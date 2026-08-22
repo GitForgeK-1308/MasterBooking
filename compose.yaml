@@ -23,8 +23,11 @@ services:
       timeout: 5s
       retries: 5
 
+
   redis:
     image: redis:7-alpine
+
+    command: redis-server --appendonly yes
 
     ports:
       - "6379:6379"
@@ -59,6 +62,7 @@ services:
       db:
         condition: service_healthy
 
+
   backend:
     build:
       context: ./backend
@@ -79,6 +83,73 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_started
+
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    env_file:
+      - ./backend/.env
+
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/masterbooking
+      CELERY_BROKER_URL: redis://redis:6379/1
+      REDIS_URL: redis://redis:6379
+
+    command:
+      [
+        "uv",
+        "run",
+        "--frozen",
+        "--no-dev",
+        "celery",
+        "-A",
+        "src.tasks.celery_app:celery_app",
+        "worker",
+        "--loglevel=info",
+        "--pool=solo",
+      ]
+
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    env_file:
+      - ./backend/.env
+
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/masterbooking
+      CELERY_BROKER_URL: redis://redis:6379/1
+      REDIS_URL: redis://redis:6379
+
+    command:
+      [
+        "uv",
+        "run",
+        "--frozen",
+        "--no-dev",
+        "celery",
+        "-A",
+        "src.tasks.celery_app:celery_app",
+        "beat",
+        "--loglevel=info",
+      ]
+
+    depends_on:
+      redis:
+        condition: service_started
 
 
 volumes:

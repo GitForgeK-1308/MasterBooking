@@ -1,15 +1,19 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.auth.password_reset_service import PasswordResetService
 from src.auth.token import decode_access_token
 from src.database.session import get_async_session
 from src.masters.models import Master
 from src.masters.repository import MasterRepository
+from src.redis.dependencies import get_redis
 from src.users.dependencies import get_user_service
 from src.users.exceptions import UserNotFoundError
 from src.users.models import User, UserRole
+from src.users.repository import UserRepository
 from src.users.service import UserService
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -119,3 +123,20 @@ async def get_current_master_profile(
         )
 
     return master
+
+def get_password_reset_service(
+    session: AsyncSession = Depends(
+        get_async_session
+    ),
+    redis: Redis = Depends(
+        get_redis
+    ),
+) -> PasswordResetService:
+    user_repository = UserRepository(
+        session
+    )
+
+    return PasswordResetService(
+        user_repository=user_repository,
+        redis_client=redis,
+    )

@@ -8,6 +8,7 @@ class Settings(BaseSettings):
 
     database_url: str
     redis_url: str
+    celery_broker_url: str
     debug: bool = False
 
     cors_origins: list[str] = [

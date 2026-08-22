@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.18.5",
     "asyncpg>=0.31.0",
+    "celery[redis]>=5.3.1",
     "fastapi[standard]>=0.140.0",
     "greenlet>=3.5.4",
     "pillow>=12.3.0",

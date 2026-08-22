@@ -10,6 +10,13 @@ class Settings(BaseSettings):
     redis_url: str
     celery_broker_url: str
     debug: bool = False
+    smtp_host: str
+    smtp_port: int = 587
+    smtp_user: str
+    smtp_password: str
+    smtp_from_email: str
+
+    frontend_reset_password_url: str
 
     cors_origins: list[str] = [
         "http://localhost:5173",

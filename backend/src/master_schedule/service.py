@@ -1,5 +1,8 @@
+import json
 import uuid
 from datetime import time
+
+from redis.asyncio import Redis
 
 from src.master_schedule.exceptions import (
     MasterNotFoundError,
@@ -8,6 +11,7 @@ from src.master_schedule.exceptions import (
 )
 from src.master_schedule.models import (
     MasterSchedule,
+    WeekDay,
 )
 from src.master_schedule.repository import (
     MasterScheduleRepository,
@@ -24,10 +28,87 @@ class MasterScheduleService:
         self,
         schedule_repository: MasterScheduleRepository,
         master_repository: MasterRepository,
+        redis_client: Redis,
     ) -> None:
         self.schedule_repository = schedule_repository
         self.master_repository = master_repository
+        self.redis = redis_client
 
+
+    def _schedule_cache_key(
+        self,
+        master_id: uuid.UUID,
+    ) -> str:
+        return f"master:{master_id}:schedule"
+
+    async def _invalidate_schedule_cache(
+        self,
+        master_id: uuid.UUID,
+    ) -> None:
+        await self.redis.delete(
+            self._schedule_cache_key(
+                master_id
+            )
+        )
+
+    def _serialize_schedules(
+        self,
+        schedules: list[MasterSchedule],
+    ) -> str:
+        return json.dumps(
+            [
+                {
+                    "id": str(schedule.id),
+                    "master_id": str(schedule.master_id),
+                    "day_of_week": schedule.day_of_week.value,
+                    "start_time": (
+                        schedule.start_time.isoformat()
+                        if schedule.start_time
+                        else None
+                    ),
+                    "end_time": (
+                        schedule.end_time.isoformat()
+                        if schedule.end_time
+                        else None
+                    ),
+                    "is_working": schedule.is_working,
+                }
+                for schedule in schedules
+            ]
+        )
+
+    def _deserialize_schedules(
+        self,
+        data: str,
+    ) -> list[MasterSchedule]:
+        schedules = json.loads(data)
+
+        return [
+            MasterSchedule(
+                id=uuid.UUID(schedule["id"]),
+                master_id=uuid.UUID(schedule["master_id"]),
+                day_of_week=WeekDay(
+                    schedule["day_of_week"]
+                ),
+                start_time=(
+                    time.fromisoformat(
+                        schedule["start_time"]
+                    )
+                    if schedule["start_time"]
+                    else None
+                ),
+                end_time=(
+                    time.fromisoformat(
+                        schedule["end_time"]
+                    )
+                    if schedule["end_time"]
+                    else None
+                ),
+                is_working=schedule["is_working"],
+            )
+            for schedule in schedules
+        ]
+    
     async def get_schedule_by_id(
         self,
         schedule_id: uuid.UUID,
@@ -40,9 +121,32 @@ class MasterScheduleService:
         self,
         master_id: uuid.UUID,
     ) -> list[MasterSchedule]:
-        return await self.schedule_repository.get_by_master_id(
+        cache_key = self._schedule_cache_key(
             master_id
         )
+
+        cached_schedule = await self.redis.get(
+            cache_key
+        )
+
+        if cached_schedule:
+            return self._deserialize_schedules(
+                cached_schedule
+            )
+
+        schedules = await self.schedule_repository.get_by_master_id(
+            master_id
+        )
+
+        await self.redis.set(
+            cache_key,
+            self._serialize_schedules(
+                schedules
+            ),
+            ex=300,
+        )
+
+        return schedules
 
     async def create_schedule(
         self,
@@ -74,9 +178,15 @@ class MasterScheduleService:
             is_working=data.is_working,
         )
 
-        return await self.schedule_repository.create(
+        created_schedule = await self.schedule_repository.create(
             new_schedule
         )
+
+        await self._invalidate_schedule_cache(
+            master_id
+        )
+
+        return created_schedule
 
     async def update_schedule(
         self,
@@ -145,9 +255,15 @@ class MasterScheduleService:
                 value,
             )
 
-        return await self.schedule_repository.update(
+        updated_schedule = await self.schedule_repository.update(
             schedule
         )
+
+        await self._invalidate_schedule_cache(
+            master_id
+        )
+
+        return updated_schedule
 
     async def delete_schedule(
         self,
@@ -166,6 +282,10 @@ class MasterScheduleService:
 
         await self.schedule_repository.delete(
             schedule
+        )
+
+        await self._invalidate_schedule_cache(
+            master_id
         )
 
         return True
@@ -193,3 +313,5 @@ class MasterScheduleService:
                 "Время начала должно быть раньше "
                 "времени окончания"
             )
+
+        

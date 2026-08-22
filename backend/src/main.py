@@ -1,13 +1,9 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from contextlib import asynccontextmanager
-from src.redis.manager import (
-    close_redis,
-    create_redis,
-)
 
 from src.bookings.router import router as bookings_router
 from src.categories.router import router as categories_router
@@ -17,6 +13,10 @@ from src.master_offering.router import router as offering_router
 from src.master_schedule.router import router as schedules_router
 from src.masters.router import router as masters_router
 from src.offering_images.router import router as offering_images_router
+from src.redis.manager import (
+    close_redis,
+    create_redis,
+)
 from src.reviews.router import router as reviews_router
 from src.tags.router import router as tags_router
 from src.users.profile_router import router as user_profile_router

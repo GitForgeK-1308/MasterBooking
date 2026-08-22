@@ -66,13 +66,27 @@ def master_repository() -> AsyncMock:
 
 
 @pytest.fixture
+def redis_client() -> AsyncMock:
+    redis = AsyncMock()
+
+    redis.get = AsyncMock(return_value=None)
+    redis.set = AsyncMock()
+    redis.delete = AsyncMock()
+
+    return redis
+
+
+@pytest.fixture
 def schedule_service(
     schedule_repository: AsyncMock,
     master_repository: AsyncMock,
+    redis_client: AsyncMock,
 ) -> MasterScheduleService:
     return MasterScheduleService(
         schedule_repository=schedule_repository,
         master_repository=master_repository,
+        redis_client=redis_client,
+        
     )
 
 
@@ -700,3 +714,180 @@ async def test_delete_schedule_access_denied(
         )
 
     schedule_repository.delete.assert_not_awaited()
+
+
+
+@pytest.mark.anyio
+async def test_get_master_schedules_from_cache(
+    schedule_service: MasterScheduleService,
+    schedule_repository: AsyncMock,
+    redis_client: AsyncMock,
+):
+    master_id = uuid.uuid4()
+
+    schedules = [
+        make_schedule(
+            master_id=master_id,
+            day_of_week=WeekDay.MONDAY,
+        ),
+        make_schedule(
+            master_id=master_id,
+            day_of_week=WeekDay.TUESDAY,
+        ),
+    ]
+
+    cached_data = schedule_service._serialize_schedules(
+        schedules
+    )
+
+    redis_client.get.return_value = cached_data
+
+    result = await schedule_service.get_master_schedules(
+        master_id
+    )
+
+    assert len(result) == 2
+    assert result[0].day_of_week == WeekDay.MONDAY
+    assert result[1].day_of_week == WeekDay.TUESDAY
+
+    redis_client.get.assert_awaited_once_with(
+        f"master:{master_id}:schedule"
+    )
+
+    schedule_repository.get_by_master_id.assert_not_awaited()
+
+    redis_client.set.assert_not_awaited()
+
+
+@pytest.mark.anyio
+async def test_get_master_schedules_cache_miss(
+    schedule_service: MasterScheduleService,
+    schedule_repository: AsyncMock,
+    redis_client: AsyncMock,
+):
+    master_id = uuid.uuid4()
+
+    schedules = [
+        make_schedule(
+            master_id=master_id,
+            day_of_week=WeekDay.MONDAY,
+        ),
+        make_schedule(
+            master_id=master_id,
+            day_of_week=WeekDay.TUESDAY,
+        ),
+    ]
+
+    redis_client.get.return_value = None
+
+    schedule_repository.get_by_master_id.return_value = (
+        schedules
+    )
+
+    result = await schedule_service.get_master_schedules(
+        master_id
+    )
+
+    assert result == schedules
+
+    redis_client.get.assert_awaited_once_with(
+        f"master:{master_id}:schedule"
+    )
+
+    schedule_repository.get_by_master_id.assert_awaited_once_with(
+        master_id
+    )
+
+    redis_client.set.assert_awaited_once()
+
+    args, kwargs = redis_client.set.await_args
+
+    assert args[0] == f"master:{master_id}:schedule"
+    assert kwargs["ex"] == 300
+
+
+@pytest.mark.anyio
+async def test_create_schedule_invalidates_cache(
+    schedule_service: MasterScheduleService,
+    schedule_repository: AsyncMock,
+    master_repository: AsyncMock,
+    redis_client: AsyncMock,
+):
+    master = make_master()
+
+    master_repository.get_by_id.return_value = master
+    schedule_repository.get_by_master_and_day.return_value = None
+    schedule_repository.create.side_effect = (
+        lambda schedule: schedule
+    )
+
+    data = MasterScheduleCreate(
+        day_of_week=WeekDay.MONDAY,
+        start_time=time(9, 0),
+        end_time=time(17, 0),
+        is_working=True,
+    )
+
+    await schedule_service.create_schedule(
+        master_id=master.id,
+        data=data,
+    )
+
+    redis_client.delete.assert_awaited_once_with(
+        f"master:{master.id}:schedule"
+    )
+
+
+@pytest.mark.anyio
+async def test_update_schedule_invalidates_cache(
+    schedule_service: MasterScheduleService,
+    schedule_repository: AsyncMock,
+    redis_client: AsyncMock,
+):
+    master_id = uuid.uuid4()
+
+    schedule = make_schedule(
+        master_id=master_id,
+    )
+
+    schedule_repository.get_by_id.return_value = schedule
+    schedule_repository.update.side_effect = (
+        lambda item: item
+    )
+
+    await schedule_service.update_schedule(
+        schedule_id=schedule.id,
+        master_id=master_id,
+        data=MasterScheduleUpdate(
+            start_time=time(10, 0),
+            end_time=time(18, 0),
+        ),
+    )
+
+    redis_client.delete.assert_awaited_once_with(
+        f"master:{master_id}:schedule"
+    )
+
+
+@pytest.mark.anyio
+async def test_delete_schedule_invalidates_cache(
+    schedule_service: MasterScheduleService,
+    schedule_repository: AsyncMock,
+    redis_client: AsyncMock,
+):
+    master_id = uuid.uuid4()
+
+    schedule = make_schedule(
+        master_id=master_id,
+    )
+
+    schedule_repository.get_by_id.return_value = schedule
+
+    await schedule_service.delete_schedule(
+        schedule_id=schedule.id,
+        master_id=master_id,
+    )
+
+    redis_client.delete.assert_awaited_once_with(
+        f"master:{master_id}:schedule"
+    )

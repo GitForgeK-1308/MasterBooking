@@ -1,7 +1,5 @@
 import asyncio
 
-import src.database.models
-
 from src.bookings.reminder_service import (
     BookingReminderService,
 )

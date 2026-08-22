@@ -3,16 +3,13 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.bookings.models import Booking
 from src.bookings.reminder_service import (
     BookingReminderService,
 )
 from src.bookings.repository import (
     BookingRepository,
 )
-from src.bookings.models import Booking
-from src.master_offering.models import MasterOffering
-from src.masters.models import Master
-from src.users.models import User
 
 
 @pytest.mark.anyio

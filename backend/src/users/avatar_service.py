@@ -94,6 +94,29 @@ class UserAvatarService:
 
         return updated_user
 
+    async def delete_avatar(
+        self,
+        user: User,
+    ) -> None:
+        old_avatar = user.avatar_storage_key
+
+        if old_avatar is None:
+            return
+
+        user.avatar_storage_key = None
+
+        try:
+            await self.repository.update(
+                user
+            )
+        except Exception:
+            user.avatar_storage_key = old_avatar
+            raise
+
+        await self.storage.delete(
+            old_avatar
+        )
+
     def get_avatar_url(
         self,
         storage_key: str,

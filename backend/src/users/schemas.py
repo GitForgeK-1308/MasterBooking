@@ -73,7 +73,7 @@ class UserResponse(BaseModel):
     role: UserRole
     is_active: bool
     created_at: datetime
-
+    avatar_url: str | None
 
 class TokenResponse(BaseModel):
     access_token: str

@@ -96,3 +96,20 @@ async def upload_my_avatar(
             user.avatar_storage_key
         )
     )
+
+
+@router.delete(
+    "/me/avatar",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_my_avatar(
+    current_user: User = Depends(
+        get_current_user
+    ),
+    service: UserAvatarService = Depends(
+        get_user_avatar_service
+    ),
+) -> None:
+    await service.delete_avatar(
+        user=current_user
+    )

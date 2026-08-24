@@ -105,3 +105,11 @@ class User(Base):
     bookings: Mapped[list["Booking"]] = relationship(
         back_populates="client",
     )
+
+
+    @property
+    def avatar_url(self) -> str | None:
+        if self.avatar_storage_key is None:
+            return None
+
+        return f"/uploads/{self.avatar_storage_key}"

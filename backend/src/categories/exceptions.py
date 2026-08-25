@@ -12,3 +12,11 @@ class CategoryInactiveError(Exception):
 
 class CategoryInvalidParentError(Exception):
     pass
+
+
+class CategoryHasChildrenError(Exception):
+    pass
+
+
+class CategoryInUseError(Exception):
+    pass

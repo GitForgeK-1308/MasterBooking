@@ -11,6 +11,8 @@ from src.auth.dependencies import get_current_admin
 from src.categories.dependencies import get_category_service
 from src.categories.exceptions import (
     CategoryAlreadyExistsError,
+    CategoryHasChildrenError,
+    CategoryInUseError,
     CategoryInvalidParentError,
     CategoryNotFoundError,
 )
@@ -34,9 +36,7 @@ router = APIRouter(
     response_model=list[CategoryResponse],
 )
 async def get_categories(
-    service: CategoryService = Depends(
-        get_category_service
-    ),
+    service: CategoryService = Depends(get_category_service),
 ):
     return await service.get_categories()
 
@@ -46,12 +46,8 @@ async def get_categories(
     response_model=list[CategoryResponse],
 )
 async def get_all_categories(
-    _: User = Depends(
-        get_current_admin
-    ),
-    service: CategoryService = Depends(
-        get_category_service
-    ),
+    _: User = Depends(get_current_admin),
+    service: CategoryService = Depends(get_category_service),
 ):
     return await service.get_all_categories()
 
@@ -61,9 +57,7 @@ async def get_all_categories(
     response_model=list[CategoryTreeResponse],
 )
 async def get_category_tree(
-    service: CategoryService = Depends(
-        get_category_service
-    ),
+    service: CategoryService = Depends(get_category_service),
 ):
     return await service.get_category_tree()
 
@@ -75,17 +69,11 @@ async def get_category_tree(
 )
 async def create_category(
     data: CategoryCreate,
-    _: User = Depends(
-        get_current_admin
-    ),
-    service: CategoryService = Depends(
-        get_category_service
-    ),
+    _: User = Depends(get_current_admin),
+    service: CategoryService = Depends(get_category_service),
 ):
     try:
-        return await service.create_category(
-            data=data
-        )
+        return await service.create_category(data=data)
     except CategoryAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -105,12 +93,8 @@ async def create_category(
 async def update_category(
     category_id: uuid.UUID,
     data: CategoryUpdate,
-    _: User = Depends(
-        get_current_admin
-    ),
-    service: CategoryService = Depends(
-        get_category_service
-    ),
+    _: User = Depends(get_current_admin),
+    service: CategoryService = Depends(get_category_service),
 ):
     try:
         return await service.update_category(
@@ -131,4 +115,35 @@ async def update_category(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Нельзя создать циклическую иерархию категорий!",
+        ) from None
+
+
+@router.delete(
+    "/{category_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_category(
+    category_id: uuid.UUID,
+    _: User = Depends(get_current_admin),
+    service: CategoryService = Depends(get_category_service),
+) -> None:
+    try:
+        await service.delete_category(category_id=category_id)
+
+    except CategoryNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Категория не найдена!",
+        ) from None
+
+    except CategoryHasChildrenError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=("Нельзя удалить категорию, пока у неё есть подкатегории!"),
+        ) from None
+
+    except CategoryInUseError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=("Категория используется услугами. Скройте её вместо удаления!"),
         ) from None

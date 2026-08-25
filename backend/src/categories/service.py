@@ -2,6 +2,8 @@ import uuid
 
 from src.categories.exceptions import (
     CategoryAlreadyExistsError,
+    CategoryHasChildrenError,
+    CategoryInUseError,
     CategoryInvalidParentError,
     CategoryNotFoundError,
 )
@@ -25,9 +27,7 @@ class CategoryService:
     def _normalize_name(
         name: str,
     ) -> str:
-        return " ".join(
-            name.strip().split()
-        )
+        return " ".join(name.strip().split())
 
     @staticmethod
     def _normalize_slug(
@@ -49,9 +49,7 @@ class CategoryService:
         self,
         category_id: uuid.UUID,
     ) -> Category:
-        category = await self.repository.get_by_id(
-            category_id
-        )
+        category = await self.repository.get_by_id(category_id)
 
         if category is None:
             raise CategoryNotFoundError
@@ -62,32 +60,22 @@ class CategoryService:
         self,
         data: CategoryCreate,
     ) -> Category:
-        name = self._normalize_name(
-            data.name
-        )
+        name = self._normalize_name(data.name)
 
-        existing_by_name = await self.repository.get_by_name(
-            name
-        )
+        existing_by_name = await self.repository.get_by_name(name)
 
         if existing_by_name is not None:
             raise CategoryAlreadyExistsError
 
-        slug = self._normalize_slug(
-            data.slug
-        )
+        slug = self._normalize_slug(data.slug)
 
-        existing_by_slug = await self.repository.get_by_slug(
-            slug
-        )
+        existing_by_slug = await self.repository.get_by_slug(slug)
 
         if existing_by_slug is not None:
             raise CategoryAlreadyExistsError
 
         if data.parent_id is not None:
-            parent = await self.repository.get_by_id(
-                data.parent_id
-            )
+            parent = await self.repository.get_by_id(data.parent_id)
 
             if parent is None:
                 raise CategoryNotFoundError
@@ -98,77 +86,49 @@ class CategoryService:
             parent_id=data.parent_id,
         )
 
-        return await self.repository.create(
-            category
-        )
+        return await self.repository.create(category)
 
     async def update_category(
         self,
         category_id: uuid.UUID,
         data: CategoryUpdate,
     ) -> Category:
-        category = await self.get_category_by_id(
-            category_id
-        )
+        category = await self.get_category_by_id(category_id)
 
-        update_data = data.model_dump(
-            exclude_unset=True
-        )
+        update_data = data.model_dump(exclude_unset=True)
 
-        name = update_data.get(
-            "name"
-        )
+        name = update_data.get("name")
 
         if name is not None:
-            normalized_name = self._normalize_name(
-                name
-            )
+            normalized_name = self._normalize_name(name)
 
-            existing_by_name = await self.repository.get_by_name(
-                normalized_name
-            )
+            existing_by_name = await self.repository.get_by_name(normalized_name)
 
-            if (
-                existing_by_name is not None
-                and existing_by_name.id != category.id
-            ):
+            if existing_by_name is not None and existing_by_name.id != category.id:
                 raise CategoryAlreadyExistsError
 
             category.name = normalized_name
 
-        slug = update_data.get(
-            "slug"
-        )
+        slug = update_data.get("slug")
 
         if slug is not None:
-            normalized_slug = self._normalize_slug(
-                slug
-            )
+            normalized_slug = self._normalize_slug(slug)
 
-            existing_by_slug = await self.repository.get_by_slug(
-                normalized_slug
-            )
+            existing_by_slug = await self.repository.get_by_slug(normalized_slug)
 
-            if (
-                existing_by_slug is not None
-                and existing_by_slug.id != category.id
-            ):
+            if existing_by_slug is not None and existing_by_slug.id != category.id:
                 raise CategoryAlreadyExistsError
 
             category.slug = normalized_slug
 
         if "parent_id" in update_data:
-            parent_id = update_data[
-                "parent_id"
-            ]
+            parent_id = update_data["parent_id"]
 
             if parent_id == category.id:
                 raise CategoryInvalidParentError
 
             if parent_id is not None:
-                parent = await self.repository.get_by_id(
-                    parent_id
-                )
+                parent = await self.repository.get_by_id(parent_id)
 
                 if parent is None:
                     raise CategoryNotFoundError
@@ -188,16 +148,12 @@ class CategoryService:
 
             category.parent_id = parent_id
 
-        is_active = update_data.get(
-            "is_active"
-        )
+        is_active = update_data.get("is_active")
 
         if is_active is not None:
             category.is_active = is_active
 
-        return await self.repository.update(
-            category
-        )
+        return await self.repository.update(category)
 
     async def get_category_tree(
         self,
@@ -219,22 +175,28 @@ class CategoryService:
         roots: list[CategoryTreeResponse] = []
 
         for category in categories:
-            node = nodes[
-                category.id
-            ]
+            node = nodes[category.id]
 
-            if (
-                category.parent_id is not None
-                and category.parent_id in nodes
-            ):
-                nodes[
-                    category.parent_id
-                ].children.append(
-                    node
-                )
+            if category.parent_id is not None and category.parent_id in nodes:
+                nodes[category.parent_id].children.append(node)
             else:
-                roots.append(
-                    node
-                )
+                roots.append(node)
 
         return roots
+
+    async def delete_category(
+        self,
+        category_id: uuid.UUID,
+    ) -> None:
+        category = await self.repository.get_by_id(category_id)
+
+        if category is None:
+            raise CategoryNotFoundError
+
+        if await self.repository.has_children(category_id):
+            raise CategoryHasChildrenError
+
+        if await self.repository.is_used_by_offerings(category_id):
+            raise CategoryInUseError
+
+        await self.repository.delete(category)

@@ -52,3 +52,7 @@ class BookingAccessDeniedError(Exception):
 
 class InvalidBookingStatusTransitionError(Exception):
     pass
+
+
+class SelfBookingNotAllowedError(Exception):
+    pass

@@ -9,12 +9,14 @@ from fastapi import (
 )
 
 from src.auth.dependencies import (
+    get_current_customer,
     get_current_client,
     get_current_master_profile,
     get_current_user,
 )
 from src.bookings.dependencies import get_booking_service
 from src.bookings.exceptions import (
+    SelfBookingNotAllowedError,
     BookingAccessDeniedError,
     BookingInPastError,
     BookingNotFoundError,
@@ -54,7 +56,7 @@ async def create_booking(
     master_id: uuid.UUID,
     data: BookingCreate,
     current_user: User = Depends(
-        get_current_client
+        get_current_customer
     ),
     service: BookingService = Depends(
         get_booking_service
@@ -66,6 +68,12 @@ async def create_booking(
             current_user=current_user,
             data=data,
         )
+
+    except SelfBookingNotAllowedError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Нельзя записаться на собственную услугу!",
+        ) from None
 
     except ClientPhoneRequiredError:
         raise HTTPException(

@@ -71,6 +71,24 @@ async def get_current_client(
 
     return current_user
 
+async def get_current_customer(
+    current_user: User = Depends(
+        get_current_user
+    ),
+) -> User:
+    if current_user.role not in {
+        UserRole.CLIENT,
+        UserRole.MASTER,
+    }:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "Доступ разрешён клиентам "
+                "и мастерам!"
+            ),
+        )
+
+    return current_user
 
 async def get_current_master_user(
     current_user: User = Depends(

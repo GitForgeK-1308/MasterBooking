@@ -2,6 +2,7 @@ import uuid
 from datetime import date, datetime, time, timedelta
 
 from src.bookings.exceptions import (
+    SelfBookingNotAllowedError,
     BookingAccessDeniedError,
     BookingInPastError,
     BookingNotFoundError,
@@ -117,6 +118,17 @@ class BookingService:
         current_user: User,
         data: BookingCreate,
     ) -> Booking:
+
+        current_master = await self.master_repository.get_by_user_id(
+            current_user.id
+        )
+
+        if (
+            current_master is not None
+            and current_master.id == master_id
+        ):
+            raise SelfBookingNotAllowedError
+
         if not current_user.phone:
             raise ClientPhoneRequiredError
 

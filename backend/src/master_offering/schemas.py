@@ -18,9 +18,7 @@ class OfferingSort(str, Enum):
 
 
 class MasterOfferingBase(BaseModel):
-    model_config = ConfigDict(
-        str_strip_whitespace=True
-    )
+    model_config = ConfigDict(str_strip_whitespace=True)
 
     title: str = Field(
         min_length=2,
@@ -34,14 +32,19 @@ class MasterOfferingBase(BaseModel):
         max_digits=10,
         decimal_places=2,
     )
+
+    discount_percent: int = Field(
+        default=0,
+        ge=0,
+        le=100,
+    )
+
     duration_minutes: int = Field(
         gt=0,
     )
 
 
-class MasterOfferingCreate(
-    MasterOfferingBase
-):
+class MasterOfferingCreate(MasterOfferingBase):
     category_id: uuid.UUID
 
     tag_ids: list[uuid.UUID] = Field(
@@ -51,9 +54,7 @@ class MasterOfferingCreate(
 
 
 class MasterOfferingUpdate(BaseModel):
-    model_config = ConfigDict(
-        str_strip_whitespace=True
-    )
+    model_config = ConfigDict(str_strip_whitespace=True)
 
     category_id: uuid.UUID | None = None
 
@@ -72,6 +73,12 @@ class MasterOfferingUpdate(BaseModel):
         max_digits=10,
         decimal_places=2,
     )
+
+    discount_percent: int | None = Field(
+        default=None,
+        ge=0,
+        le=100,
+    )
     duration_minutes: int | None = Field(
         default=None,
         gt=0,
@@ -84,9 +91,7 @@ class MasterOfferingUpdate(BaseModel):
 
 
 class OfferingMasterResponse(BaseModel):
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     first_name: str
@@ -103,9 +108,7 @@ class OfferingMasterResponse(BaseModel):
     avatar_url: str | None
 
 
-class MasterOfferingResponse(
-    MasterOfferingBase
-):
+class MasterOfferingResponse(MasterOfferingBase):
     model_config = ConfigDict(
         from_attributes=True,
         str_strip_whitespace=True,
@@ -115,10 +118,8 @@ class MasterOfferingResponse(
     category_id: uuid.UUID | None
     master_id: uuid.UUID
 
-    tags: list[TagResponse] = Field(
-        default_factory=list
-    )
-
+    tags: list[TagResponse] = Field(default_factory=list)
+    final_price: Decimal
     master: OfferingMasterResponse
 
     is_active: bool

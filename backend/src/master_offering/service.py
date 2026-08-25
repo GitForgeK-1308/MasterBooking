@@ -52,17 +52,13 @@ class MasterOfferingService:
         self,
         offering_id: uuid.UUID,
     ) -> MasterOffering | None:
-        return await self.repository.get_by_id(
-            offering_id
-        )
+        return await self.repository.get_by_id(offering_id)
 
     async def get_public_offering_by_id(
         self,
         offering_id: uuid.UUID,
     ) -> MasterOffering:
-        offering = await self.repository.get_public_by_id(
-            offering_id
-        )
+        offering = await self.repository.get_public_by_id(offering_id)
 
         if offering is None:
             raise OfferingNotFoundError
@@ -79,9 +75,7 @@ class MasterOfferingService:
         master_id: uuid.UUID,
         data: MasterOfferingCreate,
     ) -> MasterOffering:
-        category = await self.category_repository.get_by_id(
-            data.category_id
-        )
+        category = await self.category_repository.get_by_id(data.category_id)
 
         if category is None:
             raise CategoryNotFoundError
@@ -89,9 +83,7 @@ class MasterOfferingService:
         if not category.is_active:
             raise CategoryInactiveError
 
-        tags = await self._get_valid_tags(
-            data.tag_ids
-        )
+        tags = await self._get_valid_tags(data.tag_ids)
 
         new_offering = MasterOffering(
             master_id=master_id,
@@ -99,14 +91,13 @@ class MasterOfferingService:
             title=data.title,
             description=data.description,
             price=data.price,
+            discount_percent=data.discount_percent,
             duration_minutes=data.duration_minutes,
         )
 
         new_offering.tags = tags
 
-        return await self.repository.create(
-            new_offering
-        )
+        return await self.repository.create(new_offering)
 
     async def update_offering(
         self,
@@ -114,9 +105,7 @@ class MasterOfferingService:
         master_id: uuid.UUID,
         data: MasterOfferingUpdate,
     ) -> MasterOffering:
-        offering = await self.repository.get_by_id(
-            offering_id
-        )
+        offering = await self.repository.get_by_id(offering_id)
 
         if offering is None:
             raise OfferingNotFoundError
@@ -146,9 +135,7 @@ class MasterOfferingService:
                 raise CategoryInactiveError
 
         if tag_ids is not None:
-            offering.tags = await self._get_valid_tags(
-                tag_ids
-            )
+            offering.tags = await self._get_valid_tags(tag_ids)
 
         for field, value in update_data.items():
             setattr(
@@ -157,18 +144,14 @@ class MasterOfferingService:
                 value,
             )
 
-        return await self.repository.update(
-            offering
-        )
+        return await self.repository.update(offering)
 
     async def delete_offering(
         self,
         offering_id: uuid.UUID,
         master_id: uuid.UUID,
     ) -> None:
-        offering = await self.repository.get_by_id(
-            offering_id
-        )
+        offering = await self.repository.get_by_id(offering_id)
 
         if offering is None:
             raise OfferingNotFoundError
@@ -176,36 +159,23 @@ class MasterOfferingService:
         if offering.master_id != master_id:
             raise OfferingAccessDeniedError
 
-        has_bookings = await self.repository.has_bookings(
-            offering.id
-        )
+        has_bookings = await self.repository.has_bookings(offering.id)
 
         if has_bookings:
             offering.is_active = False
 
-            await self.repository.update(
-                offering
-            )
+            await self.repository.update(offering)
 
             return
 
-        images = await self.image_repository.get_by_offering_id(
-            offering.id
-        )
+        images = await self.image_repository.get_by_offering_id(offering.id)
 
-        storage_keys = [
-            image.storage_key
-            for image in images
-        ]
+        storage_keys = [image.storage_key for image in images]
 
-        await self.repository.hard_delete(
-            offering
-        )
+        await self.repository.hard_delete(offering)
 
         for storage_key in storage_keys:
-            await self.image_storage.delete(
-                storage_key
-            )
+            await self.image_storage.delete(storage_key)
 
     async def get_master_offerings(
         self,
@@ -222,6 +192,7 @@ class MasterOfferingService:
         category_id: uuid.UUID | None = None,
         min_price: Decimal | None = None,
         max_price: Decimal | None = None,
+        discounted_only: bool = False,
         sort: OfferingSort | None = None,
         city_id: uuid.UUID | None = None,
         district_id: uuid.UUID | None = None,
@@ -230,32 +201,23 @@ class MasterOfferingService:
         page: int = 1,
         page_size: int = 12,
     ) -> MasterOfferingPage:
-        offset = (
-            page - 1
-        ) * page_size
+        offset = (page - 1) * page_size
 
-        offerings, total = (
-            await self.repository.get_public_offerings(
-                category_id=category_id,
-                min_price=min_price,
-                max_price=max_price,
-                sort=sort,
-                search=search,
-                city_id=city_id,
-                district_id=district_id,
-                exclude_master_id=exclude_master_id,
-                offset=offset,
-                limit=page_size,
-            )
+        offerings, total = await self.repository.get_public_offerings(
+            category_id=category_id,
+            min_price=min_price,
+            max_price=max_price,
+            discounted_only=discounted_only,
+            sort=sort,
+            search=search,
+            city_id=city_id,
+            district_id=district_id,
+            exclude_master_id=exclude_master_id,
+            offset=offset,
+            limit=page_size,
         )
 
-        total_pages = (
-            math.ceil(
-                total / page_size
-            )
-            if total > 0
-            else 0
-        )
+        total_pages = math.ceil(total / page_size) if total > 0 else 0
 
         return MasterOfferingPage(
             items=offerings,
@@ -269,21 +231,14 @@ class MasterOfferingService:
         self,
         tag_ids: list[uuid.UUID],
     ) -> list[Tag]:
-        unique_ids = list(
-            dict.fromkeys(tag_ids)
-        )
+        unique_ids = list(dict.fromkeys(tag_ids))
 
-        tags = await self.tag_repository.get_by_ids(
-            unique_ids
-        )
+        tags = await self.tag_repository.get_by_ids(unique_ids)
 
         if len(tags) != len(unique_ids):
             raise TagNotFoundError
 
-        if any(
-            not tag.is_active
-            for tag in tags
-        ):
+        if any(not tag.is_active for tag in tags):
             raise TagInactiveError
 
         return tags

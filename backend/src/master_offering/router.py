@@ -37,9 +37,7 @@ from src.tags.exceptions import (
     TagNotFoundError,
 )
 
-router = APIRouter(
-    tags=["Offerings"]
-)
+router = APIRouter(tags=["Offerings"])
 
 
 @router.post(
@@ -49,12 +47,8 @@ router = APIRouter(
 )
 async def create_offering(
     data: MasterOfferingCreate,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: MasterOfferingService = Depends(
-        get_offering_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: MasterOfferingService = Depends(get_offering_service),
 ):
     try:
         return await service.create_offering(
@@ -88,12 +82,8 @@ async def create_offering(
     response_model=list[MasterOfferingResponse],
 )
 async def get_my_offerings(
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: MasterOfferingService = Depends(
-        get_offering_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: MasterOfferingService = Depends(get_offering_service),
 ):
     return await service.get_master_offerings(
         master_id=current_master.id,
@@ -107,9 +97,7 @@ async def get_my_offerings(
 )
 async def get_master_offerings(
     master_id: uuid.UUID,
-    service: MasterOfferingService = Depends(
-        get_offering_service
-    ),
+    service: MasterOfferingService = Depends(get_offering_service),
 ):
     return await service.get_master_offerings(
         master_id=master_id,
@@ -131,6 +119,9 @@ async def get_public_offerings(
         default=None,
         gt=0,
     ),
+    discounted_only: bool = Query(
+        default=False,
+    ),
     sort: OfferingSort | None = None,
     search: str | None = Query(
         default=None,
@@ -149,14 +140,13 @@ async def get_public_offerings(
         ge=1,
         le=50,
     ),
-    service: MasterOfferingService = Depends(
-        get_offering_service
-    ),
+    service: MasterOfferingService = Depends(get_offering_service),
 ):
     return await service.get_public_offerings(
         category_id=category_id,
         min_price=min_price,
         max_price=max_price,
+        discounted_only=discounted_only,
         sort=sort,
         search=search,
         city_id=city_id,
@@ -173,14 +163,10 @@ async def get_public_offerings(
 )
 async def get_offering_by_id(
     offering_id: uuid.UUID,
-    service: MasterOfferingService = Depends(
-        get_offering_service
-    ),
+    service: MasterOfferingService = Depends(get_offering_service),
 ):
     try:
-        return await service.get_public_offering_by_id(
-            offering_id
-        )
+        return await service.get_public_offering_by_id(offering_id)
     except OfferingNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -195,12 +181,8 @@ async def get_offering_by_id(
 async def patch_offering(
     offering_id: uuid.UUID,
     data: MasterOfferingUpdate,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: MasterOfferingService = Depends(
-        get_offering_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: MasterOfferingService = Depends(get_offering_service),
 ):
     try:
         return await service.update_offering(
@@ -246,12 +228,8 @@ async def patch_offering(
 )
 async def delete_offering(
     offering_id: uuid.UUID,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: MasterOfferingService = Depends(
-        get_offering_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: MasterOfferingService = Depends(get_offering_service),
 ) -> None:
     try:
         await service.delete_offering(

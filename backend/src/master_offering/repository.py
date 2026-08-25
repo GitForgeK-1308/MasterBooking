@@ -40,18 +40,10 @@ class MasterOfferingRepository:
         result = await self.session.scalars(
             select(MasterOffering)
             .options(
-                selectinload(
-                    MasterOffering.tags
-                ),
-                selectinload(
-                    MasterOffering.master
-                ).selectinload(
-                    Master.user
-                ),
+                selectinload(MasterOffering.tags),
+                selectinload(MasterOffering.master).selectinload(Master.user),
             )
-            .order_by(
-                MasterOffering.title.asc()
-            )
+            .order_by(MasterOffering.title.asc())
         )
 
         return list(result.all())
@@ -63,18 +55,10 @@ class MasterOfferingRepository:
         return await self.session.scalar(
             select(MasterOffering)
             .options(
-                selectinload(
-                    MasterOffering.tags
-                ),
-                selectinload(
-                    MasterOffering.master
-                ).selectinload(
-                    Master.user
-                ),
+                selectinload(MasterOffering.tags),
+                selectinload(MasterOffering.master).selectinload(Master.user),
             )
-            .where(
-                MasterOffering.id == offering_id
-            )
+            .where(MasterOffering.id == offering_id)
         )
 
     async def get_public_by_id(
@@ -85,23 +69,15 @@ class MasterOfferingRepository:
             select(MasterOffering)
             .join(
                 Master,
-                Master.id
-                == MasterOffering.master_id,
+                Master.id == MasterOffering.master_id,
             )
             .join(
                 Category,
-                Category.id
-                == MasterOffering.category_id,
+                Category.id == MasterOffering.category_id,
             )
             .options(
-                selectinload(
-                    MasterOffering.tags
-                ),
-                selectinload(
-                    MasterOffering.master
-                ).selectinload(
-                    Master.user
-                ),
+                selectinload(MasterOffering.tags),
+                selectinload(MasterOffering.master).selectinload(Master.user),
             )
             .where(
                 MasterOffering.id == offering_id,
@@ -119,32 +95,21 @@ class MasterOfferingRepository:
         query = (
             select(MasterOffering)
             .options(
-                selectinload(
-                    MasterOffering.tags
-                ),
-                selectinload(
-                    MasterOffering.master
-                ).selectinload(
-                    Master.user
-                ),
+                selectinload(MasterOffering.tags),
+                selectinload(MasterOffering.master).selectinload(Master.user),
             )
-            .where(
-                MasterOffering.master_id == master_id
-            )
+            .where(MasterOffering.master_id == master_id)
         )
 
         if active_only:
             query = (
-                query
-                .join(
+                query.join(
                     Master,
-                    Master.id
-                    == MasterOffering.master_id,
+                    Master.id == MasterOffering.master_id,
                 )
                 .join(
                     Category,
-                    Category.id
-                    == MasterOffering.category_id,
+                    Category.id == MasterOffering.category_id,
                 )
                 .where(
                     MasterOffering.is_active.is_(True),
@@ -158,9 +123,7 @@ class MasterOfferingRepository:
             MasterOffering.id.asc(),
         )
 
-        result = await self.session.scalars(
-            query
-        )
+        result = await self.session.scalars(query)
 
         return list(result.all())
 
@@ -168,20 +131,14 @@ class MasterOfferingRepository:
         self,
         offering: MasterOffering,
     ) -> MasterOffering:
-        self.session.add(
-            offering
-        )
+        self.session.add(offering)
 
         await self.session.commit()
 
-        created_offering = await self.get_by_id(
-            offering.id
-        )
+        created_offering = await self.get_by_id(offering.id)
 
         if created_offering is None:
-            raise RuntimeError(
-                "Не удалось получить созданную услугу."
-            )
+            raise RuntimeError("Не удалось получить созданную услугу.")
 
         return created_offering
 
@@ -191,14 +148,10 @@ class MasterOfferingRepository:
     ) -> MasterOffering:
         await self.session.commit()
 
-        updated_offering = await self.get_by_id(
-            offering.id
-        )
+        updated_offering = await self.get_by_id(offering.id)
 
         if updated_offering is None:
-            raise RuntimeError(
-                "Не удалось получить обновлённую услугу."
-            )
+            raise RuntimeError("Не удалось получить обновлённую услугу.")
 
         return updated_offering
 
@@ -207,13 +160,7 @@ class MasterOfferingRepository:
         offering_id: uuid.UUID,
     ) -> bool:
         booking_id = await self.session.scalar(
-            select(
-                Booking.id
-            )
-            .where(
-                Booking.offering_id == offering_id
-            )
-            .limit(1)
+            select(Booking.id).where(Booking.offering_id == offering_id).limit(1)
         )
 
         return booking_id is not None
@@ -222,9 +169,7 @@ class MasterOfferingRepository:
         self,
         offering: MasterOffering,
     ) -> None:
-        await self.session.delete(
-            offering
-        )
+        await self.session.delete(offering)
 
         await self.session.commit()
 
@@ -233,6 +178,7 @@ class MasterOfferingRepository:
         category_id: uuid.UUID | None = None,
         min_price: Decimal | None = None,
         max_price: Decimal | None = None,
+        discounted_only: bool = False,
         sort: OfferingSort | None = None,
         search: str | None = None,
         city_id: uuid.UUID | None = None,
@@ -245,23 +191,15 @@ class MasterOfferingRepository:
             select(MasterOffering)
             .join(
                 Master,
-                Master.id
-                == MasterOffering.master_id,
+                Master.id == MasterOffering.master_id,
             )
             .join(
                 Category,
-                Category.id
-                == MasterOffering.category_id,
+                Category.id == MasterOffering.category_id,
             )
             .options(
-                selectinload(
-                    MasterOffering.tags
-                ),
-                selectinload(
-                    MasterOffering.master
-                ).selectinload(
-                    Master.user
-                ),
+                selectinload(MasterOffering.tags),
+                selectinload(MasterOffering.master).selectinload(Master.user),
             )
             .where(
                 MasterOffering.is_active.is_(True),
@@ -271,20 +209,14 @@ class MasterOfferingRepository:
         )
 
         count_query = (
-            select(
-                func.count(
-                    MasterOffering.id
-                )
-            )
+            select(func.count(MasterOffering.id))
             .join(
                 Master,
-                Master.id
-                == MasterOffering.master_id,
+                Master.id == MasterOffering.master_id,
             )
             .join(
                 Category,
-                Category.id
-                == MasterOffering.category_id,
+                Category.id == MasterOffering.category_id,
             )
             .where(
                 MasterOffering.is_active.is_(True),
@@ -294,68 +226,45 @@ class MasterOfferingRepository:
         )
 
         if exclude_master_id is not None:
-            query = query.where(
-                MasterOffering.master_id
-                != exclude_master_id
-            )
+            query = query.where(MasterOffering.master_id != exclude_master_id)
 
             count_query = count_query.where(
-                MasterOffering.master_id
-                != exclude_master_id
+                MasterOffering.master_id != exclude_master_id
             )
 
         if city_id is not None:
-            query = query.where(
-                Master.city_id == city_id
-            )
+            query = query.where(Master.city_id == city_id)
 
-            count_query = count_query.where(
-                Master.city_id == city_id
-            )
+            count_query = count_query.where(Master.city_id == city_id)
 
         if district_id is not None:
-            query = query.where(
-                Master.district_id == district_id
-            )
+            query = query.where(Master.district_id == district_id)
 
-            count_query = count_query.where(
-                Master.district_id == district_id
-            )
+            count_query = count_query.where(Master.district_id == district_id)
 
         if category_id is not None:
-            category_ids = self._get_category_tree_ids(
-                category_id
-            )
+            category_ids = self._get_category_tree_ids(category_id)
 
-            query = query.where(
-                MasterOffering.category_id.in_(
-                    category_ids
-                )
-            )
+            query = query.where(MasterOffering.category_id.in_(category_ids))
 
             count_query = count_query.where(
-                MasterOffering.category_id.in_(
-                    category_ids
-                )
+                MasterOffering.category_id.in_(category_ids)
             )
+
+        if discounted_only:
+            query = query.where(MasterOffering.discount_percent > 0)
+
+            count_query = count_query.where(MasterOffering.discount_percent > 0)
 
         if min_price is not None:
-            query = query.where(
-                MasterOffering.price >= min_price
-            )
+            query = query.where(MasterOffering.price >= min_price)
 
-            count_query = count_query.where(
-                MasterOffering.price >= min_price
-            )
+            count_query = count_query.where(MasterOffering.price >= min_price)
 
         if max_price is not None:
-            query = query.where(
-                MasterOffering.price <= max_price
-            )
+            query = query.where(MasterOffering.price <= max_price)
 
-            count_query = count_query.where(
-                MasterOffering.price <= max_price
-            )
+            count_query = count_query.where(MasterOffering.price <= max_price)
 
         if search is not None:
             search = search.strip()
@@ -368,49 +277,31 @@ class MasterOfferingRepository:
                     .select_from(
                         master_offering_tags.join(
                             Tag,
-                            Tag.id
-                            == master_offering_tags.c.tag_id,
+                            Tag.id == master_offering_tags.c.tag_id,
                         )
                     )
                     .where(
-                        master_offering_tags.c.offering_id
-                        == MasterOffering.id,
+                        master_offering_tags.c.offering_id == MasterOffering.id,
                         Tag.is_active.is_(True),
                         or_(
-                            Tag.name.ilike(
-                                search_pattern
-                            ),
-                            Tag.slug.ilike(
-                                search_pattern
-                            ),
+                            Tag.name.ilike(search_pattern),
+                            Tag.slug.ilike(search_pattern),
                         ),
                     )
                     .exists()
                 )
 
                 search_condition = or_(
-                    MasterOffering.title.ilike(
-                        search_pattern
-                    ),
-                    MasterOffering.description.ilike(
-                        search_pattern
-                    ),
-                    Category.name.ilike(
-                        search_pattern
-                    ),
-                    Category.slug.ilike(
-                        search_pattern
-                    ),
+                    MasterOffering.title.ilike(search_pattern),
+                    MasterOffering.description.ilike(search_pattern),
+                    Category.name.ilike(search_pattern),
+                    Category.slug.ilike(search_pattern),
                     tag_match,
                 )
 
-                query = query.where(
-                    search_condition
-                )
+                query = query.where(search_condition)
 
-                count_query = count_query.where(
-                    search_condition
-                )
+                count_query = count_query.where(search_condition)
 
         if sort == OfferingSort.PRICE_ASC:
             query = query.order_by(
@@ -428,23 +319,16 @@ class MasterOfferingRepository:
 
         elif sort == OfferingSort.POPULAR:
             query = (
-                query
-                .outerjoin(
+                query.outerjoin(
                     Booking,
                     and_(
-                        Booking.offering_id
-                        == MasterOffering.id,
-                        Booking.status
-                        != BookingStatus.CANCELLED,
+                        Booking.offering_id == MasterOffering.id,
+                        Booking.status != BookingStatus.CANCELLED,
                     ),
                 )
-                .group_by(
-                    MasterOffering.id
-                )
+                .group_by(MasterOffering.id)
                 .order_by(
-                    func.count(
-                        Booking.id
-                    ).desc(),
+                    func.count(Booking.id).desc(),
                     MasterOffering.title.asc(),
                     MasterOffering.id.asc(),
                 )
@@ -456,19 +340,11 @@ class MasterOfferingRepository:
                 MasterOffering.id.asc(),
             )
 
-        total = await self.session.scalar(
-            count_query
-        )
+        total = await self.session.scalar(count_query)
 
-        query = (
-            query
-            .offset(offset)
-            .limit(limit)
-        )
+        query = query.offset(offset).limit(limit)
 
-        result = await self.session.scalars(
-            query
-        )
+        result = await self.session.scalars(query)
 
         return (
             list(result.all()),
@@ -480,31 +356,20 @@ class MasterOfferingRepository:
         category_id: uuid.UUID,
     ):
         category_tree = (
-            select(
-                Category.id
-            )
-            .where(
-                Category.id == category_id
-            )
+            select(Category.id)
+            .where(Category.id == category_id)
             .cte(
                 name="category_tree",
                 recursive=True,
             )
         )
 
-        child_category = aliased(
-            Category
-        )
+        child_category = aliased(Category)
 
         category_tree = category_tree.union_all(
-            select(
-                child_category.id
-            ).where(
-                child_category.parent_id
-                == category_tree.c.id
+            select(child_category.id).where(
+                child_category.parent_id == category_tree.c.id
             )
         )
 
-        return select(
-            category_tree.c.id
-        )
+        return select(category_tree.c.id)

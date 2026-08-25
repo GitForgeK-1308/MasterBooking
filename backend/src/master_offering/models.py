@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     ForeignKey,
+    Integer,
     Numeric,
     String,
     Text,
@@ -68,6 +69,13 @@ class MasterOffering(Base):
         nullable=False,
     )
 
+    discount_percent: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+        nullable=False,
+    )
+
     duration_minutes: Mapped[int] = mapped_column(
         nullable=False,
     )
@@ -99,3 +107,12 @@ class MasterOffering(Base):
         secondary=master_offering_tags,
         back_populates="offerings",
     )
+
+    @property
+    def final_price(self) -> Decimal:
+        if self.discount_percent <= 0:
+            return self.price
+
+        return (
+            self.price * Decimal(100 - self.discount_percent) / Decimal(100)
+        ).quantize(Decimal("0.01"))

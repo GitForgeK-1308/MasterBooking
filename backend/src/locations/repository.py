@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.locations.models import City, District
+from src.masters.models import Master
 
 
 class LocationRepository:
@@ -20,17 +21,11 @@ class LocationRepository:
         query = select(City)
 
         if active_only:
-            query = query.where(
-                City.is_active.is_(True)
-            )
+            query = query.where(City.is_active.is_(True))
 
-        query = query.order_by(
-            City.name.asc()
-        )
+        query = query.order_by(City.name.asc())
 
-        result = await self.session.scalars(
-            query
-        )
+        result = await self.session.scalars(query)
 
         return list(result.all())
 
@@ -38,21 +33,13 @@ class LocationRepository:
         self,
         city_id: uuid.UUID,
     ) -> City | None:
-        return await self.session.scalar(
-            select(City).where(
-                City.id == city_id
-            )
-        )
+        return await self.session.scalar(select(City).where(City.id == city_id))
 
     async def get_city_by_name(
         self,
         name: str,
     ) -> City | None:
-        return await self.session.scalar(
-            select(City).where(
-                City.name == name
-            )
-        )
+        return await self.session.scalar(select(City).where(City.name == name))
 
     async def create_city(
         self,
@@ -79,22 +66,14 @@ class LocationRepository:
         city_id: uuid.UUID,
         active_only: bool = False,
     ) -> list[District]:
-        query = select(District).where(
-            District.city_id == city_id
-        )
+        query = select(District).where(District.city_id == city_id)
 
         if active_only:
-            query = query.where(
-                District.is_active.is_(True)
-            )
+            query = query.where(District.is_active.is_(True))
 
-        query = query.order_by(
-            District.name.asc()
-        )
+        query = query.order_by(District.name.asc())
 
-        result = await self.session.scalars(
-            query
-        )
+        result = await self.session.scalars(query)
 
         return list(result.all())
 
@@ -103,9 +82,7 @@ class LocationRepository:
         district_id: uuid.UUID,
     ) -> District | None:
         return await self.session.scalar(
-            select(District).where(
-                District.id == district_id
-            )
+            select(District).where(District.id == district_id)
         )
 
     async def get_district_by_name(
@@ -139,3 +116,47 @@ class LocationRepository:
         await self.session.refresh(district)
 
         return district
+
+    async def city_has_districts(
+        self,
+        city_id: uuid.UUID,
+    ) -> bool:
+        district_id = await self.session.scalar(
+            select(District.id).where(District.city_id == city_id).limit(1)
+        )
+
+        return district_id is not None
+
+    async def city_is_used_by_masters(
+        self,
+        city_id: uuid.UUID,
+    ) -> bool:
+        master_id = await self.session.scalar(
+            select(Master.id).where(Master.city_id == city_id).limit(1)
+        )
+
+        return master_id is not None
+
+    async def district_is_used_by_masters(
+        self,
+        district_id: uuid.UUID,
+    ) -> bool:
+        master_id = await self.session.scalar(
+            select(Master.id).where(Master.district_id == district_id).limit(1)
+        )
+
+        return master_id is not None
+
+    async def delete_city(
+        self,
+        city: City,
+    ) -> None:
+        await self.session.delete(city)
+        await self.session.commit()
+
+    async def delete_district(
+        self,
+        district: District,
+    ) -> None:
+        await self.session.delete(district)
+        await self.session.commit()

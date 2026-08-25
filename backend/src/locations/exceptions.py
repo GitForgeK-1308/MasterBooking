@@ -16,3 +16,15 @@ class DistrictAlreadyExistsError(Exception):
 
 class DistrictCityMismatchError(Exception):
     pass
+
+
+class CityHasDistrictsError(Exception):
+    pass
+
+
+class CityInUseError(Exception):
+    pass
+
+
+class DistrictInUseError(Exception):
+    pass

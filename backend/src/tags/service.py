@@ -2,6 +2,7 @@ import uuid
 
 from src.tags.exceptions import (
     TagAlreadyExistsError,
+    TagInUseError,
     TagNotFoundError,
 )
 from src.tags.models import Tag
@@ -23,9 +24,7 @@ class TagService:
     def _normalize_name(
         name: str,
     ) -> str:
-        return " ".join(
-            name.strip().split()
-        )
+        return " ".join(name.strip().split())
 
     @staticmethod
     def _normalize_slug(
@@ -47,24 +46,16 @@ class TagService:
         self,
         data: TagCreate,
     ) -> Tag:
-        name = self._normalize_name(
-            data.name
-        )
+        name = self._normalize_name(data.name)
 
-        existing_by_name = await self.repository.get_by_name(
-            name
-        )
+        existing_by_name = await self.repository.get_by_name(name)
 
         if existing_by_name is not None:
             raise TagAlreadyExistsError
 
-        slug = self._normalize_slug(
-            data.slug
-        )
+        slug = self._normalize_slug(data.slug)
 
-        existing_by_slug = await self.repository.get_by_slug(
-            slug
-        )
+        existing_by_slug = await self.repository.get_by_slug(slug)
 
         if existing_by_slug is not None:
             raise TagAlreadyExistsError
@@ -74,18 +65,14 @@ class TagService:
             slug=slug,
         )
 
-        return await self.repository.create(
-            tag
-        )
+        return await self.repository.create(tag)
 
     async def update_tag(
         self,
         tag_id: uuid.UUID,
         data: TagUpdate,
     ) -> Tag:
-        tag = await self.repository.get_by_id(
-            tag_id
-        )
+        tag = await self.repository.get_by_id(tag_id)
 
         if tag is None:
             raise TagNotFoundError
@@ -96,44 +83,40 @@ class TagService:
         )
 
         if "name" in update_data:
-            name = self._normalize_name(
-                update_data["name"]
-            )
+            name = self._normalize_name(update_data["name"])
 
-            existing_by_name = await self.repository.get_by_name(
-                name
-            )
+            existing_by_name = await self.repository.get_by_name(name)
 
-            if (
-                existing_by_name is not None
-                and existing_by_name.id != tag.id
-            ):
+            if existing_by_name is not None and existing_by_name.id != tag.id:
                 raise TagAlreadyExistsError
 
             tag.name = name
 
         if "slug" in update_data:
-            slug = self._normalize_slug(
-                update_data["slug"]
-            )
+            slug = self._normalize_slug(update_data["slug"])
 
-            existing_by_slug = await self.repository.get_by_slug(
-                slug
-            )
+            existing_by_slug = await self.repository.get_by_slug(slug)
 
-            if (
-                existing_by_slug is not None
-                and existing_by_slug.id != tag.id
-            ):
+            if existing_by_slug is not None and existing_by_slug.id != tag.id:
                 raise TagAlreadyExistsError
 
             tag.slug = slug
 
         if "is_active" in update_data:
-            tag.is_active = update_data[
-                "is_active"
-            ]
+            tag.is_active = update_data["is_active"]
 
-        return await self.repository.update(
-            tag
-        )
+        return await self.repository.update(tag)
+
+    async def delete_tag(
+        self,
+        tag_id: uuid.UUID,
+    ) -> None:
+        tag = await self.repository.get_by_id(tag_id)
+
+        if tag is None:
+            raise TagNotFoundError
+
+        if await self.repository.is_used_by_offerings(tag_id):
+            raise TagInUseError
+
+        await self.repository.delete(tag)

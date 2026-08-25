@@ -11,8 +11,11 @@ from src.auth.dependencies import get_current_admin
 from src.locations.dependencies import get_location_service
 from src.locations.exceptions import (
     CityAlreadyExistsError,
+    CityHasDistrictsError,
+    CityInUseError,
     CityNotFoundError,
     DistrictAlreadyExistsError,
+    DistrictInUseError,
     DistrictNotFoundError,
 )
 from src.locations.schemas import (
@@ -37,13 +40,9 @@ router = APIRouter(
     response_model=list[CityResponse],
 )
 async def get_cities(
-    service: LocationService = Depends(
-        get_location_service
-    ),
+    service: LocationService = Depends(get_location_service),
 ):
-    return await service.get_cities(
-        active_only=True
-    )
+    return await service.get_cities(active_only=True)
 
 
 @router.get(
@@ -52,9 +51,7 @@ async def get_cities(
 )
 async def get_districts(
     city_id: uuid.UUID,
-    service: LocationService = Depends(
-        get_location_service
-    ),
+    service: LocationService = Depends(get_location_service),
 ):
     try:
         return await service.get_districts_by_city(
@@ -75,17 +72,11 @@ async def get_districts(
 )
 async def create_city(
     data: CityCreate,
-    _: User = Depends(
-        get_current_admin
-    ),
-    service: LocationService = Depends(
-        get_location_service
-    ),
+    _: User = Depends(get_current_admin),
+    service: LocationService = Depends(get_location_service),
 ):
     try:
-        return await service.create_city(
-            data
-        )
+        return await service.create_city(data)
     except CityAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -100,12 +91,8 @@ async def create_city(
 async def update_city(
     city_id: uuid.UUID,
     data: CityUpdate,
-    _: User = Depends(
-        get_current_admin
-    ),
-    service: LocationService = Depends(
-        get_location_service
-    ),
+    _: User = Depends(get_current_admin),
+    service: LocationService = Depends(get_location_service),
 ):
     try:
         return await service.update_city(
@@ -124,6 +111,37 @@ async def update_city(
         ) from None
 
 
+@router.delete(
+    "/cities/{city_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_city(
+    city_id: uuid.UUID,
+    _: User = Depends(get_current_admin),
+    service: LocationService = Depends(get_location_service),
+) -> None:
+    try:
+        await service.delete_city(city_id=city_id)
+
+    except CityNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Город не найден!",
+        ) from None
+
+    except CityHasDistrictsError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=("Нельзя удалить город, пока у него есть районы!"),
+        ) from None
+
+    except CityInUseError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=("Город используется мастерами. Скройте его вместо удаления!"),
+        ) from None
+
+
 @router.post(
     "/districts",
     response_model=DistrictResponse,
@@ -131,17 +149,11 @@ async def update_city(
 )
 async def create_district(
     data: DistrictCreate,
-    _: User = Depends(
-        get_current_admin
-    ),
-    service: LocationService = Depends(
-        get_location_service
-    ),
+    _: User = Depends(get_current_admin),
+    service: LocationService = Depends(get_location_service),
 ):
     try:
-        return await service.create_district(
-            data
-        )
+        return await service.create_district(data)
     except CityNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -161,12 +173,8 @@ async def create_district(
 async def update_district(
     district_id: uuid.UUID,
     data: DistrictUpdate,
-    _: User = Depends(
-        get_current_admin
-    ),
-    service: LocationService = Depends(
-        get_location_service
-    ),
+    _: User = Depends(get_current_admin),
+    service: LocationService = Depends(get_location_service),
 ):
     try:
         return await service.update_district(
@@ -182,4 +190,29 @@ async def update_district(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Такой район уже существует в этом городе!",
+        ) from None
+
+
+@router.delete(
+    "/districts/{district_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_district(
+    district_id: uuid.UUID,
+    _: User = Depends(get_current_admin),
+    service: LocationService = Depends(get_location_service),
+) -> None:
+    try:
+        await service.delete_district(district_id=district_id)
+
+    except DistrictNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Район не найден!",
+        ) from None
+
+    except DistrictInUseError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=("Район используется мастерами. Скройте его вместо удаления!"),
         ) from None

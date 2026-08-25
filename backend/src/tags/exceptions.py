@@ -8,3 +8,7 @@ class TagAlreadyExistsError(Exception):
 
 class TagInactiveError(Exception):
     pass
+
+
+class TagInUseError(Exception):
+    pass

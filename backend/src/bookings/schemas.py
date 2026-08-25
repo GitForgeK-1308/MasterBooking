@@ -42,6 +42,7 @@ class BookingResponse(BaseModel):
     client_name: str
     client_phone: str
     client_email: str | None
+    has_review: bool
 
     status: BookingStatus
     created_at: datetime

@@ -27,6 +27,7 @@ from src.database.base import Base
 if TYPE_CHECKING:
     from src.master_offering.models import MasterOffering
     from src.masters.models import Master
+    from src.reviews.models import Review
     from src.users.models import User
 
 
@@ -144,3 +145,12 @@ class Booking(Base):
     client: Mapped["User | None"] = relationship(
         back_populates="bookings",
     )
+
+    review: Mapped["Review | None"] = relationship(
+    uselist=False,
+    lazy="selectin",
+    )
+
+    @property
+    def has_review(self) -> bool:
+        return self.review is not None

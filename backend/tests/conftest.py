@@ -33,6 +33,7 @@ def redis_client_mock() -> AsyncMock:
     redis.get = AsyncMock(return_value=None)
     redis.set = AsyncMock()
     redis.delete = AsyncMock()
+    redis.ping = AsyncMock(return_value=True)
 
     return redis
 

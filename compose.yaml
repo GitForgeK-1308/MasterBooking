@@ -35,6 +35,12 @@ services:
     volumes:
       - redis_data:/data
 
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 
   migrate:
     build:
@@ -86,7 +92,19 @@ services:
       migrate:
         condition: service_completed_successfully
       redis:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 
   celery_worker:
@@ -118,9 +136,9 @@ services:
 
     depends_on:
       redis:
-        condition: service_started
-      db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 
   celery_beat:
@@ -151,7 +169,9 @@ services:
 
     depends_on:
       redis:
-        condition: service_started
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   frontend:
     build:
@@ -165,7 +185,7 @@ services:
 
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
         
 volumes:
   postgres_data:

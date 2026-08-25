@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from src.bookings.router import router as bookings_router
 from src.categories.router import router as categories_router
 from src.config import settings
+from src.health.router import router as health_router
 from src.locations.router import router as locations_router
 from src.master_offering.router import router as offering_router
 from src.master_schedule.router import router as schedules_router
@@ -97,3 +98,4 @@ app.include_router(schedules_router)
 
 app.include_router(bookings_router)
 app.include_router(reviews_router)
+app.include_router(health_router)

@@ -37,7 +37,19 @@ function useAuth() { return useContext(AuthContext); }
 function useToast() { return useContext(ToastContext); }
 
 function useHashRoute() {
-  const getRoute = () => window.location.hash.replace(/^#/, "") || "/";
+  const getRoute = () => {
+    const hashRoute = window.location.hash.replace(/^#/, "");
+
+    if (hashRoute) {
+      return hashRoute;
+    }
+
+    if (window.location.pathname === "/reset-password") {
+      return `/reset-password${window.location.search}`;
+    }
+
+    return "/";
+  };
   const [route, setRoute] = useState(getRoute);
   useEffect(() => {
     const listener = () => setRoute(getRoute());
@@ -268,6 +280,9 @@ function App() {
   if (route === "/" || route === "") page = <HomePage />;
   else if (route.startsWith("/catalog")) page = <CatalogPage route={route} />;
   else if (route.startsWith("/offering/")) page = <OfferingPage id={route.split("/")[2]} />;
+  else if (route.startsWith("/reset-password")) {
+    page = <ResetPasswordPage route={route} />;
+  }
   else if (route === "/auth") page = <AuthPage />;
   else if (route === "/profile") page = <Protected><ProfilePage /></Protected>;
   else if (route === "/become-master") page = <Protected><BecomeMasterPage /></Protected>;
@@ -863,7 +878,204 @@ function AuthPage() {
   };
   return <section className="auth-section"><div className="auth-art"><div className="auth-art-content"><span className="eyebrow light">MasterBooking</span><h1>Запись к мастерам без лишних действий.</h1><p>Выбирайте услугу и доступное время онлайн, а все детали визита храните в личном кабинете.</p><div className="auth-quote">Поиск, запись и управление визитами — в одном сервисе.<span>MasterBooking</span></div></div></div><div className="auth-panel"><div className="auth-box"><button className="brand auth-brand" onClick={() => go("/")}><span className="brand-mark"><Icon name="logo" size={32}/></span><span>MasterBooking</span></button><span className="eyebrow">{mode === "register" ? "Регистрация" : mode === "forgot" ? "Восстановление доступа" : "Вход в аккаунт"}</span><h2>{mode === "register" ? "Создайте аккаунт" : mode === "forgot" ? "Восстановите доступ" : "Войдите в MasterBooking"}</h2><p>{mode === "register" ? "После регистрации вы сможете создавать записи, отслеживать их статус и оставлять отзывы." : mode === "forgot" ? "Укажите email, связанный с аккаунтом. Если он найден, мы отправим инструкции по восстановлению." : "Введите email и пароль, которые вы использовали при регистрации."}</p><form onSubmit={submit} className="auth-form">{mode === "register" && <div className="two-col"><Field label="Имя"><input required minLength="2" value={form.first_name} onChange={(e)=>setForm({...form, first_name:e.target.value})}/></Field><Field label="Фамилия"><input required minLength="2" value={form.last_name} onChange={(e)=>setForm({...form, last_name:e.target.value})}/></Field></div>}<Field label="Email"><input required type="email" value={form.email} onChange={(e)=>setForm({...form, email:e.target.value})} placeholder="you@example.com"/></Field>{mode !== "forgot" && <Field label="Пароль"><input required type="password" minLength={mode === "register" ? 8 : 1} value={form.password} onChange={(e)=>setForm({...form, password:e.target.value})} placeholder={mode === "register" ? "Не менее 8 символов" : "Введите пароль"}/></Field>}{mode === "register" && <Field label="Телефон"><input value={form.phone} onChange={(e)=>setForm({...form, phone:e.target.value})} placeholder="+7 999 123-45-67"/></Field>}{message && <div className={`form-message ${message.includes("ошиб") || message.includes("Невер") ? "error" : ""}`}>{message}</div>}<button className="button button-dark button-block" disabled={loading}>{loading ? "Выполняем запрос…" : mode === "register" ? "Создать аккаунт" : mode === "forgot" ? "Отправить инструкцию" : "Войти"}</button></form><div className="auth-links">{mode === "login" && <button onClick={()=>setMode("forgot")}>Забыли пароль?</button>}<button onClick={()=>{setMessage("");setMode(mode === "register" ? "login" : "register")}}>{mode === "register" ? "Уже зарегистрированы? Войти" : "Создать аккаунт"}</button>{mode === "forgot" && <button onClick={()=>setMode("login")}>Вернуться ко входу</button>}</div></div></div></section>;
 }
+function ResetPasswordPage({ route }) {
+  const notify = useToast();
 
+  const token =
+    new URLSearchParams(
+      route.split("?")[1] || ""
+    ).get("token") || "";
+
+  const [form, setForm] = useState({
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setMessage("");
+
+    if (!token) {
+      setMessage(
+        "Ссылка для восстановления пароля недействительна или повреждена."
+      );
+      return;
+    }
+
+    if (form.password.length < 8) {
+      setMessage(
+        "Новый пароль должен содержать не менее 8 символов."
+      );
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setMessage("Пароли не совпадают.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await endpoints.resetPassword(
+        token,
+        form.password
+      );
+
+      setSuccess(true);
+
+      setMessage(
+        response?.message ||
+          "Пароль успешно изменён. Теперь вы можете войти в аккаунт."
+      );
+
+      notify("Пароль успешно изменён");
+    } catch (error) {
+      setMessage(
+        safeError(
+          error,
+          "Не удалось изменить пароль"
+        )
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="auth-section">
+      <div className="auth-art">
+        <div className="auth-art-content">
+          <span className="eyebrow light">
+            MasterBooking
+          </span>
+
+          <h1>Верните доступ к аккаунту.</h1>
+
+          <p>
+            Создайте новый пароль и продолжайте
+            управлять записями.
+          </p>
+        </div>
+      </div>
+
+      <div className="auth-panel">
+        <div className="auth-box">
+          <button
+            className="brand auth-brand"
+            onClick={() => go("/")}
+          >
+            <span className="brand-mark">
+              <Icon name="logo" size={32} />
+            </span>
+
+            <span>MasterBooking</span>
+          </button>
+
+          <span className="eyebrow">
+            Восстановление доступа
+          </span>
+
+          <h2>
+            {success
+              ? "Пароль изменён"
+              : "Создайте новый пароль"}
+          </h2>
+
+          {!token ? (
+            <>
+              <div className="form-message error">
+                Ссылка для восстановления пароля
+                недействительна или не содержит токен.
+              </div>
+
+              <button
+                className="button button-dark button-block"
+                onClick={() => go("/auth")}
+              >
+                Вернуться ко входу
+              </button>
+            </>
+          ) : success ? (
+            <>
+              {message && (
+                <div className="form-message">
+                  {message}
+                </div>
+              )}
+
+              <button
+                className="button button-dark button-block"
+                onClick={() => go("/auth")}
+              >
+                Войти в аккаунт
+              </button>
+            </>
+          ) : (
+            <form
+              onSubmit={submit}
+              className="auth-form"
+            >
+              <Field label="Новый пароль">
+                <input
+                  required
+                  type="password"
+                  minLength="8"
+                  autoComplete="new-password"
+                  value={form.password}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      password: event.target.value,
+                    })
+                  }
+                  placeholder="Не менее 8 символов"
+                />
+              </Field>
+
+              <Field label="Повторите пароль">
+                <input
+                  required
+                  type="password"
+                  minLength="8"
+                  autoComplete="new-password"
+                  value={form.confirmPassword}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      confirmPassword:
+                        event.target.value,
+                    })
+                  }
+                  placeholder="Введите пароль ещё раз"
+                />
+              </Field>
+
+              {message && (
+                <div className="form-message error">
+                  {message}
+                </div>
+              )}
+
+              <button
+                className="button button-dark button-block"
+                disabled={loading}
+              >
+                {loading
+                  ? "Сохраняем пароль…"
+                  : "Сохранить новый пароль"}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
 function ProfilePage() {
   const { user, refreshUser } = useAuth();
   const notify = useToast();

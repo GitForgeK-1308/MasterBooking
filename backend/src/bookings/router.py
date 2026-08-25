@@ -10,13 +10,11 @@ from fastapi import (
 
 from src.auth.dependencies import (
     get_current_customer,
-    get_current_client,
     get_current_master_profile,
     get_current_user,
 )
 from src.bookings.dependencies import get_booking_service
 from src.bookings.exceptions import (
-    SelfBookingNotAllowedError,
     BookingAccessDeniedError,
     BookingInPastError,
     BookingNotFoundError,
@@ -31,6 +29,7 @@ from src.bookings.exceptions import (
     OfferingDoesNotBelongToMasterError,
     OfferingInactiveError,
     OfferingNotFoundError,
+    SelfBookingNotAllowedError,
 )
 from src.bookings.schemas import (
     AvailableSlotsResponse,

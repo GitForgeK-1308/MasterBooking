@@ -2,7 +2,6 @@ import uuid
 from datetime import date, datetime, time, timedelta
 
 from src.bookings.exceptions import (
-    SelfBookingNotAllowedError,
     BookingAccessDeniedError,
     BookingInPastError,
     BookingNotFoundError,
@@ -17,6 +16,7 @@ from src.bookings.exceptions import (
     OfferingDoesNotBelongToMasterError,
     OfferingInactiveError,
     OfferingNotFoundError,
+    SelfBookingNotAllowedError,
 )
 from src.bookings.models import (
     Booking,

@@ -8,7 +8,7 @@ from fastapi import (
 )
 
 from src.auth.dependencies import (
-    get_current_client,
+    get_current_customer,
     get_current_master_profile,
 )
 from src.masters.models import Master
@@ -43,8 +43,8 @@ router = APIRouter(
 async def create_review(
     booking_id: uuid.UUID,
     data: ReviewCreate,
-    current_client: User = Depends(
-        get_current_client
+    current_customer: User = Depends(
+        get_current_customer
     ),
     service: ReviewService = Depends(
         get_review_service
@@ -53,7 +53,7 @@ async def create_review(
     try:
         return await service.create_review(
             booking_id=booking_id,
-            client_id=current_client.id,
+            client_id=current_customer.id,
             data=data,
         )
 

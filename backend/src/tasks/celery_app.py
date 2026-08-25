@@ -1,5 +1,6 @@
 from celery import Celery
 
+import src.database.models  # noqa: F401
 from src.config import settings
 
 celery_app = Celery(

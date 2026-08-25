@@ -73,6 +73,8 @@ services:
 
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/masterbooking
+      REDIS_URL: redis://redis:6379
+      CELERY_BROKER_URL: redis://redis:6379/1
 
     ports:
       - "8000:8000"
@@ -151,7 +153,20 @@ services:
       redis:
         condition: service_started
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
 
+    ports:
+      - "3000:80"
+
+    depends_on:
+      backend:
+        condition: service_started
+        
 volumes:
   postgres_data:
 

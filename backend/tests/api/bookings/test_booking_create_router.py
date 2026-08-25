@@ -133,7 +133,7 @@ async def test_create_booking_without_token(
 
 
 @pytest.mark.anyio
-async def test_create_booking_as_master_forbidden(
+async def test_create_booking_on_own_service_forbidden(
     ac: AsyncClient,
     master: Master,
     offering: MasterOffering,
@@ -154,8 +154,14 @@ async def test_create_booking_as_master_forbidden(
         },
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 409
 
+    assert response.json() == {
+        "detail": (
+            "Нельзя записаться "
+            "на собственную услугу!"
+        )
+    }
 
 @pytest.mark.anyio
 async def test_create_booking_phone_required(

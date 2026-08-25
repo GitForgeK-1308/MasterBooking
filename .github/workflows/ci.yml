@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+
+jobs:
+  backend:
+    name: Backend checks
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+
+        env:
+          POSTGRES_DB: masterbooking_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd="pg_isready -U postgres -d masterbooking_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/masterbooking_test
+
+      SECRET_KEY: ci-secret-key-for-tests
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      DEBUG: "False"
+
+      REDIS_URL: redis://localhost:6379
+      CELERY_BROKER_URL: redis://localhost:6379/1
+
+      SMTP_HOST: localhost
+      SMTP_PORT: 587
+      SMTP_USER: test@example.com
+      SMTP_PASSWORD: test-password
+      SMTP_FROM_EMAIL: test@example.com
+
+      FRONTEND_RESET_PASSWORD_URL: http://localhost:3000/reset-password
+
+      CORS_ORIGINS: '["http://localhost:3000"]'
+
+    steps:
+      - name: Получить код
+        uses: actions/checkout@v4
+
+      - name: Установить Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Установить uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Установить зависимости
+        run: uv sync --frozen
+
+      - name: Проверить Ruff
+        run: uv run ruff check .
+
+      - name: Запустить тесты
+        run: uv run pytest

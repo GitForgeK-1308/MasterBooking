@@ -237,6 +237,7 @@ class MasterOfferingRepository:
         search: str | None = None,
         city_id: uuid.UUID | None = None,
         district_id: uuid.UUID | None = None,
+        exclude_master_id: uuid.UUID | None = None,
         offset: int = 0,
         limit: int = 12,
     ) -> tuple[list[MasterOffering], int]:
@@ -291,6 +292,17 @@ class MasterOfferingRepository:
                 Category.is_active.is_(True),
             )
         )
+
+        if exclude_master_id is not None:
+            query = query.where(
+                MasterOffering.master_id
+                != exclude_master_id
+            )
+
+            count_query = count_query.where(
+                MasterOffering.master_id
+                != exclude_master_id
+            )
 
         if city_id is not None:
             query = query.where(

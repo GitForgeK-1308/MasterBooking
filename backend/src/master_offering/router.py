@@ -139,6 +139,7 @@ async def get_public_offerings(
     ),
     city_id: uuid.UUID | None = None,
     district_id: uuid.UUID | None = None,
+    exclude_master_id: uuid.UUID | None = None,
     page: int = Query(
         default=1,
         ge=1,
@@ -160,6 +161,7 @@ async def get_public_offerings(
         search=search,
         city_id=city_id,
         district_id=district_id,
+        exclude_master_id=exclude_master_id,
         page=page,
         page_size=page_size,
     )

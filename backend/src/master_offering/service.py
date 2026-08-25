@@ -226,6 +226,7 @@ class MasterOfferingService:
         city_id: uuid.UUID | None = None,
         district_id: uuid.UUID | None = None,
         search: str | None = None,
+        exclude_master_id: uuid.UUID | None = None,
         page: int = 1,
         page_size: int = 12,
     ) -> MasterOfferingPage:
@@ -242,6 +243,7 @@ class MasterOfferingService:
                 search=search,
                 city_id=city_id,
                 district_id=district_id,
+                exclude_master_id=exclude_master_id,
                 offset=offset,
                 limit=page_size,
             )

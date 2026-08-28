@@ -11,11 +11,7 @@ from sqlalchemy.pool import NullPool
 from src.config import settings
 from src.database.models import Base
 
-TEST_DATABASE_URL = make_url(
-    settings.database_url
-).set(
-    database="masterbooking_test"
-)
+TEST_DATABASE_URL = make_url(settings.database_url).set(database="masterbooking_test")
 
 
 test_engine = create_async_engine(
@@ -30,19 +26,13 @@ test_engine = create_async_engine(
 )
 async def prepare_test_database():
     async with test_engine.begin() as connection:
-        await connection.run_sync(
-            Base.metadata.drop_all
-        )
-        await connection.run_sync(
-            Base.metadata.create_all
-        )
+        await connection.run_sync(Base.metadata.drop_all)
+        await connection.run_sync(Base.metadata.create_all)
 
     yield
 
     async with test_engine.begin() as connection:
-        await connection.run_sync(
-            Base.metadata.drop_all
-        )
+        await connection.run_sync(Base.metadata.drop_all)
 
     await test_engine.dispose()
 

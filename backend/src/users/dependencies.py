@@ -10,17 +10,11 @@ from src.users.service import UserService
 
 
 def get_user_service(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
+    session: AsyncSession = Depends(get_async_session),
 ) -> UserService:
-    user_repository = UserRepository(
-        session
-    )
+    user_repository = UserRepository(session)
 
-    master_repository = MasterRepository(
-        session
-    )
+    master_repository = MasterRepository(session)
 
     return UserService(
         repository=user_repository,
@@ -29,13 +23,9 @@ def get_user_service(
 
 
 def get_user_avatar_service(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
+    session: AsyncSession = Depends(get_async_session),
 ) -> UserAvatarService:
-    repository = UserRepository(
-        session
-    )
+    repository = UserRepository(session)
 
     storage = LocalAvatarStorage()
 

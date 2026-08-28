@@ -17,25 +17,15 @@ from src.tags.repository import TagRepository
 
 
 def get_offering_service(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
+    session: AsyncSession = Depends(get_async_session),
 ) -> MasterOfferingService:
-    repository = MasterOfferingRepository(
-        session
-    )
+    repository = MasterOfferingRepository(session)
 
-    category_repository = CategoryRepository(
-        session
-    )
+    category_repository = CategoryRepository(session)
 
-    tag_repository = TagRepository(
-        session
-    )
+    tag_repository = TagRepository(session)
 
-    image_repository = OfferingImageRepository(
-        session
-    )
+    image_repository = OfferingImageRepository(session)
 
     image_storage = LocalImageStorage()
 

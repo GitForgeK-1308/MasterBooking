@@ -14,21 +14,12 @@ from src.redis.dependencies import get_redis
 
 
 def get_schedule_service(
-    session: AsyncSession = Depends(
-        get_async_session
-        
-    ),
-    redis: Redis = Depends(
-        get_redis
-    )
+    session: AsyncSession = Depends(get_async_session),
+    redis: Redis = Depends(get_redis),
 ) -> MasterScheduleService:
-    schedule_repository = MasterScheduleRepository(
-        session
-    )
+    schedule_repository = MasterScheduleRepository(session)
 
-    master_repository = MasterRepository(
-        session
-    )
+    master_repository = MasterRepository(session)
 
     return MasterScheduleService(
         schedule_repository=schedule_repository,

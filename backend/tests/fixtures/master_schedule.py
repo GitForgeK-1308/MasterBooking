@@ -31,9 +31,7 @@ async def monday_schedule(
 
     db_session.add(schedule)
     await db_session.commit()
-    await db_session.refresh(
-        schedule
-    )
+    await db_session.refresh(schedule)
 
     return schedule
 
@@ -59,9 +57,7 @@ async def tuesday_schedule(
 
     db_session.add(schedule)
     await db_session.commit()
-    await db_session.refresh(
-        schedule
-    )
+    await db_session.refresh(schedule)
 
     return schedule
 
@@ -81,9 +77,7 @@ async def day_off_schedule(
 
     db_session.add(schedule)
     await db_session.commit()
-    await db_session.refresh(
-        schedule
-    )
+    await db_session.refresh(schedule)
 
     return schedule
 
@@ -109,8 +103,6 @@ async def foreign_schedule(
 
     db_session.add(schedule)
     await db_session.commit()
-    await db_session.refresh(
-        schedule
-    )
+    await db_session.refresh(schedule)
 
     return schedule

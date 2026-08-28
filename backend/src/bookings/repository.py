@@ -22,9 +22,7 @@ class BookingRepository:
         booking_id: uuid.UUID,
     ) -> Booking | None:
         return await self.session.scalar(
-            select(Booking).where(
-                Booking.id == booking_id
-            )
+            select(Booking).where(Booking.id == booking_id)
         )
 
     async def get_by_master_and_date(
@@ -56,8 +54,7 @@ class BookingRepository:
             .where(
                 Booking.master_id == master_id,
                 Booking.booking_date == booking_date,
-                Booking.status
-                != BookingStatus.CANCELLED,
+                Booking.status != BookingStatus.CANCELLED,
             )
             .order_by(
                 Booking.start_time.asc(),
@@ -79,8 +76,7 @@ class BookingRepository:
             .where(
                 Booking.master_id == master_id,
                 Booking.booking_date == booking_date,
-                Booking.status
-                != BookingStatus.CANCELLED,
+                Booking.status != BookingStatus.CANCELLED,
                 Booking.start_time < end_time,
                 Booking.end_time > start_time,
             )
@@ -93,9 +89,7 @@ class BookingRepository:
     ) -> list[Booking]:
         result = await self.session.scalars(
             select(Booking)
-            .where(
-                Booking.client_id == client_id
-            )
+            .where(Booking.client_id == client_id)
             .order_by(
                 Booking.booking_date.asc(),
                 Booking.start_time.asc(),
@@ -109,14 +103,10 @@ class BookingRepository:
         self,
         booking: Booking,
     ) -> Booking:
-        self.session.add(
-            booking
-        )
+        self.session.add(booking)
 
         await self.session.commit()
-        await self.session.refresh(
-            booking
-        )
+        await self.session.refresh(booking)
 
         return booking
 
@@ -125,9 +115,7 @@ class BookingRepository:
         booking: Booking,
     ) -> Booking:
         await self.session.commit()
-        await self.session.refresh(
-            booking
-        )
+        await self.session.refresh(booking)
 
         return booking
 
@@ -142,8 +130,7 @@ class BookingRepository:
         )
 
         result = await self.session.scalars(
-            select(Booking)
-            .where(
+            select(Booking).where(
                 Booking.booking_date == target_date,
                 Booking.start_time == target_time,
                 Booking.status.in_(

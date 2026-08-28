@@ -28,9 +28,7 @@ from src.masters.repository import MasterRepository
 
 
 def make_master():
-    return SimpleNamespace(
-        id=uuid.uuid4()
-    )
+    return SimpleNamespace(id=uuid.uuid4())
 
 
 def make_schedule(
@@ -53,16 +51,12 @@ def make_schedule(
 
 @pytest.fixture
 def schedule_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterScheduleRepository
-    )
+    return AsyncMock(spec=MasterScheduleRepository)
 
 
 @pytest.fixture
 def master_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterRepository
-    )
+    return AsyncMock(spec=MasterRepository)
 
 
 @pytest.fixture
@@ -86,7 +80,6 @@ def schedule_service(
         schedule_repository=schedule_repository,
         master_repository=master_repository,
         redis_client=redis_client,
-        
     )
 
 
@@ -97,19 +90,13 @@ async def test_get_schedule_by_id(
 ):
     schedule = make_schedule()
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
-    result = await schedule_service.get_schedule_by_id(
-        schedule.id
-    )
+    result = await schedule_service.get_schedule_by_id(schedule.id)
 
     assert result is schedule
 
-    schedule_repository.get_by_id.assert_awaited_once_with(
-        schedule.id
-    )
+    schedule_repository.get_by_id.assert_awaited_once_with(schedule.id)
 
 
 @pytest.mark.anyio
@@ -130,19 +117,13 @@ async def test_get_master_schedules(
         ),
     ]
 
-    schedule_repository.get_by_master_id.return_value = (
-        schedules
-    )
+    schedule_repository.get_by_master_id.return_value = schedules
 
-    result = await schedule_service.get_master_schedules(
-        master_id
-    )
+    result = await schedule_service.get_master_schedules(master_id)
 
     assert result == schedules
 
-    schedule_repository.get_by_master_id.assert_awaited_once_with(
-        master_id
-    )
+    schedule_repository.get_by_master_id.assert_awaited_once_with(master_id)
 
 
 @pytest.mark.anyio
@@ -153,17 +134,11 @@ async def test_create_schedule(
 ):
     master = make_master()
 
-    master_repository.get_by_id.return_value = (
-        master
-    )
+    master_repository.get_by_id.return_value = master
 
-    schedule_repository.get_by_master_and_day.return_value = (
-        None
-    )
+    schedule_repository.get_by_master_and_day.return_value = None
 
-    schedule_repository.create.side_effect = (
-        lambda schedule: schedule
-    )
+    schedule_repository.create.side_effect = lambda schedule: schedule
 
     data = MasterScheduleCreate(
         day_of_week=WeekDay.MONDAY,
@@ -195,18 +170,14 @@ async def test_create_schedule(
     )
     assert result.is_working is True
 
-    master_repository.get_by_id.assert_awaited_once_with(
-        master.id
-    )
+    master_repository.get_by_id.assert_awaited_once_with(master.id)
 
     schedule_repository.get_by_master_and_day.assert_awaited_once_with(
         master_id=master.id,
         day_of_week=WeekDay.MONDAY,
     )
 
-    schedule_repository.create.assert_awaited_once_with(
-        result
-    )
+    schedule_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -217,17 +188,11 @@ async def test_create_day_off_schedule(
 ):
     master = make_master()
 
-    master_repository.get_by_id.return_value = (
-        master
-    )
+    master_repository.get_by_id.return_value = master
 
-    schedule_repository.get_by_master_and_day.return_value = (
-        None
-    )
+    schedule_repository.get_by_master_and_day.return_value = None
 
-    schedule_repository.create.side_effect = (
-        lambda schedule: schedule
-    )
+    schedule_repository.create.side_effect = lambda schedule: schedule
 
     data = MasterScheduleCreate(
         day_of_week=WeekDay.SUNDAY,
@@ -265,9 +230,7 @@ async def test_create_schedule_master_not_found(
         ),
     )
 
-    with pytest.raises(
-        MasterNotFoundError
-    ):
+    with pytest.raises(MasterNotFoundError):
         await schedule_service.create_schedule(
             master_id=uuid.uuid4(),
             data=data,
@@ -285,17 +248,11 @@ async def test_create_schedule_already_exists(
 ):
     master = make_master()
 
-    existing_schedule = make_schedule(
-        master_id=master.id
-    )
+    existing_schedule = make_schedule(master_id=master.id)
 
-    master_repository.get_by_id.return_value = (
-        master
-    )
+    master_repository.get_by_id.return_value = master
 
-    schedule_repository.get_by_master_and_day.return_value = (
-        existing_schedule
-    )
+    schedule_repository.get_by_master_and_day.return_value = existing_schedule
 
     data = MasterScheduleCreate(
         day_of_week=WeekDay.MONDAY,
@@ -309,9 +266,7 @@ async def test_create_schedule_already_exists(
         ),
     )
 
-    with pytest.raises(
-        ScheduleAlreadyExistsError
-    ):
+    with pytest.raises(ScheduleAlreadyExistsError):
         await schedule_service.create_schedule(
             master_id=master.id,
             data=data,
@@ -350,13 +305,9 @@ async def test_update_schedule_access_denied(
 ):
     schedule = make_schedule()
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
-    with pytest.raises(
-        ScheduleAccessDeniedError
-    ):
+    with pytest.raises(ScheduleAccessDeniedError):
         await schedule_service.update_schedule(
             schedule_id=schedule.id,
             master_id=uuid.uuid4(),
@@ -378,17 +329,11 @@ async def test_update_schedule_times(
 ):
     master_id = uuid.uuid4()
 
-    schedule = make_schedule(
-        master_id=master_id
-    )
+    schedule = make_schedule(master_id=master_id)
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
-    schedule_repository.update.side_effect = (
-        lambda item: item
-    )
+    schedule_repository.update.side_effect = lambda item: item
 
     result = await schedule_service.update_schedule(
         schedule_id=schedule.id,
@@ -416,9 +361,7 @@ async def test_update_schedule_times(
     )
     assert result.is_working is True
 
-    schedule_repository.update.assert_awaited_once_with(
-        schedule
-    )
+    schedule_repository.update.assert_awaited_once_with(schedule)
 
 
 @pytest.mark.anyio
@@ -433,17 +376,11 @@ async def test_update_schedule_day(
         day_of_week=WeekDay.MONDAY,
     )
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
-    schedule_repository.get_by_master_and_day.return_value = (
-        None
-    )
+    schedule_repository.get_by_master_and_day.return_value = None
 
-    schedule_repository.update.side_effect = (
-        lambda item: item
-    )
+    schedule_repository.update.side_effect = lambda item: item
 
     result = await schedule_service.update_schedule(
         schedule_id=schedule.id,
@@ -454,10 +391,7 @@ async def test_update_schedule_day(
     )
 
     assert result is schedule
-    assert (
-        result.day_of_week
-        == WeekDay.WEDNESDAY
-    )
+    assert result.day_of_week == WeekDay.WEDNESDAY
 
     schedule_repository.get_by_master_and_day.assert_awaited_once_with(
         master_id=master_id,
@@ -477,13 +411,9 @@ async def test_update_schedule_same_day_does_not_check_duplicate(
         day_of_week=WeekDay.MONDAY,
     )
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
-    schedule_repository.update.side_effect = (
-        lambda item: item
-    )
+    schedule_repository.update.side_effect = lambda item: item
 
     result = await schedule_service.update_schedule(
         schedule_id=schedule.id,
@@ -496,9 +426,7 @@ async def test_update_schedule_same_day_does_not_check_duplicate(
     assert result is schedule
 
     schedule_repository.get_by_master_and_day.assert_not_awaited()
-    schedule_repository.update.assert_awaited_once_with(
-        schedule
-    )
+    schedule_repository.update.assert_awaited_once_with(schedule)
 
 
 @pytest.mark.anyio
@@ -518,17 +446,11 @@ async def test_update_schedule_duplicate_day(
         day_of_week=WeekDay.TUESDAY,
     )
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
-    schedule_repository.get_by_master_and_day.return_value = (
-        existing_schedule
-    )
+    schedule_repository.get_by_master_and_day.return_value = existing_schedule
 
-    with pytest.raises(
-        ScheduleAlreadyExistsError
-    ):
+    with pytest.raises(ScheduleAlreadyExistsError):
         await schedule_service.update_schedule(
             schedule_id=schedule.id,
             master_id=master_id,
@@ -547,24 +469,16 @@ async def test_update_schedule_to_day_off_clears_times(
 ):
     master_id = uuid.uuid4()
 
-    schedule = make_schedule(
-        master_id=master_id
-    )
+    schedule = make_schedule(master_id=master_id)
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
-    schedule_repository.update.side_effect = (
-        lambda item: item
-    )
+    schedule_repository.update.side_effect = lambda item: item
 
     result = await schedule_service.update_schedule(
         schedule_id=schedule.id,
         master_id=master_id,
-        data=MasterScheduleUpdate(
-            is_working=False
-        ),
+        data=MasterScheduleUpdate(is_working=False),
     )
 
     assert result is schedule
@@ -588,23 +502,16 @@ async def test_update_day_off_to_working_requires_time(
         is_working=False,
     )
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
     with pytest.raises(
         ValueError,
-        match=(
-            "Для рабочего дня необходимо "
-            "указать время начала и окончания"
-        ),
+        match=("Для рабочего дня необходимо указать время начала и окончания"),
     ):
         await schedule_service.update_schedule(
             schedule_id=schedule.id,
             master_id=master_id,
-            data=MasterScheduleUpdate(
-                is_working=True
-            ),
+            data=MasterScheduleUpdate(is_working=True),
         )
 
     schedule_repository.update.assert_not_awaited()
@@ -617,20 +524,13 @@ async def test_update_schedule_invalid_time_range(
 ):
     master_id = uuid.uuid4()
 
-    schedule = make_schedule(
-        master_id=master_id
-    )
+    schedule = make_schedule(master_id=master_id)
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
     with pytest.raises(
         ValueError,
-        match=(
-            "Время начала должно быть раньше "
-            "времени окончания"
-        ),
+        match=("Время начала должно быть раньше времени окончания"),
     ):
         await schedule_service.update_schedule(
             schedule_id=schedule.id,
@@ -657,13 +557,9 @@ async def test_delete_schedule(
 ):
     master_id = uuid.uuid4()
 
-    schedule = make_schedule(
-        master_id=master_id
-    )
+    schedule = make_schedule(master_id=master_id)
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
     result = await schedule_service.delete_schedule(
         schedule_id=schedule.id,
@@ -672,9 +568,7 @@ async def test_delete_schedule(
 
     assert result is True
 
-    schedule_repository.delete.assert_awaited_once_with(
-        schedule
-    )
+    schedule_repository.delete.assert_awaited_once_with(schedule)
 
 
 @pytest.mark.anyio
@@ -701,20 +595,15 @@ async def test_delete_schedule_access_denied(
 ):
     schedule = make_schedule()
 
-    schedule_repository.get_by_id.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_id.return_value = schedule
 
-    with pytest.raises(
-        ScheduleAccessDeniedError
-    ):
+    with pytest.raises(ScheduleAccessDeniedError):
         await schedule_service.delete_schedule(
             schedule_id=schedule.id,
             master_id=uuid.uuid4(),
         )
 
     schedule_repository.delete.assert_not_awaited()
-
 
 
 @pytest.mark.anyio
@@ -736,23 +625,17 @@ async def test_get_master_schedules_from_cache(
         ),
     ]
 
-    cached_data = schedule_service._serialize_schedules(
-        schedules
-    )
+    cached_data = schedule_service._serialize_schedules(schedules)
 
     redis_client.get.return_value = cached_data
 
-    result = await schedule_service.get_master_schedules(
-        master_id
-    )
+    result = await schedule_service.get_master_schedules(master_id)
 
     assert len(result) == 2
     assert result[0].day_of_week == WeekDay.MONDAY
     assert result[1].day_of_week == WeekDay.TUESDAY
 
-    redis_client.get.assert_awaited_once_with(
-        f"master:{master_id}:schedule"
-    )
+    redis_client.get.assert_awaited_once_with(f"master:{master_id}:schedule")
 
     schedule_repository.get_by_master_id.assert_not_awaited()
 
@@ -780,23 +663,15 @@ async def test_get_master_schedules_cache_miss(
 
     redis_client.get.return_value = None
 
-    schedule_repository.get_by_master_id.return_value = (
-        schedules
-    )
+    schedule_repository.get_by_master_id.return_value = schedules
 
-    result = await schedule_service.get_master_schedules(
-        master_id
-    )
+    result = await schedule_service.get_master_schedules(master_id)
 
     assert result == schedules
 
-    redis_client.get.assert_awaited_once_with(
-        f"master:{master_id}:schedule"
-    )
+    redis_client.get.assert_awaited_once_with(f"master:{master_id}:schedule")
 
-    schedule_repository.get_by_master_id.assert_awaited_once_with(
-        master_id
-    )
+    schedule_repository.get_by_master_id.assert_awaited_once_with(master_id)
 
     redis_client.set.assert_awaited_once()
 
@@ -817,9 +692,7 @@ async def test_create_schedule_invalidates_cache(
 
     master_repository.get_by_id.return_value = master
     schedule_repository.get_by_master_and_day.return_value = None
-    schedule_repository.create.side_effect = (
-        lambda schedule: schedule
-    )
+    schedule_repository.create.side_effect = lambda schedule: schedule
 
     data = MasterScheduleCreate(
         day_of_week=WeekDay.MONDAY,
@@ -833,9 +706,7 @@ async def test_create_schedule_invalidates_cache(
         data=data,
     )
 
-    redis_client.delete.assert_awaited_once_with(
-        f"master:{master.id}:schedule"
-    )
+    redis_client.delete.assert_awaited_once_with(f"master:{master.id}:schedule")
 
 
 @pytest.mark.anyio
@@ -851,9 +722,7 @@ async def test_update_schedule_invalidates_cache(
     )
 
     schedule_repository.get_by_id.return_value = schedule
-    schedule_repository.update.side_effect = (
-        lambda item: item
-    )
+    schedule_repository.update.side_effect = lambda item: item
 
     await schedule_service.update_schedule(
         schedule_id=schedule.id,
@@ -864,9 +733,7 @@ async def test_update_schedule_invalidates_cache(
         ),
     )
 
-    redis_client.delete.assert_awaited_once_with(
-        f"master:{master_id}:schedule"
-    )
+    redis_client.delete.assert_awaited_once_with(f"master:{master_id}:schedule")
 
 
 @pytest.mark.anyio
@@ -888,6 +755,4 @@ async def test_delete_schedule_invalidates_cache(
         master_id=master_id,
     )
 
-    redis_client.delete.assert_awaited_once_with(
-        f"master:{master_id}:schedule"
-    )
+    redis_client.delete.assert_awaited_once_with(f"master:{master_id}:schedule")

@@ -98,16 +98,12 @@ def make_offering_image(
 
 @pytest.fixture
 def image_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=OfferingImageRepository
-    )
+    return AsyncMock(spec=OfferingImageRepository)
 
 
 @pytest.fixture
 def offering_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterOfferingRepository
-    )
+    return AsyncMock(spec=MasterOfferingRepository)
 
 
 @pytest.fixture
@@ -135,22 +131,13 @@ def test_get_image_url(
     image_service: OfferingImageService,
     image_storage,
 ):
-    image_storage.get_url.return_value = (
-        "/uploads/offerings/image.png"
-    )
+    image_storage.get_url.return_value = "/uploads/offerings/image.png"
 
-    result = image_service.get_image_url(
-        "offerings/image.png"
-    )
+    result = image_service.get_image_url("offerings/image.png")
 
-    assert (
-        result
-        == "/uploads/offerings/image.png"
-    )
+    assert result == "/uploads/offerings/image.png"
 
-    image_storage.get_url.assert_called_once_with(
-        "offerings/image.png"
-    )
+    image_storage.get_url.assert_called_once_with("offerings/image.png")
 
 
 @pytest.mark.anyio
@@ -183,29 +170,17 @@ async def test_upload_first_image_supported_formats(
     expected_extension: str,
 ):
     master_id = uuid.uuid4()
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     image_repository.count_by_offering_id.return_value = 0
 
-    image_storage.save.return_value = (
-        f"offerings/image.{expected_extension}"
-    )
+    image_storage.save.return_value = f"offerings/image.{expected_extension}"
 
-    image_repository.create.side_effect = (
-        lambda image: image
-    )
+    image_repository.create.side_effect = lambda image: image
 
-    file = make_upload_file(
-        make_image_bytes(
-            image_format
-        )
-    )
+    file = make_upload_file(make_image_bytes(image_format))
 
     result = await image_service.upload_image(
         offering_id=offering.id,
@@ -214,31 +189,19 @@ async def test_upload_first_image_supported_formats(
     )
 
     assert result.offering_id == offering.id
-    assert (
-        result.storage_key
-        == f"offerings/image.{expected_extension}"
-    )
+    assert result.storage_key == f"offerings/image.{expected_extension}"
     assert result.is_primary is True
     assert result.sort_order == 0
 
-    image_repository.count_by_offering_id.assert_awaited_once_with(
-        offering.id
-    )
+    image_repository.count_by_offering_id.assert_awaited_once_with(offering.id)
 
     image_storage.save.assert_awaited_once()
 
-    save_kwargs = (
-        image_storage.save.await_args.kwargs
-    )
+    save_kwargs = image_storage.save.await_args.kwargs
 
-    assert (
-        save_kwargs["extension"]
-        == expected_extension
-    )
+    assert save_kwargs["extension"] == expected_extension
 
-    image_repository.create.assert_awaited_once_with(
-        result
-    )
+    image_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -249,29 +212,17 @@ async def test_upload_next_image_is_not_primary(
     image_storage,
 ):
     master_id = uuid.uuid4()
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     image_repository.count_by_offering_id.return_value = 3
 
-    image_storage.save.return_value = (
-        "offerings/image.png"
-    )
+    image_storage.save.return_value = "offerings/image.png"
 
-    image_repository.create.side_effect = (
-        lambda image: image
-    )
+    image_repository.create.side_effect = lambda image: image
 
-    file = make_upload_file(
-        make_image_bytes(
-            "PNG"
-        )
-    )
+    file = make_upload_file(make_image_bytes("PNG"))
 
     result = await image_service.upload_image(
         offering_id=offering.id,
@@ -292,17 +243,11 @@ async def test_upload_image_offering_not_found(
 ):
     offering_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingNotFoundError
-    ):
+    with pytest.raises(OfferingNotFoundError):
         await image_service.upload_image(
             offering_id=uuid.uuid4(),
             master_id=uuid.uuid4(),
-            file=make_upload_file(
-                make_image_bytes(
-                    "PNG"
-                )
-            ),
+            file=make_upload_file(make_image_bytes("PNG")),
         )
 
     image_repository.count_by_offering_id.assert_not_awaited()
@@ -318,21 +263,13 @@ async def test_upload_image_access_denied(
 ):
     offering = make_offering()
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    with pytest.raises(
-        OfferingImageAccessDeniedError
-    ):
+    with pytest.raises(OfferingImageAccessDeniedError):
         await image_service.upload_image(
             offering_id=offering.id,
             master_id=uuid.uuid4(),
-            file=make_upload_file(
-                make_image_bytes(
-                    "PNG"
-                )
-            ),
+            file=make_upload_file(make_image_bytes("PNG")),
         )
 
     image_repository.count_by_offering_id.assert_not_awaited()
@@ -348,27 +285,17 @@ async def test_upload_image_limit_exceeded(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     image_repository.count_by_offering_id.return_value = 20
 
-    with pytest.raises(
-        OfferingImageLimitExceededError
-    ):
+    with pytest.raises(OfferingImageLimitExceededError):
         await image_service.upload_image(
             offering_id=offering.id,
             master_id=master_id,
-            file=make_upload_file(
-                make_image_bytes(
-                    "PNG"
-                )
-            ),
+            file=make_upload_file(make_image_bytes("PNG")),
         )
 
     image_storage.save.assert_not_awaited()
@@ -384,25 +311,15 @@ async def test_upload_image_too_large(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     image_repository.count_by_offering_id.return_value = 0
 
-    file = make_upload_file(
-        b"x" * (
-            MAX_IMAGE_SIZE + 1
-        )
-    )
+    file = make_upload_file(b"x" * (MAX_IMAGE_SIZE + 1))
 
-    with pytest.raises(
-        OfferingImageTooLargeError
-    ):
+    with pytest.raises(OfferingImageTooLargeError):
         await image_service.upload_image(
             offering_id=offering.id,
             master_id=master_id,
@@ -422,25 +339,17 @@ async def test_upload_invalid_image_content(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     image_repository.count_by_offering_id.return_value = 0
 
-    with pytest.raises(
-        InvalidOfferingImageTypeError
-    ):
+    with pytest.raises(InvalidOfferingImageTypeError):
         await image_service.upload_image(
             offering_id=offering.id,
             master_id=master_id,
-            file=make_upload_file(
-                b"not-an-image"
-            ),
+            file=make_upload_file(b"not-an-image"),
         )
 
     image_storage.save.assert_not_awaited()
@@ -456,27 +365,17 @@ async def test_upload_unsupported_image_format(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     image_repository.count_by_offering_id.return_value = 0
 
-    with pytest.raises(
-        InvalidOfferingImageTypeError
-    ):
+    with pytest.raises(InvalidOfferingImageTypeError):
         await image_service.upload_image(
             offering_id=offering.id,
             master_id=master_id,
-            file=make_upload_file(
-                make_image_bytes(
-                    "GIF"
-                )
-            ),
+            file=make_upload_file(make_image_bytes("GIF")),
         )
 
     image_storage.save.assert_not_awaited()
@@ -492,23 +391,15 @@ async def test_upload_image_removes_file_when_repository_fails(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     image_repository.count_by_offering_id.return_value = 0
 
-    image_storage.save.return_value = (
-        "offerings/image.png"
-    )
+    image_storage.save.return_value = "offerings/image.png"
 
-    image_repository.create.side_effect = (
-        RuntimeError("database error")
-    )
+    image_repository.create.side_effect = RuntimeError("database error")
 
     with pytest.raises(
         RuntimeError,
@@ -517,16 +408,10 @@ async def test_upload_image_removes_file_when_repository_fails(
         await image_service.upload_image(
             offering_id=offering.id,
             master_id=master_id,
-            file=make_upload_file(
-                make_image_bytes(
-                    "PNG"
-                )
-            ),
+            file=make_upload_file(make_image_bytes("PNG")),
         )
 
-    image_storage.delete.assert_awaited_once_with(
-        "offerings/image.png"
-    )
+    image_storage.delete.assert_awaited_once_with("offerings/image.png")
 
 
 @pytest.mark.anyio
@@ -538,31 +423,19 @@ async def test_get_offering_images(
     offering = make_offering()
 
     images = [
-        make_offering_image(
-            offering_id=offering.id
-        ),
-        make_offering_image(
-            offering_id=offering.id
-        ),
+        make_offering_image(offering_id=offering.id),
+        make_offering_image(offering_id=offering.id),
     ]
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    image_repository.get_by_offering_id.return_value = (
-        images
-    )
+    image_repository.get_by_offering_id.return_value = images
 
-    result = await image_service.get_offering_images(
-        offering.id
-    )
+    result = await image_service.get_offering_images(offering.id)
 
     assert result == images
 
-    image_repository.get_by_offering_id.assert_awaited_once_with(
-        offering.id
-    )
+    image_repository.get_by_offering_id.assert_awaited_once_with(offering.id)
 
 
 @pytest.mark.anyio
@@ -573,12 +446,8 @@ async def test_get_offering_images_offering_not_found(
 ):
     offering_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingNotFoundError
-    ):
-        await image_service.get_offering_images(
-            uuid.uuid4()
-        )
+    with pytest.raises(OfferingNotFoundError):
+        await image_service.get_offering_images(uuid.uuid4())
 
     image_repository.get_by_offering_id.assert_not_awaited()
 
@@ -591,13 +460,9 @@ async def test_set_primary_image(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    image = make_offering_image(
-        offering_id=offering.id
-    )
+    image = make_offering_image(offering_id=offering.id)
 
     updated_image = make_offering_image(
         offering_id=offering.id,
@@ -606,17 +471,11 @@ async def test_set_primary_image(
 
     updated_image.id = image.id
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    image_repository.get_by_id.return_value = (
-        image
-    )
+    image_repository.get_by_id.return_value = image
 
-    image_repository.set_primary.return_value = (
-        updated_image
-    )
+    image_repository.set_primary.return_value = updated_image
 
     result = await image_service.set_primary_image(
         offering_id=offering.id,
@@ -640,9 +499,7 @@ async def test_set_primary_offering_not_found(
 ):
     offering_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingNotFoundError
-    ):
+    with pytest.raises(OfferingNotFoundError):
         await image_service.set_primary_image(
             offering_id=uuid.uuid4(),
             image_id=uuid.uuid4(),
@@ -660,13 +517,9 @@ async def test_set_primary_access_denied(
 ):
     offering = make_offering()
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    with pytest.raises(
-        OfferingImageAccessDeniedError
-    ):
+    with pytest.raises(OfferingImageAccessDeniedError):
         await image_service.set_primary_image(
             offering_id=offering.id,
             image_id=uuid.uuid4(),
@@ -684,19 +537,13 @@ async def test_set_primary_image_not_found(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     image_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingImageNotFoundError
-    ):
+    with pytest.raises(OfferingImageNotFoundError):
         await image_service.set_primary_image(
             offering_id=offering.id,
             image_id=uuid.uuid4(),
@@ -714,25 +561,15 @@ async def test_set_primary_image_from_other_offering(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    image = make_offering_image(
-        offering_id=uuid.uuid4()
-    )
+    image = make_offering_image(offering_id=uuid.uuid4())
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    image_repository.get_by_id.return_value = (
-        image
-    )
+    image_repository.get_by_id.return_value = image
 
-    with pytest.raises(
-        OfferingImageNotFoundError
-    ):
+    with pytest.raises(OfferingImageNotFoundError):
         await image_service.set_primary_image(
             offering_id=offering.id,
             image_id=image.id,
@@ -750,27 +587,17 @@ async def test_set_primary_repository_returns_none(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    image = make_offering_image(
-        offering_id=offering.id
-    )
+    image = make_offering_image(offering_id=offering.id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    image_repository.get_by_id.return_value = (
-        image
-    )
+    image_repository.get_by_id.return_value = image
 
     image_repository.set_primary.return_value = None
 
-    with pytest.raises(
-        OfferingImageNotFoundError
-    ):
+    with pytest.raises(OfferingImageNotFoundError):
         await image_service.set_primary_image(
             offering_id=offering.id,
             image_id=image.id,
@@ -787,22 +614,16 @@ async def test_delete_image(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
     image = make_offering_image(
         offering_id=offering.id,
         storage_key="offerings/image.png",
     )
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    image_repository.get_by_id.return_value = (
-        image
-    )
+    image_repository.get_by_id.return_value = image
 
     result = await image_service.delete_image(
         offering_id=offering.id,
@@ -812,13 +633,9 @@ async def test_delete_image(
 
     assert result is None
 
-    image_repository.delete_with_primary_fallback.assert_awaited_once_with(
-        image
-    )
+    image_repository.delete_with_primary_fallback.assert_awaited_once_with(image)
 
-    image_storage.delete.assert_awaited_once_with(
-        "offerings/image.png"
-    )
+    image_storage.delete.assert_awaited_once_with("offerings/image.png")
 
 
 @pytest.mark.anyio
@@ -830,9 +647,7 @@ async def test_delete_image_offering_not_found(
 ):
     offering_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingNotFoundError
-    ):
+    with pytest.raises(OfferingNotFoundError):
         await image_service.delete_image(
             offering_id=uuid.uuid4(),
             image_id=uuid.uuid4(),
@@ -852,13 +667,9 @@ async def test_delete_image_access_denied(
 ):
     offering = make_offering()
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    with pytest.raises(
-        OfferingImageAccessDeniedError
-    ):
+    with pytest.raises(OfferingImageAccessDeniedError):
         await image_service.delete_image(
             offering_id=offering.id,
             image_id=uuid.uuid4(),
@@ -878,19 +689,13 @@ async def test_delete_image_not_found(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     image_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingImageNotFoundError
-    ):
+    with pytest.raises(OfferingImageNotFoundError):
         await image_service.delete_image(
             offering_id=offering.id,
             image_id=uuid.uuid4(),
@@ -910,25 +715,15 @@ async def test_delete_image_from_other_offering(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    image = make_offering_image(
-        offering_id=uuid.uuid4()
-    )
+    image = make_offering_image(offering_id=uuid.uuid4())
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    image_repository.get_by_id.return_value = (
-        image
-    )
+    image_repository.get_by_id.return_value = image
 
-    with pytest.raises(
-        OfferingImageNotFoundError
-    ):
+    with pytest.raises(OfferingImageNotFoundError):
         await image_service.delete_image(
             offering_id=offering.id,
             image_id=image.id,

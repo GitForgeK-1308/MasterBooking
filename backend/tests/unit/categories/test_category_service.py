@@ -35,18 +35,14 @@ def make_category(
 
 @pytest.fixture
 def category_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=CategoryRepository
-    )
+    return AsyncMock(spec=CategoryRepository)
 
 
 @pytest.fixture
 def category_service(
     category_repository: AsyncMock,
 ) -> CategoryService:
-    return CategoryService(
-        repository=category_repository
-    )
+    return CategoryService(repository=category_repository)
 
 
 @pytest.mark.anyio
@@ -62,9 +58,7 @@ async def test_get_categories(
         ),
     ]
 
-    category_repository.get_active.return_value = (
-        categories
-    )
+    category_repository.get_active.return_value = categories
 
     result = await category_service.get_categories()
 
@@ -87,13 +81,9 @@ async def test_get_all_categories(
         ),
     ]
 
-    category_repository.get_all.return_value = (
-        categories
-    )
+    category_repository.get_all.return_value = categories
 
-    result = (
-        await category_service.get_all_categories()
-    )
+    result = await category_service.get_all_categories()
 
     assert result == categories
 
@@ -107,21 +97,13 @@ async def test_get_category_by_id(
 ):
     category = make_category()
 
-    category_repository.get_by_id.return_value = (
-        category
-    )
+    category_repository.get_by_id.return_value = category
 
-    result = (
-        await category_service.get_category_by_id(
-            category.id
-        )
-    )
+    result = await category_service.get_category_by_id(category.id)
 
     assert result is category
 
-    category_repository.get_by_id.assert_awaited_once_with(
-        category.id
-    )
+    category_repository.get_by_id.assert_awaited_once_with(category.id)
 
 
 @pytest.mark.anyio
@@ -131,20 +113,12 @@ async def test_get_category_by_id_not_found(
 ):
     category_id = uuid.uuid4()
 
-    category_repository.get_by_id.return_value = (
-        None
-    )
+    category_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        CategoryNotFoundError
-    ):
-        await category_service.get_category_by_id(
-            category_id
-        )
+    with pytest.raises(CategoryNotFoundError):
+        await category_service.get_category_by_id(category_id)
 
-    category_repository.get_by_id.assert_awaited_once_with(
-        category_id
-    )
+    category_repository.get_by_id.assert_awaited_once_with(category_id)
 
 
 @pytest.mark.anyio
@@ -157,33 +131,19 @@ async def test_create_category(
         slug=" HAIR-STYLING ",
     )
 
-    category_repository.get_by_name.return_value = (
-        None
-    )
-    category_repository.get_by_slug.return_value = (
-        None
-    )
-    category_repository.create.side_effect = (
-        lambda category: category
-    )
+    category_repository.get_by_name.return_value = None
+    category_repository.get_by_slug.return_value = None
+    category_repository.create.side_effect = lambda category: category
 
-    result = await category_service.create_category(
-        data
-    )
+    result = await category_service.create_category(data)
 
     assert result.name == "Hair Styling"
     assert result.slug == "hair-styling"
     assert result.parent_id is None
 
-    category_repository.get_by_name.assert_awaited_once_with(
-        "Hair Styling"
-    )
-    category_repository.get_by_slug.assert_awaited_once_with(
-        "hair-styling"
-    )
-    category_repository.create.assert_awaited_once_with(
-        result
-    )
+    category_repository.get_by_name.assert_awaited_once_with("Hair Styling")
+    category_repository.get_by_slug.assert_awaited_once_with("hair-styling")
+    category_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -193,21 +153,15 @@ async def test_create_category_duplicate_name(
 ):
     existing_category = make_category()
 
-    category_repository.get_by_name.return_value = (
-        existing_category
-    )
+    category_repository.get_by_name.return_value = existing_category
 
     data = CategoryCreate(
         name="Beauty",
         slug="other",
     )
 
-    with pytest.raises(
-        CategoryAlreadyExistsError
-    ):
-        await category_service.create_category(
-            data
-        )
+    with pytest.raises(CategoryAlreadyExistsError):
+        await category_service.create_category(data)
 
     category_repository.get_by_slug.assert_not_awaited()
     category_repository.create.assert_not_awaited()
@@ -220,28 +174,18 @@ async def test_create_category_duplicate_slug(
 ):
     existing_category = make_category()
 
-    category_repository.get_by_name.return_value = (
-        None
-    )
-    category_repository.get_by_slug.return_value = (
-        existing_category
-    )
+    category_repository.get_by_name.return_value = None
+    category_repository.get_by_slug.return_value = existing_category
 
     data = CategoryCreate(
         name="Other",
         slug=" BEAUTY ",
     )
 
-    with pytest.raises(
-        CategoryAlreadyExistsError
-    ):
-        await category_service.create_category(
-            data
-        )
+    with pytest.raises(CategoryAlreadyExistsError):
+        await category_service.create_category(data)
 
-    category_repository.get_by_slug.assert_awaited_once_with(
-        "beauty"
-    )
+    category_repository.get_by_slug.assert_awaited_once_with("beauty")
     category_repository.create.assert_not_awaited()
 
 
@@ -252,18 +196,10 @@ async def test_create_category_with_parent(
 ):
     parent = make_category()
 
-    category_repository.get_by_name.return_value = (
-        None
-    )
-    category_repository.get_by_slug.return_value = (
-        None
-    )
-    category_repository.get_by_id.return_value = (
-        parent
-    )
-    category_repository.create.side_effect = (
-        lambda category: category
-    )
+    category_repository.get_by_name.return_value = None
+    category_repository.get_by_slug.return_value = None
+    category_repository.get_by_id.return_value = parent
+    category_repository.create.side_effect = lambda category: category
 
     data = CategoryCreate(
         name="Hair",
@@ -271,18 +207,12 @@ async def test_create_category_with_parent(
         parent_id=parent.id,
     )
 
-    result = await category_service.create_category(
-        data
-    )
+    result = await category_service.create_category(data)
 
     assert result.parent_id == parent.id
 
-    category_repository.get_by_id.assert_awaited_once_with(
-        parent.id
-    )
-    category_repository.create.assert_awaited_once_with(
-        result
-    )
+    category_repository.get_by_id.assert_awaited_once_with(parent.id)
+    category_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -292,15 +222,9 @@ async def test_create_category_parent_not_found(
 ):
     parent_id = uuid.uuid4()
 
-    category_repository.get_by_name.return_value = (
-        None
-    )
-    category_repository.get_by_slug.return_value = (
-        None
-    )
-    category_repository.get_by_id.return_value = (
-        None
-    )
+    category_repository.get_by_name.return_value = None
+    category_repository.get_by_slug.return_value = None
+    category_repository.get_by_id.return_value = None
 
     data = CategoryCreate(
         name="Hair",
@@ -308,12 +232,8 @@ async def test_create_category_parent_not_found(
         parent_id=parent_id,
     )
 
-    with pytest.raises(
-        CategoryNotFoundError
-    ):
-        await category_service.create_category(
-            data
-        )
+    with pytest.raises(CategoryNotFoundError):
+        await category_service.create_category(data)
 
     category_repository.create.assert_not_awaited()
 
@@ -325,18 +245,10 @@ async def test_update_category(
 ):
     category = make_category()
 
-    category_repository.get_by_id.return_value = (
-        category
-    )
-    category_repository.get_by_name.return_value = (
-        None
-    )
-    category_repository.get_by_slug.return_value = (
-        None
-    )
-    category_repository.update.side_effect = (
-        lambda category: category
-    )
+    category_repository.get_by_id.return_value = category
+    category_repository.get_by_name.return_value = None
+    category_repository.get_by_slug.return_value = None
+    category_repository.update.side_effect = lambda category: category
 
     data = CategoryUpdate(
         name="  New   Beauty ",
@@ -354,9 +266,7 @@ async def test_update_category(
     assert category.slug == "new-beauty"
     assert category.is_active is False
 
-    category_repository.update.assert_awaited_once_with(
-        category
-    )
+    category_repository.update.assert_awaited_once_with(category)
 
 
 @pytest.mark.anyio
@@ -371,20 +281,12 @@ async def test_update_category_duplicate_name(
         slug="nails",
     )
 
-    category_repository.get_by_id.return_value = (
-        category
-    )
-    category_repository.get_by_name.return_value = (
-        existing_category
-    )
+    category_repository.get_by_id.return_value = category
+    category_repository.get_by_name.return_value = existing_category
 
-    data = CategoryUpdate(
-        name="Nails"
-    )
+    data = CategoryUpdate(name="Nails")
 
-    with pytest.raises(
-        CategoryAlreadyExistsError
-    ):
+    with pytest.raises(CategoryAlreadyExistsError):
         await category_service.update_category(
             category_id=category.id,
             data=data,
@@ -405,20 +307,12 @@ async def test_update_category_duplicate_slug(
         slug="nails",
     )
 
-    category_repository.get_by_id.return_value = (
-        category
-    )
-    category_repository.get_by_slug.return_value = (
-        existing_category
-    )
+    category_repository.get_by_id.return_value = category
+    category_repository.get_by_slug.return_value = existing_category
 
-    data = CategoryUpdate(
-        slug="nails"
-    )
+    data = CategoryUpdate(slug="nails")
 
-    with pytest.raises(
-        CategoryAlreadyExistsError
-    ):
+    with pytest.raises(CategoryAlreadyExistsError):
         await category_service.update_category(
             category_id=category.id,
             data=data,
@@ -434,17 +328,11 @@ async def test_update_category_cannot_be_own_parent(
 ):
     category = make_category()
 
-    category_repository.get_by_id.return_value = (
-        category
-    )
+    category_repository.get_by_id.return_value = category
 
-    data = CategoryUpdate(
-        parent_id=category.id
-    )
+    data = CategoryUpdate(parent_id=category.id)
 
-    with pytest.raises(
-        CategoryInvalidParentError
-    ):
+    with pytest.raises(CategoryInvalidParentError):
         await category_service.update_category(
             category_id=category.id,
             data=data,
@@ -466,13 +354,9 @@ async def test_update_category_parent_not_found(
         None,
     ]
 
-    data = CategoryUpdate(
-        parent_id=parent_id
-    )
+    data = CategoryUpdate(parent_id=parent_id)
 
-    with pytest.raises(
-        CategoryNotFoundError
-    ):
+    with pytest.raises(CategoryNotFoundError):
         await category_service.update_category(
             category_id=category.id,
             data=data,
@@ -500,13 +384,9 @@ async def test_update_category_prevents_cycle(
         category,
     ]
 
-    data = CategoryUpdate(
-        parent_id=child.id
-    )
+    data = CategoryUpdate(parent_id=child.id)
 
-    with pytest.raises(
-        CategoryInvalidParentError
-    ):
+    with pytest.raises(CategoryInvalidParentError):
         await category_service.update_category(
             category_id=category.id,
             data=data,
@@ -522,20 +402,12 @@ async def test_update_category_can_remove_parent(
 ):
     parent_id = uuid.uuid4()
 
-    category = make_category(
-        parent_id=parent_id
-    )
+    category = make_category(parent_id=parent_id)
 
-    category_repository.get_by_id.return_value = (
-        category
-    )
-    category_repository.update.side_effect = (
-        lambda category: category
-    )
+    category_repository.get_by_id.return_value = category
+    category_repository.update.side_effect = lambda category: category
 
-    data = CategoryUpdate(
-        parent_id=None
-    )
+    data = CategoryUpdate(parent_id=None)
 
     result = await category_service.update_category(
         category_id=category.id,
@@ -544,9 +416,7 @@ async def test_update_category_can_remove_parent(
 
     assert result.parent_id is None
 
-    category_repository.update.assert_awaited_once_with(
-        category
-    )
+    category_repository.update.assert_awaited_once_with(category)
 
 
 @pytest.mark.anyio
@@ -577,9 +447,7 @@ async def test_get_category_tree(
         grandchild,
     ]
 
-    result = (
-        await category_service.get_category_tree()
-    )
+    result = await category_service.get_category_tree()
 
     assert len(result) == 1
 
@@ -617,18 +485,11 @@ async def test_get_category_tree_treats_category_with_missing_parent_as_root(
         parent_id=missing_parent_id,
     )
 
-    category_repository.get_active.return_value = [
-        category
-    ]
+    category_repository.get_active.return_value = [category]
 
-    result = (
-        await category_service.get_category_tree()
-    )
+    result = await category_service.get_category_tree()
 
     assert len(result) == 1
     assert result[0].id == category.id
-    assert (
-        result[0].parent_id
-        == missing_parent_id
-    )
+    assert result[0].parent_id == missing_parent_id
     assert result[0].children == []

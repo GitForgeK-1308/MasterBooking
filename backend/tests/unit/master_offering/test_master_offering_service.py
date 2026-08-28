@@ -82,30 +82,22 @@ def make_tag(
 
 @pytest.fixture
 def offering_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterOfferingRepository
-    )
+    return AsyncMock(spec=MasterOfferingRepository)
 
 
 @pytest.fixture
 def category_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=CategoryRepository
-    )
+    return AsyncMock(spec=CategoryRepository)
 
 
 @pytest.fixture
 def tag_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=TagRepository
-    )
+    return AsyncMock(spec=TagRepository)
 
 
 @pytest.fixture
 def image_repository() -> AsyncMock:
-    repository = AsyncMock(
-        spec=OfferingImageRepository
-    )
+    repository = AsyncMock(spec=OfferingImageRepository)
 
     repository.get_by_offering_id.return_value = []
 
@@ -114,9 +106,7 @@ def image_repository() -> AsyncMock:
 
 @pytest.fixture
 def image_storage() -> AsyncMock:
-    return AsyncMock(
-        spec=LocalImageStorage
-    )
+    return AsyncMock(spec=LocalImageStorage)
 
 
 @pytest.fixture
@@ -145,15 +135,11 @@ async def test_get_offering_by_id(
 
     offering_repository.get_by_id.return_value = offering
 
-    result = await offering_service.get_offering_by_id(
-        offering.id
-    )
+    result = await offering_service.get_offering_by_id(offering.id)
 
     assert result is offering
 
-    offering_repository.get_by_id.assert_awaited_once_with(
-        offering.id
-    )
+    offering_repository.get_by_id.assert_awaited_once_with(offering.id)
 
 
 @pytest.mark.anyio
@@ -163,21 +149,13 @@ async def test_get_public_offering_by_id(
 ):
     offering = make_offering()
 
-    offering_repository.get_public_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_public_by_id.return_value = offering
 
-    result = (
-        await offering_service.get_public_offering_by_id(
-            offering.id
-        )
-    )
+    result = await offering_service.get_public_offering_by_id(offering.id)
 
     assert result is offering
 
-    offering_repository.get_public_by_id.assert_awaited_once_with(
-        offering.id
-    )
+    offering_repository.get_public_by_id.assert_awaited_once_with(offering.id)
 
 
 @pytest.mark.anyio
@@ -189,12 +167,8 @@ async def test_get_public_offering_by_id_not_found(
 
     offering_repository.get_public_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingNotFoundError
-    ):
-        await offering_service.get_public_offering_by_id(
-            offering_id
-        )
+    with pytest.raises(OfferingNotFoundError):
+        await offering_service.get_public_offering_by_id(offering_id)
 
 
 @pytest.mark.anyio
@@ -227,25 +201,17 @@ async def test_create_offering(
     category_id = uuid.uuid4()
     tag_id = uuid.uuid4()
 
-    category = make_category(
-        category_id=category_id
-    )
+    category = make_category(category_id=category_id)
 
-    tag = make_tag(
-        tag_id=tag_id
-    )
+    tag = make_tag(tag_id=tag_id)
 
-    category_repository.get_by_id.return_value = (
-        category
-    )
+    category_repository.get_by_id.return_value = category
 
     tag_repository.get_by_ids.return_value = [
         tag,
     ]
 
-    offering_repository.create.side_effect = (
-        lambda offering: offering
-    )
+    offering_repository.create.side_effect = lambda offering: offering
 
     data = MasterOfferingCreate(
         category_id=category_id,
@@ -266,19 +232,14 @@ async def test_create_offering(
     assert result.master_id == master_id
     assert result.category_id == category_id
     assert result.title == "Hair Styling"
-    assert (
-        result.description
-        == "Professional styling."
-    )
+    assert result.description == "Professional styling."
     assert result.price == Decimal("35.50")
     assert result.duration_minutes == 60
     assert result.tags == [
         tag,
     ]
 
-    category_repository.get_by_id.assert_awaited_once_with(
-        category_id
-    )
+    category_repository.get_by_id.assert_awaited_once_with(category_id)
 
     tag_repository.get_by_ids.assert_awaited_once_with(
         [
@@ -286,9 +247,7 @@ async def test_create_offering(
         ]
     )
 
-    offering_repository.create.assert_awaited_once_with(
-        result
-    )
+    offering_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -310,9 +269,7 @@ async def test_create_offering_category_not_found(
         duration_minutes=60,
     )
 
-    with pytest.raises(
-        CategoryNotFoundError
-    ):
+    with pytest.raises(CategoryNotFoundError):
         await offering_service.create_offering(
             master_id=uuid.uuid4(),
             data=data,
@@ -331,11 +288,9 @@ async def test_create_offering_inactive_category(
 ):
     category_id = uuid.uuid4()
 
-    category_repository.get_by_id.return_value = (
-        make_category(
-            category_id=category_id,
-            is_active=False,
-        )
+    category_repository.get_by_id.return_value = make_category(
+        category_id=category_id,
+        is_active=False,
     )
 
     data = MasterOfferingCreate(
@@ -346,9 +301,7 @@ async def test_create_offering_inactive_category(
         duration_minutes=60,
     )
 
-    with pytest.raises(
-        CategoryInactiveError
-    ):
+    with pytest.raises(CategoryInactiveError):
         await offering_service.create_offering(
             master_id=uuid.uuid4(),
             data=data,
@@ -368,11 +321,7 @@ async def test_create_offering_tag_not_found(
     category_id = uuid.uuid4()
     tag_id = uuid.uuid4()
 
-    category_repository.get_by_id.return_value = (
-        make_category(
-            category_id=category_id
-        )
-    )
+    category_repository.get_by_id.return_value = make_category(category_id=category_id)
 
     tag_repository.get_by_ids.return_value = []
 
@@ -387,9 +336,7 @@ async def test_create_offering_tag_not_found(
         ],
     )
 
-    with pytest.raises(
-        TagNotFoundError
-    ):
+    with pytest.raises(TagNotFoundError):
         await offering_service.create_offering(
             master_id=uuid.uuid4(),
             data=data,
@@ -408,11 +355,7 @@ async def test_create_offering_inactive_tag(
     category_id = uuid.uuid4()
     tag_id = uuid.uuid4()
 
-    category_repository.get_by_id.return_value = (
-        make_category(
-            category_id=category_id
-        )
-    )
+    category_repository.get_by_id.return_value = make_category(category_id=category_id)
 
     tag_repository.get_by_ids.return_value = [
         make_tag(
@@ -432,9 +375,7 @@ async def test_create_offering_inactive_tag(
         ],
     )
 
-    with pytest.raises(
-        TagInactiveError
-    ):
+    with pytest.raises(TagInactiveError):
         await offering_service.create_offering(
             master_id=uuid.uuid4(),
             data=data,
@@ -453,23 +394,15 @@ async def test_create_offering_deduplicates_tag_ids(
     category_id = uuid.uuid4()
     tag_id = uuid.uuid4()
 
-    category_repository.get_by_id.return_value = (
-        make_category(
-            category_id=category_id
-        )
-    )
+    category_repository.get_by_id.return_value = make_category(category_id=category_id)
 
-    tag = make_tag(
-        tag_id=tag_id
-    )
+    tag = make_tag(tag_id=tag_id)
 
     tag_repository.get_by_ids.return_value = [
         tag,
     ]
 
-    offering_repository.create.side_effect = (
-        lambda offering: offering
-    )
+    offering_repository.create.side_effect = lambda offering: offering
 
     data = MasterOfferingCreate(
         category_id=category_id,
@@ -508,15 +441,11 @@ async def test_update_offering_not_found(
 
     offering_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingNotFoundError
-    ):
+    with pytest.raises(OfferingNotFoundError):
         await offering_service.update_offering(
             offering_id=offering_id,
             master_id=uuid.uuid4(),
-            data=MasterOfferingUpdate(
-                title="Updated Service"
-            ),
+            data=MasterOfferingUpdate(title="Updated Service"),
         )
 
     offering_repository.update.assert_not_awaited()
@@ -531,15 +460,11 @@ async def test_update_offering_access_denied(
 
     offering_repository.get_by_id.return_value = offering
 
-    with pytest.raises(
-        OfferingAccessDeniedError
-    ):
+    with pytest.raises(OfferingAccessDeniedError):
         await offering_service.update_offering(
             offering_id=offering.id,
             master_id=uuid.uuid4(),
-            data=MasterOfferingUpdate(
-                title="Updated Service"
-            ),
+            data=MasterOfferingUpdate(title="Updated Service"),
         )
 
     offering_repository.update.assert_not_awaited()
@@ -554,17 +479,11 @@ async def test_update_offering(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    offering_repository.update.side_effect = (
-        lambda offering: offering
-    )
+    offering_repository.update.side_effect = lambda offering: offering
 
     data = MasterOfferingUpdate(
         title="Updated Service",
@@ -581,19 +500,14 @@ async def test_update_offering(
 
     assert result is offering
     assert offering.title == "Updated Service"
-    assert (
-        offering.description
-        == "Updated description."
-    )
+    assert offering.description == "Updated description."
     assert offering.price == Decimal("45.75")
     assert offering.duration_minutes == 90
 
     category_repository.get_by_id.assert_not_awaited()
     tag_repository.get_by_ids.assert_not_awaited()
 
-    offering_repository.update.assert_awaited_once_with(
-        offering
-    )
+    offering_repository.update.assert_awaited_once_with(offering)
 
 
 @pytest.mark.anyio
@@ -604,27 +518,19 @@ async def test_update_offering_category_not_found(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
     category_id = uuid.uuid4()
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     category_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        CategoryNotFoundError
-    ):
+    with pytest.raises(CategoryNotFoundError):
         await offering_service.update_offering(
             offering_id=offering.id,
             master_id=master_id,
-            data=MasterOfferingUpdate(
-                category_id=category_id
-            ),
+            data=MasterOfferingUpdate(category_id=category_id),
         )
 
     offering_repository.update.assert_not_awaited()
@@ -638,32 +544,22 @@ async def test_update_offering_inactive_category(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
     category_id = uuid.uuid4()
 
-    offering_repository.get_by_id.return_value = (
-        offering
+    offering_repository.get_by_id.return_value = offering
+
+    category_repository.get_by_id.return_value = make_category(
+        category_id=category_id,
+        is_active=False,
     )
 
-    category_repository.get_by_id.return_value = (
-        make_category(
-            category_id=category_id,
-            is_active=False,
-        )
-    )
-
-    with pytest.raises(
-        CategoryInactiveError
-    ):
+    with pytest.raises(CategoryInactiveError):
         await offering_service.update_offering(
             offering_id=offering.id,
             master_id=master_id,
-            data=MasterOfferingUpdate(
-                category_id=category_id
-            ),
+            data=MasterOfferingUpdate(category_id=category_id),
         )
 
     offering_repository.update.assert_not_awaited()
@@ -677,23 +573,15 @@ async def test_update_offering_tags(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
     tag_id = uuid.uuid4()
 
-    tag = make_tag(
-        tag_id=tag_id
-    )
+    tag = make_tag(tag_id=tag_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    offering_repository.update.side_effect = (
-        lambda offering: offering
-    )
+    offering_repository.update.side_effect = lambda offering: offering
 
     tag_repository.get_by_ids.return_value = [
         tag,
@@ -719,9 +607,7 @@ async def test_update_offering_tags(
         ]
     )
 
-    offering_repository.update.assert_awaited_once_with(
-        offering
-    )
+    offering_repository.update.assert_awaited_once_with(offering)
 
 
 @pytest.mark.anyio
@@ -731,9 +617,7 @@ async def test_delete_offering_not_found(
 ):
     offering_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingNotFoundError
-    ):
+    with pytest.raises(OfferingNotFoundError):
         await offering_service.delete_offering(
             offering_id=uuid.uuid4(),
             master_id=uuid.uuid4(),
@@ -752,9 +636,7 @@ async def test_delete_offering_access_denied(
 
     offering_repository.get_by_id.return_value = offering
 
-    with pytest.raises(
-        OfferingAccessDeniedError
-    ):
+    with pytest.raises(OfferingAccessDeniedError):
         await offering_service.delete_offering(
             offering_id=offering.id,
             master_id=uuid.uuid4(),
@@ -773,21 +655,13 @@ async def test_delete_offering_without_bookings_hard_deletes(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    first_image = SimpleNamespace(
-        storage_key="offerings/first.jpg"
-    )
+    first_image = SimpleNamespace(storage_key="offerings/first.jpg")
 
-    second_image = SimpleNamespace(
-        storage_key="offerings/second.webp"
-    )
+    second_image = SimpleNamespace(storage_key="offerings/second.webp")
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     offering_repository.has_bookings.return_value = False
 
@@ -803,27 +677,17 @@ async def test_delete_offering_without_bookings_hard_deletes(
 
     assert result is None
 
-    offering_repository.has_bookings.assert_awaited_once_with(
-        offering.id
-    )
+    offering_repository.has_bookings.assert_awaited_once_with(offering.id)
 
-    image_repository.get_by_offering_id.assert_awaited_once_with(
-        offering.id
-    )
+    image_repository.get_by_offering_id.assert_awaited_once_with(offering.id)
 
-    offering_repository.hard_delete.assert_awaited_once_with(
-        offering
-    )
+    offering_repository.hard_delete.assert_awaited_once_with(offering)
 
     assert image_storage.delete.await_count == 2
 
-    image_storage.delete.assert_any_await(
-        "offerings/first.jpg"
-    )
+    image_storage.delete.assert_any_await("offerings/first.jpg")
 
-    image_storage.delete.assert_any_await(
-        "offerings/second.webp"
-    )
+    image_storage.delete.assert_any_await("offerings/second.webp")
 
     offering_repository.update.assert_not_awaited()
 
@@ -835,13 +699,9 @@ async def test_delete_offering_with_bookings_deactivates(
 ):
     master_id = uuid.uuid4()
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
     offering_repository.has_bookings.return_value = True
 
@@ -852,9 +712,7 @@ async def test_delete_offering_with_bookings_deactivates(
 
     assert offering.is_active is False
 
-    offering_repository.update.assert_awaited_once_with(
-        offering
-    )
+    offering_repository.update.assert_awaited_once_with(offering)
 
     offering_repository.hard_delete.assert_not_awaited()
 
@@ -867,14 +725,10 @@ async def test_get_master_offerings(
     master_id = uuid.uuid4()
 
     offerings = [
-        make_offering(
-            master_id=master_id
-        ),
+        make_offering(master_id=master_id),
     ]
 
-    offering_repository.get_by_master_id.return_value = (
-        offerings
-    )
+    offering_repository.get_by_master_id.return_value = offerings
 
     result = await offering_service.get_master_offerings(
         master_id=master_id,

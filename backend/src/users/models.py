@@ -72,9 +72,7 @@ class User(Base):
         SQLAlchemyEnum(
             UserRole,
             name="user_role_enum",
-            values_callable=lambda enum: [
-                role.value for role in enum
-            ],
+            values_callable=lambda enum: [role.value for role in enum],
         ),
         default=UserRole.CLIENT,
         nullable=False,
@@ -105,7 +103,6 @@ class User(Base):
     bookings: Mapped[list["Booking"]] = relationship(
         back_populates="client",
     )
-
 
     @property
     def avatar_url(self) -> str | None:

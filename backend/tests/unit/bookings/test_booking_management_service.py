@@ -28,18 +28,14 @@ def make_user(
     *,
     user_id: uuid.UUID | None = None,
 ):
-    return SimpleNamespace(
-        id=user_id or uuid.uuid4()
-    )
+    return SimpleNamespace(id=user_id or uuid.uuid4())
 
 
 def make_master(
     *,
     master_id: uuid.UUID | None = None,
 ):
-    return SimpleNamespace(
-        id=master_id or uuid.uuid4()
-    )
+    return SimpleNamespace(id=master_id or uuid.uuid4())
 
 
 def make_booking(
@@ -48,12 +44,7 @@ def make_booking(
     master_id: uuid.UUID | None = None,
     status: BookingStatus = BookingStatus.PENDING,
 ):
-    booking_date = (
-        date.today()
-        + timedelta(
-            days=7
-        )
-    )
+    booking_date = date.today() + timedelta(days=7)
 
     return SimpleNamespace(
         id=uuid.uuid4(),
@@ -75,30 +66,22 @@ def make_booking(
 
 @pytest.fixture
 def booking_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=BookingRepository
-    )
+    return AsyncMock(spec=BookingRepository)
 
 
 @pytest.fixture
 def master_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterRepository
-    )
+    return AsyncMock(spec=MasterRepository)
 
 
 @pytest.fixture
 def offering_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterOfferingRepository
-    )
+    return AsyncMock(spec=MasterOfferingRepository)
 
 
 @pytest.fixture
 def schedule_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterScheduleRepository
-    )
+    return AsyncMock(spec=MasterScheduleRepository)
 
 
 @pytest.fixture
@@ -124,13 +107,9 @@ async def test_get_booking_for_client(
 ):
     user = make_user()
 
-    booking = make_booking(
-        client_id=user.id
-    )
+    booking = make_booking(client_id=user.id)
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
     result = await booking_service.get_booking_for_user(
         booking_id=booking.id,
@@ -139,9 +118,7 @@ async def test_get_booking_for_client(
 
     assert result is booking
 
-    booking_repository.get_by_id.assert_awaited_once_with(
-        booking.id
-    )
+    booking_repository.get_by_id.assert_awaited_once_with(booking.id)
 
     master_repository.get_by_user_id.assert_not_awaited()
 
@@ -155,17 +132,11 @@ async def test_get_booking_for_master(
     user = make_user()
     master = make_master()
 
-    booking = make_booking(
-        master_id=master.id
-    )
+    booking = make_booking(master_id=master.id)
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    master_repository.get_by_user_id.return_value = (
-        master
-    )
+    master_repository.get_by_user_id.return_value = master
 
     result = await booking_service.get_booking_for_user(
         booking_id=booking.id,
@@ -174,9 +145,7 @@ async def test_get_booking_for_master(
 
     assert result is booking
 
-    master_repository.get_by_user_id.assert_awaited_once_with(
-        user.id
-    )
+    master_repository.get_by_user_id.assert_awaited_once_with(user.id)
 
 
 @pytest.mark.anyio
@@ -185,13 +154,9 @@ async def test_get_booking_not_found(
     booking_repository: AsyncMock,
     master_repository: AsyncMock,
 ):
-    booking_repository.get_by_id.return_value = (
-        None
-    )
+    booking_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        BookingNotFoundError
-    ):
+    with pytest.raises(BookingNotFoundError):
         await booking_service.get_booking_for_user(
             booking_id=uuid.uuid4(),
             current_user=make_user(),
@@ -208,27 +173,19 @@ async def test_get_booking_access_denied_for_other_client(
 ):
     booking = make_booking()
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    master_repository.get_by_user_id.return_value = (
-        None
-    )
+    master_repository.get_by_user_id.return_value = None
 
     user = make_user()
 
-    with pytest.raises(
-        BookingAccessDeniedError
-    ):
+    with pytest.raises(BookingAccessDeniedError):
         await booking_service.get_booking_for_user(
             booking_id=booking.id,
             current_user=user,
         )
 
-    master_repository.get_by_user_id.assert_awaited_once_with(
-        user.id
-    )
+    master_repository.get_by_user_id.assert_awaited_once_with(user.id)
 
 
 @pytest.mark.anyio
@@ -241,26 +198,17 @@ async def test_get_booking_access_denied_for_other_master(
 
     other_master = make_master()
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    master_repository.get_by_user_id.return_value = (
-        other_master
-    )
+    master_repository.get_by_user_id.return_value = other_master
 
-    with pytest.raises(
-        BookingAccessDeniedError
-    ):
+    with pytest.raises(BookingAccessDeniedError):
         await booking_service.get_booking_for_user(
             booking_id=booking.id,
             current_user=make_user(),
         )
 
-    assert (
-        other_master.id
-        != booking.master_id
-    )
+    assert other_master.id != booking.master_id
 
 
 @pytest.mark.anyio
@@ -271,29 +219,16 @@ async def test_get_master_bookings(
 ):
     master = make_master()
 
-    booking_date = (
-        date.today()
-        + timedelta(
-            days=7
-        )
-    )
+    booking_date = date.today() + timedelta(days=7)
 
     bookings = [
-        make_booking(
-            master_id=master.id
-        ),
-        make_booking(
-            master_id=master.id
-        ),
+        make_booking(master_id=master.id),
+        make_booking(master_id=master.id),
     ]
 
-    master_repository.get_by_id.return_value = (
-        master
-    )
+    master_repository.get_by_id.return_value = master
 
-    booking_repository.get_by_master_and_date.return_value = (
-        bookings
-    )
+    booking_repository.get_by_master_and_date.return_value = bookings
 
     result = await booking_service.get_master_bookings(
         master_id=master.id,
@@ -302,9 +237,7 @@ async def test_get_master_bookings(
 
     assert result == bookings
 
-    master_repository.get_by_id.assert_awaited_once_with(
-        master.id
-    )
+    master_repository.get_by_id.assert_awaited_once_with(master.id)
 
     booking_repository.get_by_master_and_date.assert_awaited_once_with(
         master_id=master.id,
@@ -318,13 +251,9 @@ async def test_get_master_bookings_master_not_found(
     booking_repository: AsyncMock,
     master_repository: AsyncMock,
 ):
-    master_repository.get_by_id.return_value = (
-        None
-    )
+    master_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        MasterNotFoundError
-    ):
+    with pytest.raises(MasterNotFoundError):
         await booking_service.get_master_bookings(
             master_id=uuid.uuid4(),
             booking_date=date.today(),
@@ -341,27 +270,17 @@ async def test_get_client_bookings(
     client_id = uuid.uuid4()
 
     bookings = [
-        make_booking(
-            client_id=client_id
-        ),
-        make_booking(
-            client_id=client_id
-        ),
+        make_booking(client_id=client_id),
+        make_booking(client_id=client_id),
     ]
 
-    booking_repository.get_by_client_id.return_value = (
-        bookings
-    )
+    booking_repository.get_by_client_id.return_value = bookings
 
-    result = await booking_service.get_client_bookings(
-        client_id
-    )
+    result = await booking_service.get_client_bookings(client_id)
 
     assert result == bookings
 
-    booking_repository.get_by_client_id.assert_awaited_once_with(
-        client_id
-    )
+    booking_repository.get_by_client_id.assert_awaited_once_with(client_id)
 
 
 @pytest.mark.anyio
@@ -402,28 +321,20 @@ async def test_update_booking_status_allowed(
         status=initial_status,
     )
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    booking_repository.update.side_effect = (
-        lambda item: item
-    )
+    booking_repository.update.side_effect = lambda item: item
 
     result = await booking_service.update_booking_status(
         booking_id=booking.id,
         master_id=master_id,
-        data=BookingStatusUpdate(
-            status=new_status
-        ),
+        data=BookingStatusUpdate(status=new_status),
     )
 
     assert result is booking
     assert result.status == new_status
 
-    booking_repository.update.assert_awaited_once_with(
-        booking
-    )
+    booking_repository.update.assert_awaited_once_with(booking)
 
 
 @pytest.mark.anyio
@@ -431,19 +342,13 @@ async def test_update_booking_status_not_found(
     booking_service: BookingService,
     booking_repository: AsyncMock,
 ):
-    booking_repository.get_by_id.return_value = (
-        None
-    )
+    booking_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        BookingNotFoundError
-    ):
+    with pytest.raises(BookingNotFoundError):
         await booking_service.update_booking_status(
             booking_id=uuid.uuid4(),
             master_id=uuid.uuid4(),
-            data=BookingStatusUpdate(
-                status=BookingStatus.CONFIRMED
-            ),
+            data=BookingStatusUpdate(status=BookingStatus.CONFIRMED),
         )
 
     booking_repository.update.assert_not_awaited()
@@ -456,19 +361,13 @@ async def test_update_booking_status_access_denied(
 ):
     booking = make_booking()
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    with pytest.raises(
-        BookingAccessDeniedError
-    ):
+    with pytest.raises(BookingAccessDeniedError):
         await booking_service.update_booking_status(
             booking_id=booking.id,
             master_id=uuid.uuid4(),
-            data=BookingStatusUpdate(
-                status=BookingStatus.CONFIRMED
-            ),
+            data=BookingStatusUpdate(status=BookingStatus.CONFIRMED),
         )
 
     booking_repository.update.assert_not_awaited()
@@ -512,19 +411,13 @@ async def test_update_booking_status_invalid_transition(
         status=initial_status,
     )
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    with pytest.raises(
-        InvalidBookingStatusTransitionError
-    ):
+    with pytest.raises(InvalidBookingStatusTransitionError):
         await booking_service.update_booking_status(
             booking_id=booking.id,
             master_id=master_id,
-            data=BookingStatusUpdate(
-                status=new_status
-            ),
+            data=BookingStatusUpdate(status=new_status),
         )
 
     booking_repository.update.assert_not_awaited()
@@ -552,13 +445,9 @@ async def test_cancel_client_booking(
         status=initial_status,
     )
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    booking_repository.update.side_effect = (
-        lambda item: item
-    )
+    booking_repository.update.side_effect = lambda item: item
 
     result = await booking_service.cancel_client_booking(
         booking_id=booking.id,
@@ -567,14 +456,9 @@ async def test_cancel_client_booking(
 
     assert result is booking
 
-    assert (
-        result.status
-        == BookingStatus.CANCELLED
-    )
+    assert result.status == BookingStatus.CANCELLED
 
-    booking_repository.update.assert_awaited_once_with(
-        booking
-    )
+    booking_repository.update.assert_awaited_once_with(booking)
 
 
 @pytest.mark.anyio
@@ -582,13 +466,9 @@ async def test_cancel_client_booking_not_found(
     booking_service: BookingService,
     booking_repository: AsyncMock,
 ):
-    booking_repository.get_by_id.return_value = (
-        None
-    )
+    booking_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        BookingNotFoundError
-    ):
+    with pytest.raises(BookingNotFoundError):
         await booking_service.cancel_client_booking(
             booking_id=uuid.uuid4(),
             client_id=uuid.uuid4(),
@@ -604,13 +484,9 @@ async def test_cancel_client_booking_access_denied(
 ):
     booking = make_booking()
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    with pytest.raises(
-        BookingAccessDeniedError
-    ):
+    with pytest.raises(BookingAccessDeniedError):
         await booking_service.cancel_client_booking(
             booking_id=booking.id,
             client_id=uuid.uuid4(),
@@ -639,13 +515,9 @@ async def test_cancel_client_booking_invalid_status(
         status=initial_status,
     )
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    with pytest.raises(
-        InvalidBookingStatusTransitionError
-    ):
+    with pytest.raises(InvalidBookingStatusTransitionError):
         await booking_service.cancel_client_booking(
             booking_id=booking.id,
             client_id=client_id,

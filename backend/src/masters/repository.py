@@ -19,11 +19,7 @@ class MasterRepository:
     ) -> list[Master]:
         result = await self.session.scalars(
             select(Master)
-            .options(
-                selectinload(
-                    Master.user
-                )
-            )
+            .options(selectinload(Master.user))
             .order_by(
                 Master.last_name.asc(),
                 Master.first_name.asc(),
@@ -38,14 +34,8 @@ class MasterRepository:
     ) -> list[Master]:
         result = await self.session.scalars(
             select(Master)
-            .options(
-                selectinload(
-                    Master.user
-                )
-            )
-            .where(
-                Master.is_active.is_(True)
-            )
+            .options(selectinload(Master.user))
+            .where(Master.is_active.is_(True))
             .order_by(
                 Master.last_name.asc(),
                 Master.first_name.asc(),
@@ -61,14 +51,8 @@ class MasterRepository:
     ) -> Master | None:
         return await self.session.scalar(
             select(Master)
-            .options(
-                selectinload(
-                    Master.user
-                )
-            )
-            .where(
-                Master.id == master_id
-            )
+            .options(selectinload(Master.user))
+            .where(Master.id == master_id)
         )
 
     async def get_by_user_id(
@@ -77,34 +61,22 @@ class MasterRepository:
     ) -> Master | None:
         return await self.session.scalar(
             select(Master)
-            .options(
-                selectinload(
-                    Master.user
-                )
-            )
-            .where(
-                Master.user_id == user_id
-            )
+            .options(selectinload(Master.user))
+            .where(Master.user_id == user_id)
         )
 
     async def create(
         self,
         master: Master,
     ) -> Master:
-        self.session.add(
-            master
-        )
+        self.session.add(master)
 
         await self.session.commit()
 
-        created_master = await self.get_by_id(
-            master.id
-        )
+        created_master = await self.get_by_id(master.id)
 
         if created_master is None:
-            raise RuntimeError(
-                "Не удалось получить созданного мастера."
-            )
+            raise RuntimeError("Не удалось получить созданного мастера.")
 
         return created_master
 
@@ -114,14 +86,10 @@ class MasterRepository:
     ) -> Master:
         await self.session.commit()
 
-        updated_master = await self.get_by_id(
-            master.id
-        )
+        updated_master = await self.get_by_id(master.id)
 
         if updated_master is None:
-            raise RuntimeError(
-                "Не удалось получить обновлённого мастера."
-            )
+            raise RuntimeError("Не удалось получить обновлённого мастера.")
 
         return updated_master
 
@@ -129,8 +97,6 @@ class MasterRepository:
         self,
         master: Master,
     ) -> None:
-        await self.session.delete(
-            master
-        )
+        await self.session.delete(master)
 
         await self.session.commit()

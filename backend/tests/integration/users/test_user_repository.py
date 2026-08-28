@@ -24,15 +24,11 @@ def make_user(
 async def test_create_user(
     db_session: AsyncSession,
 ):
-    repository = UserRepository(
-        db_session
-    )
+    repository = UserRepository(db_session)
 
     user = make_user()
 
-    result = await repository.create(
-        user
-    )
+    result = await repository.create(user)
 
     assert result.id is not None
     assert isinstance(
@@ -54,17 +50,11 @@ async def test_create_user(
 async def test_get_user_by_id(
     db_session: AsyncSession,
 ):
-    repository = UserRepository(
-        db_session
-    )
+    repository = UserRepository(db_session)
 
-    user = await repository.create(
-        make_user()
-    )
+    user = await repository.create(make_user())
 
-    result = await repository.get_by_id(
-        user.id
-    )
+    result = await repository.get_by_id(user.id)
 
     assert result is not None
     assert result.id == user.id
@@ -75,13 +65,9 @@ async def test_get_user_by_id(
 async def test_get_user_by_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = UserRepository(
-        db_session
-    )
+    repository = UserRepository(db_session)
 
-    result = await repository.get_by_id(
-        uuid.uuid4()
-    )
+    result = await repository.get_by_id(uuid.uuid4())
 
     assert result is None
 
@@ -90,17 +76,11 @@ async def test_get_user_by_id_not_found(
 async def test_get_user_by_email(
     db_session: AsyncSession,
 ):
-    repository = UserRepository(
-        db_session
-    )
+    repository = UserRepository(db_session)
 
-    user = await repository.create(
-        make_user()
-    )
+    user = await repository.create(make_user())
 
-    result = await repository.get_by_email(
-        "user@example.com"
-    )
+    result = await repository.get_by_email("user@example.com")
 
     assert result is not None
     assert result.id == user.id
@@ -111,13 +91,9 @@ async def test_get_user_by_email(
 async def test_get_user_by_email_not_found(
     db_session: AsyncSession,
 ):
-    repository = UserRepository(
-        db_session
-    )
+    repository = UserRepository(db_session)
 
-    result = await repository.get_by_email(
-        "missing@example.com"
-    )
+    result = await repository.get_by_email("missing@example.com")
 
     assert result is None
 
@@ -126,21 +102,15 @@ async def test_get_user_by_email_not_found(
 async def test_update_user(
     db_session: AsyncSession,
 ):
-    repository = UserRepository(
-        db_session
-    )
+    repository = UserRepository(db_session)
 
-    user = await repository.create(
-        make_user()
-    )
+    user = await repository.create(make_user())
 
     user.first_name = "Petr"
     user.last_name = "Petrov"
     user.phone = None
 
-    result = await repository.update(
-        user
-    )
+    result = await repository.update(user)
 
     assert result.id == user.id
     assert result.first_name == "Petr"
@@ -149,15 +119,9 @@ async def test_update_user(
 
     user_id = result.id
 
-    db_session.expire(
-        result
-    )
+    db_session.expire(result)
 
-    user_from_database = (
-        await repository.get_by_id(
-            user_id
-        )
-    )
+    user_from_database = await repository.get_by_id(user_id)
 
     assert user_from_database is not None
     assert user_from_database.id == user_id

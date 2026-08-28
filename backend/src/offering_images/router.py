@@ -47,9 +47,7 @@ def _to_response(
     return OfferingImageResponse(
         id=image.id,
         offering_id=image.offering_id,
-        image_url=service.get_image_url(
-            image.storage_key
-        ),
+        image_url=service.get_image_url(image.storage_key),
         is_primary=image.is_primary,
         sort_order=image.sort_order,
         created_at=image.created_at,
@@ -64,12 +62,8 @@ def _to_response(
 async def upload_offering_image(
     offering_id: uuid.UUID,
     file: UploadFile = File(...),
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: OfferingImageService = Depends(
-        get_offering_image_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: OfferingImageService = Depends(get_offering_image_service),
 ):
     try:
         image = await service.upload_image(
@@ -92,37 +86,25 @@ async def upload_offering_image(
     except OfferingImageAccessDeniedError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "Вы не можете загружать фотографии "
-                "для чужой услуги!"
-            ),
+            detail=("Вы не можете загружать фотографии для чужой услуги!"),
         ) from None
 
     except OfferingImageLimitExceededError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Для одной услуги можно загрузить "
-                "не более 20 фотографий!"
-            ),
+            detail=("Для одной услуги можно загрузить не более 20 фотографий!"),
         ) from None
 
     except OfferingImageTooLargeError:
         raise HTTPException(
             status_code=status.HTTP_413_CONTENT_TOO_LARGE,
-            detail=(
-                "Размер фотографии не должен "
-                "превышать 5 MB!"
-            ),
+            detail=("Размер фотографии не должен превышать 5 MB!"),
         ) from None
 
     except InvalidOfferingImageTypeError:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail=(
-                "Разрешены только JPEG, PNG "
-                "и WEBP изображения!"
-            ),
+            detail=("Разрешены только JPEG, PNG и WEBP изображения!"),
         ) from None
 
 
@@ -132,14 +114,10 @@ async def upload_offering_image(
 )
 async def get_offering_images(
     offering_id: uuid.UUID,
-    service: OfferingImageService = Depends(
-        get_offering_image_service
-    ),
+    service: OfferingImageService = Depends(get_offering_image_service),
 ):
     try:
-        images = await service.get_offering_images(
-            offering_id=offering_id
-        )
+        images = await service.get_offering_images(offering_id=offering_id)
 
         return [
             _to_response(
@@ -163,12 +141,8 @@ async def get_offering_images(
 async def set_primary_image(
     offering_id: uuid.UUID,
     image_id: uuid.UUID,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: OfferingImageService = Depends(
-        get_offering_image_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: OfferingImageService = Depends(get_offering_image_service),
 ):
     try:
         image = await service.set_primary_image(
@@ -197,10 +171,7 @@ async def set_primary_image(
     except OfferingImageAccessDeniedError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "Вы не можете изменять фотографии "
-                "чужой услуги!"
-            ),
+            detail=("Вы не можете изменять фотографии чужой услуги!"),
         ) from None
 
 
@@ -211,12 +182,8 @@ async def set_primary_image(
 async def delete_offering_image(
     offering_id: uuid.UUID,
     image_id: uuid.UUID,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: OfferingImageService = Depends(
-        get_offering_image_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: OfferingImageService = Depends(get_offering_image_service),
 ) -> None:
     try:
         await service.delete_image(
@@ -240,8 +207,5 @@ async def delete_offering_image(
     except OfferingImageAccessDeniedError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "Вы не можете удалять фотографии "
-                "чужой услуги!"
-            ),
+            detail=("Вы не можете удалять фотографии чужой услуги!"),
         ) from None

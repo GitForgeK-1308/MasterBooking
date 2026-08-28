@@ -39,10 +39,7 @@ async def completed_booking(
             16,
             0,
         ),
-        client_name=(
-            f"{user.first_name} "
-            f"{user.last_name}"
-        ),
+        client_name=(f"{user.first_name} {user.last_name}"),
         client_phone=user.phone,
         client_email=user.email,
         status=BookingStatus.COMPLETED,
@@ -50,9 +47,7 @@ async def completed_booking(
 
     db_session.add(booking)
     await db_session.commit()
-    await db_session.refresh(
-        booking
-    )
+    await db_session.refresh(booking)
 
     return booking
 
@@ -78,10 +73,7 @@ async def second_completed_booking(
             17,
             0,
         ),
-        client_name=(
-            f"{user.first_name} "
-            f"{user.last_name}"
-        ),
+        client_name=(f"{user.first_name} {user.last_name}"),
         client_phone=user.phone,
         client_email=user.email,
         status=BookingStatus.COMPLETED,
@@ -89,9 +81,7 @@ async def second_completed_booking(
 
     db_session.add(booking)
     await db_session.commit()
-    await db_session.refresh(
-        booking
-    )
+    await db_session.refresh(booking)
 
     return booking
 
@@ -118,8 +108,7 @@ async def foreign_completed_booking(
             0,
         ),
         client_name=(
-            f"{second_booking_user.first_name} "
-            f"{second_booking_user.last_name}"
+            f"{second_booking_user.first_name} {second_booking_user.last_name}"
         ),
         client_phone=second_booking_user.phone,
         client_email=second_booking_user.email,
@@ -128,9 +117,7 @@ async def foreign_completed_booking(
 
     db_session.add(booking)
     await db_session.commit()
-    await db_session.refresh(
-        booking
-    )
+    await db_session.refresh(booking)
 
     return booking
 
@@ -160,9 +147,7 @@ async def review(
 
     db_session.add(review)
     await db_session.commit()
-    await db_session.refresh(
-        review
-    )
+    await db_session.refresh(review)
 
     return review
 
@@ -192,9 +177,7 @@ async def second_review(
 
     db_session.add(review)
     await db_session.commit()
-    await db_session.refresh(
-        review
-    )
+    await db_session.refresh(review)
 
     return review
 
@@ -223,9 +206,7 @@ async def deleted_user_review(
 
     db_session.add(review)
     await db_session.commit()
-    await db_session.refresh(
-        review
-    )
+    await db_session.refresh(review)
 
     return review
 
@@ -252,8 +233,7 @@ async def foreign_master_review(
             30,
         ),
         client_name=(
-            f"{second_booking_user.first_name} "
-            f"{second_booking_user.last_name}"
+            f"{second_booking_user.first_name} {second_booking_user.last_name}"
         ),
         client_phone=second_booking_user.phone,
         client_email=second_booking_user.email,
@@ -262,9 +242,7 @@ async def foreign_master_review(
 
     db_session.add(booking)
     await db_session.commit()
-    await db_session.refresh(
-        booking
-    )
+    await db_session.refresh(booking)
 
     review = Review(
         booking_id=booking.id,
@@ -284,8 +262,6 @@ async def foreign_master_review(
 
     db_session.add(review)
     await db_session.commit()
-    await db_session.refresh(
-        review
-    )
+    await db_session.refresh(review)
 
     return review

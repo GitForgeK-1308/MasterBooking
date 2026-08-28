@@ -7,14 +7,8 @@ from src.locations.service import LocationService
 
 
 def get_location_service(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
+    session: AsyncSession = Depends(get_async_session),
 ) -> LocationService:
-    repository = LocationRepository(
-        session
-    )
+    repository = LocationRepository(session)
 
-    return LocationService(
-        repository=repository
-    )
+    return LocationService(repository=repository)

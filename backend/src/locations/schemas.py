@@ -24,9 +24,7 @@ class CityUpdate(BaseModel):
 
 
 class CityResponse(BaseModel):
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     name: str
@@ -51,9 +49,7 @@ class DistrictUpdate(BaseModel):
 
 
 class DistrictResponse(BaseModel):
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     city_id: uuid.UUID

@@ -40,6 +40,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
             await session.rollback()
             raise
 
+
 @asynccontextmanager
 async def get_celery_session():
     async with CelerySessionLocal() as session:

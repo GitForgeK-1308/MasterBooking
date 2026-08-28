@@ -49,18 +49,14 @@ def make_district(
 
 @pytest.fixture
 def location_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=LocationRepository
-    )
+    return AsyncMock(spec=LocationRepository)
 
 
 @pytest.fixture
 def location_service(
     location_repository: AsyncMock,
 ) -> LocationService:
-    return LocationService(
-        repository=location_repository
-    )
+    return LocationService(repository=location_repository)
 
 
 @pytest.mark.anyio
@@ -73,19 +69,13 @@ async def test_get_cities(
         make_city(name="Riga"),
     ]
 
-    location_repository.get_cities.return_value = (
-        cities
-    )
+    location_repository.get_cities.return_value = cities
 
-    result = await location_service.get_cities(
-        active_only=True
-    )
+    result = await location_service.get_cities(active_only=True)
 
     assert result == cities
 
-    location_repository.get_cities.assert_awaited_once_with(
-        active_only=True
-    )
+    location_repository.get_cities.assert_awaited_once_with(active_only=True)
 
 
 @pytest.mark.anyio
@@ -95,19 +85,13 @@ async def test_get_city_by_id(
 ):
     city = make_city()
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    result = await location_service.get_city_by_id(
-        city.id
-    )
+    result = await location_service.get_city_by_id(city.id)
 
     assert result is city
 
-    location_repository.get_city_by_id.assert_awaited_once_with(
-        city.id
-    )
+    location_repository.get_city_by_id.assert_awaited_once_with(city.id)
 
 
 @pytest.mark.anyio
@@ -117,20 +101,12 @@ async def test_get_city_by_id_not_found(
 ):
     city_id = uuid.uuid4()
 
-    location_repository.get_city_by_id.return_value = (
-        None
-    )
+    location_repository.get_city_by_id.return_value = None
 
-    with pytest.raises(
-        CityNotFoundError
-    ):
-        await location_service.get_city_by_id(
-            city_id
-        )
+    with pytest.raises(CityNotFoundError):
+        await location_service.get_city_by_id(city_id)
 
-    location_repository.get_city_by_id.assert_awaited_once_with(
-        city_id
-    )
+    location_repository.get_city_by_id.assert_awaited_once_with(city_id)
 
 
 @pytest.mark.anyio
@@ -138,35 +114,21 @@ async def test_create_city(
     location_service: LocationService,
     location_repository: AsyncMock,
 ):
-    data = CityCreate(
-        name="  rIGA   cITY "
-    )
+    data = CityCreate(name="  rIGA   cITY ")
 
-    location_repository.get_city_by_name.return_value = (
-        None
-    )
+    location_repository.get_city_by_name.return_value = None
 
-    location_repository.create_city.side_effect = (
-        lambda city: city
-    )
+    location_repository.create_city.side_effect = lambda city: city
 
-    result = await location_service.create_city(
-        data
-    )
+    result = await location_service.create_city(data)
 
     assert result.name == "Riga City"
 
-    location_repository.get_city_by_name.assert_awaited_once_with(
-        "Riga City"
-    )
+    location_repository.get_city_by_name.assert_awaited_once_with("Riga City")
 
     location_repository.create_city.assert_awaited_once()
 
-    created_city = (
-        location_repository.create_city.await_args.args[
-            0
-        ]
-    )
+    created_city = location_repository.create_city.await_args.args[0]
 
     assert created_city is result
     assert created_city.name == "Riga City"
@@ -179,24 +141,14 @@ async def test_create_city_duplicate(
 ):
     existing_city = make_city()
 
-    location_repository.get_city_by_name.return_value = (
-        existing_city
-    )
+    location_repository.get_city_by_name.return_value = existing_city
 
-    data = CityCreate(
-        name="  rIGA "
-    )
+    data = CityCreate(name="  rIGA ")
 
-    with pytest.raises(
-        CityAlreadyExistsError
-    ):
-        await location_service.create_city(
-            data
-        )
+    with pytest.raises(CityAlreadyExistsError):
+        await location_service.create_city(data)
 
-    location_repository.get_city_by_name.assert_awaited_once_with(
-        "Riga"
-    )
+    location_repository.get_city_by_name.assert_awaited_once_with("Riga")
 
     location_repository.create_city.assert_not_awaited()
 
@@ -208,17 +160,11 @@ async def test_update_city(
 ):
     city = make_city()
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    location_repository.get_city_by_name.return_value = (
-        None
-    )
+    location_repository.get_city_by_name.return_value = None
 
-    location_repository.update_city.side_effect = (
-        lambda city: city
-    )
+    location_repository.update_city.side_effect = lambda city: city
 
     data = CityUpdate(
         name="  new   rIGA ",
@@ -234,13 +180,9 @@ async def test_update_city(
     assert city.name == "New Riga"
     assert city.is_active is False
 
-    location_repository.get_city_by_name.assert_awaited_once_with(
-        "New Riga"
-    )
+    location_repository.get_city_by_name.assert_awaited_once_with("New Riga")
 
-    location_repository.update_city.assert_awaited_once_with(
-        city
-    )
+    location_repository.update_city.assert_awaited_once_with(city)
 
 
 @pytest.mark.anyio
@@ -248,29 +190,17 @@ async def test_update_city_duplicate(
     location_service: LocationService,
     location_repository: AsyncMock,
 ):
-    city = make_city(
-        name="Riga"
-    )
+    city = make_city(name="Riga")
 
-    existing_city = make_city(
-        name="Jurmala"
-    )
+    existing_city = make_city(name="Jurmala")
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    location_repository.get_city_by_name.return_value = (
-        existing_city
-    )
+    location_repository.get_city_by_name.return_value = existing_city
 
-    data = CityUpdate(
-        name="Jurmala"
-    )
+    data = CityUpdate(name="Jurmala")
 
-    with pytest.raises(
-        CityAlreadyExistsError
-    ):
+    with pytest.raises(CityAlreadyExistsError):
         await location_service.update_city(
             city_id=city.id,
             data=data,
@@ -297,19 +227,13 @@ async def test_get_districts_by_city(
         ),
     ]
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    location_repository.get_districts_by_city.return_value = (
-        districts
-    )
+    location_repository.get_districts_by_city.return_value = districts
 
-    result = (
-        await location_service.get_districts_by_city(
-            city_id=city.id,
-            active_only=True,
-        )
+    result = await location_service.get_districts_by_city(
+        city_id=city.id,
+        active_only=True,
     )
 
     assert result == districts
@@ -325,17 +249,11 @@ async def test_get_districts_by_inactive_city(
     location_service: LocationService,
     location_repository: AsyncMock,
 ):
-    city = make_city(
-        is_active=False
-    )
+    city = make_city(is_active=False)
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    with pytest.raises(
-        CityNotFoundError
-    ):
+    with pytest.raises(CityNotFoundError):
         await location_service.get_districts_by_city(
             city_id=city.id,
             active_only=True,
@@ -351,25 +269,15 @@ async def test_get_district_by_id(
 ):
     city = make_city()
 
-    district = make_district(
-        city_id=city.id
-    )
+    district = make_district(city_id=city.id)
 
-    location_repository.get_district_by_id.return_value = (
-        district
-    )
+    location_repository.get_district_by_id.return_value = district
 
-    result = (
-        await location_service.get_district_by_id(
-            district.id
-        )
-    )
+    result = await location_service.get_district_by_id(district.id)
 
     assert result is district
 
-    location_repository.get_district_by_id.assert_awaited_once_with(
-        district.id
-    )
+    location_repository.get_district_by_id.assert_awaited_once_with(district.id)
 
 
 @pytest.mark.anyio
@@ -379,16 +287,10 @@ async def test_get_district_by_id_not_found(
 ):
     district_id = uuid.uuid4()
 
-    location_repository.get_district_by_id.return_value = (
-        None
-    )
+    location_repository.get_district_by_id.return_value = None
 
-    with pytest.raises(
-        DistrictNotFoundError
-    ):
-        await location_service.get_district_by_id(
-            district_id
-        )
+    with pytest.raises(DistrictNotFoundError):
+        await location_service.get_district_by_id(district_id)
 
 
 @pytest.mark.anyio
@@ -398,28 +300,18 @@ async def test_create_district(
 ):
     city = make_city()
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    location_repository.get_district_by_name.return_value = (
-        None
-    )
+    location_repository.get_district_by_name.return_value = None
 
-    location_repository.create_district.side_effect = (
-        lambda district: district
-    )
+    location_repository.create_district.side_effect = lambda district: district
 
     data = DistrictCreate(
         city_id=city.id,
         name="  old   town ",
     )
 
-    result = (
-        await location_service.create_district(
-            data
-        )
-    )
+    result = await location_service.create_district(data)
 
     assert result.city_id == city.id
     assert result.name == "Old Town"
@@ -431,11 +323,7 @@ async def test_create_district(
 
     location_repository.create_district.assert_awaited_once()
 
-    created_district = (
-        location_repository.create_district.await_args.args[
-            0
-        ]
-    )
+    created_district = location_repository.create_district.await_args.args[0]
 
     assert created_district is result
 
@@ -447,29 +335,19 @@ async def test_create_district_duplicate(
 ):
     city = make_city()
 
-    existing_district = make_district(
-        city_id=city.id
-    )
+    existing_district = make_district(city_id=city.id)
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    location_repository.get_district_by_name.return_value = (
-        existing_district
-    )
+    location_repository.get_district_by_name.return_value = existing_district
 
     data = DistrictCreate(
         city_id=city.id,
         name="  cENTRS ",
     )
 
-    with pytest.raises(
-        DistrictAlreadyExistsError
-    ):
-        await location_service.create_district(
-            data
-        )
+    with pytest.raises(DistrictAlreadyExistsError):
+        await location_service.create_district(data)
 
     location_repository.create_district.assert_not_awaited()
 
@@ -481,32 +359,22 @@ async def test_update_district(
 ):
     city = make_city()
 
-    district = make_district(
-        city_id=city.id
-    )
+    district = make_district(city_id=city.id)
 
-    location_repository.get_district_by_id.return_value = (
-        district
-    )
+    location_repository.get_district_by_id.return_value = district
 
-    location_repository.get_district_by_name.return_value = (
-        None
-    )
+    location_repository.get_district_by_name.return_value = None
 
-    location_repository.update_district.side_effect = (
-        lambda district: district
-    )
+    location_repository.update_district.side_effect = lambda district: district
 
     data = DistrictUpdate(
         name="  old   cENTRS ",
         is_active=False,
     )
 
-    result = (
-        await location_service.update_district(
-            district_id=district.id,
-            data=data,
-        )
+    result = await location_service.update_district(
+        district_id=district.id,
+        data=data,
     )
 
     assert result is district
@@ -518,9 +386,7 @@ async def test_update_district(
         name="Old Centrs",
     )
 
-    location_repository.update_district.assert_awaited_once_with(
-        district
-    )
+    location_repository.update_district.assert_awaited_once_with(district)
 
 
 @pytest.mark.anyio
@@ -540,21 +406,13 @@ async def test_update_district_duplicate(
         name="Agenskalns",
     )
 
-    location_repository.get_district_by_id.return_value = (
-        district
-    )
+    location_repository.get_district_by_id.return_value = district
 
-    location_repository.get_district_by_name.return_value = (
-        existing_district
-    )
+    location_repository.get_district_by_name.return_value = existing_district
 
-    data = DistrictUpdate(
-        name="Agenskalns"
-    )
+    data = DistrictUpdate(name="Agenskalns")
 
-    with pytest.raises(
-        DistrictAlreadyExistsError
-    ):
+    with pytest.raises(DistrictAlreadyExistsError):
         await location_service.update_district(
             district_id=district.id,
             data=data,
@@ -570,17 +428,11 @@ async def test_validate_location(
 ):
     city = make_city()
 
-    district = make_district(
-        city_id=city.id
-    )
+    district = make_district(city_id=city.id)
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    location_repository.get_district_by_id.return_value = (
-        district
-    )
+    location_repository.get_district_by_id.return_value = district
 
     result = await location_service.validate_location(
         city_id=city.id,
@@ -600,21 +452,13 @@ async def test_validate_location_city_mismatch(
 ):
     city = make_city()
 
-    district = make_district(
-        city_id=uuid.uuid4()
-    )
+    district = make_district(city_id=uuid.uuid4())
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    location_repository.get_district_by_id.return_value = (
-        district
-    )
+    location_repository.get_district_by_id.return_value = district
 
-    with pytest.raises(
-        DistrictCityMismatchError
-    ):
+    with pytest.raises(DistrictCityMismatchError):
         await location_service.validate_location(
             city_id=city.id,
             district_id=district.id,
@@ -626,25 +470,15 @@ async def test_validate_location_inactive_city(
     location_service: LocationService,
     location_repository: AsyncMock,
 ):
-    city = make_city(
-        is_active=False
-    )
+    city = make_city(is_active=False)
 
-    district = make_district(
-        city_id=city.id
-    )
+    district = make_district(city_id=city.id)
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    location_repository.get_district_by_id.return_value = (
-        district
-    )
+    location_repository.get_district_by_id.return_value = district
 
-    with pytest.raises(
-        CityNotFoundError
-    ):
+    with pytest.raises(CityNotFoundError):
         await location_service.validate_location(
             city_id=city.id,
             district_id=district.id,
@@ -663,17 +497,11 @@ async def test_validate_location_inactive_district(
         is_active=False,
     )
 
-    location_repository.get_city_by_id.return_value = (
-        city
-    )
+    location_repository.get_city_by_id.return_value = city
 
-    location_repository.get_district_by_id.return_value = (
-        district
-    )
+    location_repository.get_district_by_id.return_value = district
 
-    with pytest.raises(
-        DistrictNotFoundError
-    ):
+    with pytest.raises(DistrictNotFoundError):
         await location_service.validate_location(
             city_id=city.id,
             district_id=district.id,

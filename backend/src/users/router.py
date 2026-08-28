@@ -47,14 +47,10 @@ router = APIRouter(
 )
 async def register_user(
     data: UserRegister,
-    service: UserService = Depends(
-        get_user_service
-    ),
+    service: UserService = Depends(get_user_service),
 ) -> UserResponse:
     try:
-        return await service.register_user(
-            data
-        )
+        return await service.register_user(data)
     except EmailAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -68,9 +64,7 @@ async def register_user(
 )
 async def login_user(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    service: UserService = Depends(
-        get_user_service
-    ),
+    service: UserService = Depends(get_user_service),
 ) -> TokenResponse:
     try:
         user = await service.authenticate_user(
@@ -91,13 +85,10 @@ async def login_user(
             detail="Аккаунт пользователя отключён!",
         ) from None
 
-    access_token = create_access_token(
-        user_id=user.id
-    )
+    access_token = create_access_token(user_id=user.id)
 
-    return TokenResponse(
-        access_token=access_token
-    )
+    return TokenResponse(access_token=access_token)
+
 
 @router.post(
     "/forgot-password",
@@ -105,13 +96,9 @@ async def login_user(
 )
 async def forgot_password(
     data: ForgotPasswordRequest,
-    service: PasswordResetService = Depends(
-        get_password_reset_service
-    ),
+    service: PasswordResetService = Depends(get_password_reset_service),
 ) -> PasswordResetMessage:
-    await service.request_password_reset(
-        str(data.email)
-    )
+    await service.request_password_reset(str(data.email))
 
     return PasswordResetMessage(
         message=(
@@ -127,9 +114,7 @@ async def forgot_password(
 )
 async def reset_password(
     data: ResetPasswordRequest,
-    service: PasswordResetService = Depends(
-        get_password_reset_service
-    ),
+    service: PasswordResetService = Depends(get_password_reset_service),
 ) -> PasswordResetMessage:
     try:
         await service.reset_password(
@@ -139,12 +124,7 @@ async def reset_password(
     except InvalidPasswordResetTokenError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Токен восстановления пароля "
-                "недействителен или истёк."
-            ),
+            detail=("Токен восстановления пароля недействителен или истёк."),
         ) from None
 
-    return PasswordResetMessage(
-        message="Пароль успешно изменён."
-    )
+    return PasswordResetMessage(message="Пароль успешно изменён.")

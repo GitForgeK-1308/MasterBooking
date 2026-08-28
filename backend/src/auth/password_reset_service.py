@@ -33,9 +33,7 @@ class PasswordResetService:
     def _hash_token(
         token: str,
     ) -> str:
-        return hashlib.sha256(
-            token.encode()
-        ).hexdigest()
+        return hashlib.sha256(token.encode()).hexdigest()
 
     def _reset_token_key(
         self,
@@ -48,14 +46,10 @@ class PasswordResetService:
         token: str,
         user_id: uuid.UUID,
     ) -> None:
-        token_hash = self._hash_token(
-            token
-        )
+        token_hash = self._hash_token(token)
 
         await self.redis.set(
-            self._reset_token_key(
-                token_hash
-            ),
+            self._reset_token_key(token_hash),
             str(user_id),
             ex=self.RESET_TOKEN_TTL_SECONDS,
         )
@@ -64,15 +58,9 @@ class PasswordResetService:
         self,
         email: str,
     ) -> str | None:
-        normalized_email = (
-            email
-            .strip()
-            .lower()
-        )
+        normalized_email = email.strip().lower()
 
-        user = await self.user_repository.get_by_email(
-            normalized_email
-        )
+        user = await self.user_repository.get_by_email(normalized_email)
 
         if user is None or not user.is_active:
             return None
@@ -89,47 +77,29 @@ class PasswordResetService:
             token,
         )
 
-
         return token
-
-
-    
 
     async def reset_password(
         self,
         token: str,
         new_password: str,
     ) -> None:
-        token_hash = self._hash_token(
-            token
-        )
+        token_hash = self._hash_token(token)
 
-        cache_key = self._reset_token_key(
-            token_hash
-        )
+        cache_key = self._reset_token_key(token_hash)
 
-        user_id = await self.redis.get(
-            cache_key
-        )
+        user_id = await self.redis.get(cache_key)
 
         if user_id is None:
             raise InvalidPasswordResetTokenError
 
-        user = await self.user_repository.get_by_id(
-            uuid.UUID(user_id)
-        )
+        user = await self.user_repository.get_by_id(uuid.UUID(user_id))
 
         if user is None:
             raise InvalidPasswordResetTokenError
 
-        user.hashed_password = hash_password(
-            new_password
-        )
+        user.hashed_password = hash_password(new_password)
 
-        await self.user_repository.update(
-            user
-        )
+        await self.user_repository.update(user)
 
-        await self.redis.delete(
-            cache_key
-        )
+        await self.redis.delete(cache_key)

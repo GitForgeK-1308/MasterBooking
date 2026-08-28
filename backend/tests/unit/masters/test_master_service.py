@@ -55,16 +55,12 @@ def make_user() -> User:
 
 @pytest.fixture
 def master_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterRepository
-    )
+    return AsyncMock(spec=MasterRepository)
 
 
 @pytest.fixture
 def location_service() -> AsyncMock:
-    return AsyncMock(
-        spec=LocationService
-    )
+    return AsyncMock(spec=LocationService)
 
 
 @pytest.fixture
@@ -87,15 +83,11 @@ async def test_get_master_by_id(
 
     master_repository.get_by_id.return_value = master
 
-    result = await master_service.get_master_by_id(
-        master.id
-    )
+    result = await master_service.get_master_by_id(master.id)
 
     assert result is master
 
-    master_repository.get_by_id.assert_awaited_once_with(
-        master.id
-    )
+    master_repository.get_by_id.assert_awaited_once_with(master.id)
 
 
 @pytest.mark.anyio
@@ -132,13 +124,9 @@ async def test_create_master_without_location(
         address="Main Street 10",
     )
 
-    master_repository.create.side_effect = (
-        lambda master: master
-    )
+    master_repository.create.side_effect = lambda master: master
 
-    result = await master_service.create_master(
-        data
-    )
+    result = await master_service.create_master(data)
 
     assert result.first_name == "Anna"
     assert result.last_name == "Petrova"
@@ -153,9 +141,7 @@ async def test_create_master_without_location(
 
     location_service.validate_location.assert_not_awaited()
 
-    master_repository.create.assert_awaited_once_with(
-        result
-    )
+    master_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -182,9 +168,7 @@ async def test_create_master_with_location(
         district,
     )
 
-    master_repository.create.side_effect = (
-        lambda master: master
-    )
+    master_repository.create.side_effect = lambda master: master
 
     data = MasterCreate(
         first_name="Anna",
@@ -197,9 +181,7 @@ async def test_create_master_with_location(
         address="Main Street 10",
     )
 
-    result = await master_service.create_master(
-        data
-    )
+    result = await master_service.create_master(data)
 
     assert result.city_id == city_id
     assert result.district_id == district_id
@@ -211,9 +193,7 @@ async def test_create_master_with_location(
         district_id=district_id,
     )
 
-    master_repository.create.assert_awaited_once_with(
-        result
-    )
+    master_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -237,9 +217,7 @@ async def test_create_master_requires_city_and_district(
         ValueError,
         match="Город и район должны быть выбраны вместе.",
     ):
-        await master_service.create_master(
-            data
-        )
+        await master_service.create_master(data)
 
     location_service.validate_location.assert_not_awaited()
     master_repository.create.assert_not_awaited()
@@ -256,16 +234,12 @@ async def test_update_master_not_found(
 
     result = await master_service.update_master(
         master_id=master_id,
-        data=MasterUpdate(
-            experience=10
-        ),
+        data=MasterUpdate(experience=10),
     )
 
     assert result is None
 
-    master_repository.get_by_id.assert_awaited_once_with(
-        master_id
-    )
+    master_repository.get_by_id.assert_awaited_once_with(master_id)
     master_repository.update.assert_not_awaited()
 
 
@@ -278,9 +252,7 @@ async def test_update_master(
     master = make_master()
 
     master_repository.get_by_id.return_value = master
-    master_repository.update.side_effect = (
-        lambda master: master
-    )
+    master_repository.update.side_effect = lambda master: master
 
     data = MasterUpdate(
         first_name="Maria",
@@ -305,9 +277,7 @@ async def test_update_master(
 
     location_service.validate_location.assert_not_awaited()
 
-    master_repository.update.assert_awaited_once_with(
-        master
-    )
+    master_repository.update.assert_awaited_once_with(master)
 
 
 @pytest.mark.anyio
@@ -318,9 +288,7 @@ async def test_update_master_does_not_clear_required_fields_with_none(
     master = make_master()
 
     master_repository.get_by_id.return_value = master
-    master_repository.update.side_effect = (
-        lambda master: master
-    )
+    master_repository.update.side_effect = lambda master: master
 
     data = MasterUpdate(
         first_name=None,
@@ -342,9 +310,7 @@ async def test_update_master_does_not_clear_required_fields_with_none(
     assert master.experience == 5
     assert master.education == "Beauty Academy"
 
-    master_repository.update.assert_awaited_once_with(
-        master
-    )
+    master_repository.update.assert_awaited_once_with(master)
 
 
 @pytest.mark.anyio
@@ -377,9 +343,7 @@ async def test_update_master_location(
     )
 
     master_repository.get_by_id.return_value = master
-    master_repository.update.side_effect = (
-        lambda master: master
-    )
+    master_repository.update.side_effect = lambda master: master
 
     location_service.validate_location.return_value = (
         city,
@@ -422,9 +386,7 @@ async def test_update_master_can_clear_location(
     )
 
     master_repository.get_by_id.return_value = master
-    master_repository.update.side_effect = (
-        lambda master: master
-    )
+    master_repository.update.side_effect = lambda master: master
 
     data = MasterUpdate(
         city_id=None,
@@ -474,9 +436,7 @@ async def test_update_master_partial_city_uses_current_district(
     )
 
     master_repository.get_by_id.return_value = master
-    master_repository.update.side_effect = (
-        lambda master: master
-    )
+    master_repository.update.side_effect = lambda master: master
 
     location_service.validate_location.return_value = (
         city,
@@ -485,9 +445,7 @@ async def test_update_master_partial_city_uses_current_district(
 
     result = await master_service.update_master(
         master_id=master.id,
-        data=MasterUpdate(
-            city_id=new_city_id
-        ),
+        data=MasterUpdate(city_id=new_city_id),
     )
 
     assert result is master
@@ -521,9 +479,7 @@ async def test_update_master_requires_complete_location(
     ):
         await master_service.update_master(
             master_id=master.id,
-            data=MasterUpdate(
-                city_id=city_id
-            ),
+            data=MasterUpdate(city_id=city_id),
         )
 
     location_service.validate_location.assert_not_awaited()
@@ -539,19 +495,13 @@ async def test_delete_master(
 
     master_repository.get_by_id.return_value = master
 
-    result = await master_service.delete_master(
-        master.id
-    )
+    result = await master_service.delete_master(master.id)
 
     assert result is True
 
-    master_repository.get_by_id.assert_awaited_once_with(
-        master.id
-    )
+    master_repository.get_by_id.assert_awaited_once_with(master.id)
 
-    master_repository.delete.assert_awaited_once_with(
-        master
-    )
+    master_repository.delete.assert_awaited_once_with(master)
 
 
 @pytest.mark.anyio
@@ -563,9 +513,7 @@ async def test_delete_master_not_found(
 
     master_repository.get_by_id.return_value = None
 
-    result = await master_service.delete_master(
-        master_id
-    )
+    result = await master_service.delete_master(master_id)
 
     assert result is None
 
@@ -581,14 +529,10 @@ async def test_create_master_profile(
     current_user = make_user()
 
     master_repository.get_by_user_id.return_value = None
-    master_repository.create.side_effect = (
-        lambda master: master
-    )
+    master_repository.create.side_effect = lambda master: master
 
     data = MasterProfileCreate(
-        description=(
-            "Professional beauty specialist."
-        ),
+        description=("Professional beauty specialist."),
         experience=5,
         education="Beauty Academy",
         address="Main Street 10",
@@ -613,9 +557,7 @@ async def test_create_master_profile(
 
     location_service.validate_location.assert_not_awaited()
 
-    master_repository.create.assert_awaited_once_with(
-        result
-    )
+    master_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -646,14 +588,10 @@ async def test_create_master_profile_with_location(
         district,
     )
 
-    master_repository.create.side_effect = (
-        lambda master: master
-    )
+    master_repository.create.side_effect = lambda master: master
 
     data = MasterProfileCreate(
-        description=(
-            "Professional beauty specialist."
-        ),
+        description=("Professional beauty specialist."),
         experience=5,
         education="Beauty Academy",
         city_id=city_id,
@@ -687,21 +625,15 @@ async def test_create_master_profile_duplicate(
     current_user = make_user()
     existing_master = make_master()
 
-    master_repository.get_by_user_id.return_value = (
-        existing_master
-    )
+    master_repository.get_by_user_id.return_value = existing_master
 
     data = MasterProfileCreate(
-        description=(
-            "Professional beauty specialist."
-        ),
+        description=("Professional beauty specialist."),
         experience=5,
         education="Beauty Academy",
     )
 
-    with pytest.raises(
-        MasterProfileAlreadyExistsError
-    ):
+    with pytest.raises(MasterProfileAlreadyExistsError):
         await master_service.create_master_profile(
             current_user=current_user,
             data=data,
@@ -722,9 +654,7 @@ async def test_create_master_profile_requires_city_and_district(
     master_repository.get_by_user_id.return_value = None
 
     data = MasterProfileCreate(
-        description=(
-            "Professional beauty specialist."
-        ),
+        description=("Professional beauty specialist."),
         experience=5,
         education="Beauty Academy",
         city_id=uuid.uuid4(),

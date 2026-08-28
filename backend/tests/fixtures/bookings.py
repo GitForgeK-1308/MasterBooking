@@ -25,23 +25,17 @@ def get_next_weekday(
 ) -> date:
     today = date.today()
 
-    days_ahead = (
-        weekday - today.weekday()
-    ) % 7
+    days_ahead = (weekday - today.weekday()) % 7
 
     if days_ahead == 0:
         days_ahead = 7
 
-    return today + timedelta(
-        days=days_ahead
-    )
+    return today + timedelta(days=days_ahead)
 
 
 @pytest.fixture
 def future_booking_date() -> date:
-    return get_next_weekday(
-        0
-    )
+    return get_next_weekday(0)
 
 
 @pytest.fixture
@@ -50,9 +44,7 @@ async def no_phone_user(
 ) -> User:
     user = User(
         email="no-phone@example.com",
-        hashed_password=hash_password(
-            TEST_BOOKING_USER_PASSWORD
-        ),
+        hashed_password=hash_password(TEST_BOOKING_USER_PASSWORD),
         first_name="No",
         last_name="Phone",
         phone=None,
@@ -70,9 +62,7 @@ async def no_phone_user(
 def no_phone_auth_headers(
     no_phone_user: User,
 ) -> dict[str, str]:
-    token = create_access_token(
-        user_id=no_phone_user.id
-    )
+    token = create_access_token(user_id=no_phone_user.id)
 
     return {
         "Authorization": f"Bearer {token}",
@@ -85,9 +75,7 @@ async def second_booking_user(
 ) -> User:
     user = User(
         email="second-client@example.com",
-        hashed_password=hash_password(
-            TEST_BOOKING_USER_PASSWORD
-        ),
+        hashed_password=hash_password(TEST_BOOKING_USER_PASSWORD),
         first_name="Pavel",
         last_name="Smirnov",
         phone="+79990000002",
@@ -105,9 +93,7 @@ async def second_booking_user(
 def second_booking_auth_headers(
     second_booking_user: User,
 ) -> dict[str, str]:
-    token = create_access_token(
-        user_id=second_booking_user.id
-    )
+    token = create_access_token(user_id=second_booking_user.id)
 
     return {
         "Authorization": f"Bearer {token}",
@@ -135,9 +121,7 @@ async def booking_schedule(
 
     db_session.add(schedule)
     await db_session.commit()
-    await db_session.refresh(
-        schedule
-    )
+    await db_session.refresh(schedule)
 
     return schedule
 
@@ -163,10 +147,7 @@ async def booking(
             11,
             0,
         ),
-        client_name=(
-            f"{user.first_name} "
-            f"{user.last_name}"
-        ),
+        client_name=(f"{user.first_name} {user.last_name}"),
         client_phone=user.phone,
         client_email=user.email,
         status=BookingStatus.PENDING,
@@ -174,9 +155,7 @@ async def booking(
 
     db_session.add(booking)
     await db_session.commit()
-    await db_session.refresh(
-        booking
-    )
+    await db_session.refresh(booking)
 
     return booking
 
@@ -202,10 +181,7 @@ async def second_booking(
             13,
             0,
         ),
-        client_name=(
-            f"{user.first_name} "
-            f"{user.last_name}"
-        ),
+        client_name=(f"{user.first_name} {user.last_name}"),
         client_phone=user.phone,
         client_email=user.email,
         status=BookingStatus.CONFIRMED,
@@ -213,9 +189,7 @@ async def second_booking(
 
     db_session.add(booking)
     await db_session.commit()
-    await db_session.refresh(
-        booking
-    )
+    await db_session.refresh(booking)
 
     return booking
 
@@ -242,8 +216,7 @@ async def foreign_booking(
             0,
         ),
         client_name=(
-            f"{second_booking_user.first_name} "
-            f"{second_booking_user.last_name}"
+            f"{second_booking_user.first_name} {second_booking_user.last_name}"
         ),
         client_phone=second_booking_user.phone,
         client_email=second_booking_user.email,
@@ -252,9 +225,7 @@ async def foreign_booking(
 
     db_session.add(booking)
     await db_session.commit()
-    await db_session.refresh(
-        booking
-    )
+    await db_session.refresh(booking)
 
     return booking
 
@@ -266,10 +237,7 @@ async def reminder_booking(
     master: Master,
     offering: MasterOffering,
 ) -> Booking:
-    reminder_time = (
-        datetime.now()
-        + timedelta(hours=1)
-    ).replace(
+    reminder_time = (datetime.now() + timedelta(hours=1)).replace(
         second=0,
         microsecond=0,
     )
@@ -280,14 +248,8 @@ async def reminder_booking(
         offering_id=offering.id,
         booking_date=reminder_time.date(),
         start_time=reminder_time.time(),
-        end_time=(
-            reminder_time
-            + timedelta(minutes=60)
-        ).time(),
-        client_name=(
-            f"{user.first_name} "
-            f"{user.last_name}"
-        ),
+        end_time=(reminder_time + timedelta(minutes=60)).time(),
+        client_name=(f"{user.first_name} {user.last_name}"),
         client_phone=user.phone,
         client_email=user.email,
         status=BookingStatus.CONFIRMED,
@@ -297,8 +259,6 @@ async def reminder_booking(
     db_session.add(booking)
 
     await db_session.commit()
-    await db_session.refresh(
-        booking
-    )
+    await db_session.refresh(booking)
 
     return booking

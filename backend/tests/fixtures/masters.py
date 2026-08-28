@@ -15,9 +15,7 @@ async def master_user(
 ) -> User:
     user = User(
         email="master@example.com",
-        hashed_password=hash_password(
-            TEST_USER_PASSWORD
-        ),
+        hashed_password=hash_password(TEST_USER_PASSWORD),
         first_name="Anna",
         last_name="Petrova",
         phone="+37120000001",
@@ -37,9 +35,7 @@ async def master_user(
 def master_auth_headers(
     master_user: User,
 ) -> dict[str, str]:
-    token = create_access_token(
-        user_id=master_user.id
-    )
+    token = create_access_token(user_id=master_user.id)
 
     return {
         "Authorization": f"Bearer {token}",
@@ -52,9 +48,7 @@ async def master_without_profile_user(
 ) -> User:
     user = User(
         email="master-no-profile@example.com",
-        hashed_password=hash_password(
-            TEST_USER_PASSWORD
-        ),
+        hashed_password=hash_password(TEST_USER_PASSWORD),
         first_name="Olga",
         last_name="Ivanova",
         role=UserRole.MASTER,
@@ -72,9 +66,7 @@ async def master_without_profile_user(
 def master_without_profile_headers(
     master_without_profile_user: User,
 ) -> dict[str, str]:
-    token = create_access_token(
-        user_id=master_without_profile_user.id
-    )
+    token = create_access_token(user_id=master_without_profile_user.id)
 
     return {
         "Authorization": f"Bearer {token}",
@@ -116,9 +108,7 @@ async def inactive_master(
 ) -> Master:
     user = User(
         email="inactive-master@example.com",
-        hashed_password=hash_password(
-            TEST_USER_PASSWORD
-        ),
+        hashed_password=hash_password(TEST_USER_PASSWORD),
         first_name="Maria",
         last_name="Sidorova",
         role=UserRole.MASTER,
@@ -151,9 +141,7 @@ async def second_master(
 ) -> Master:
     user = User(
         email="second-master@example.com",
-        hashed_password=hash_password(
-            TEST_USER_PASSWORD
-        ),
+        hashed_password=hash_password(TEST_USER_PASSWORD),
         first_name="Irina",
         last_name="Andersone",
         role=UserRole.MASTER,

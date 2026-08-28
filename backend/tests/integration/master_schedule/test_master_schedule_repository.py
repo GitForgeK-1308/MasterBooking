@@ -36,18 +36,14 @@ async def test_create_schedule(
     db_session: AsyncSession,
     master: Master,
 ):
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
     schedule = make_schedule(
         master_id=master.id,
         day_of_week=WeekDay.WEDNESDAY,
     )
 
-    result = await repository.create(
-        schedule
-    )
+    result = await repository.create(schedule)
 
     assert result.id is not None
     assert isinstance(
@@ -56,10 +52,7 @@ async def test_create_schedule(
     )
 
     assert result.master_id == master.id
-    assert (
-        result.day_of_week
-        == WeekDay.WEDNESDAY
-    )
+    assert result.day_of_week == WeekDay.WEDNESDAY
     assert result.start_time == time(
         9,
         0,
@@ -76,26 +69,17 @@ async def test_get_schedule_by_id(
     db_session: AsyncSession,
     monday_schedule: MasterSchedule,
 ):
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
     schedule_id = monday_schedule.id
 
-    db_session.expunge(
-        monday_schedule
-    )
+    db_session.expunge(monday_schedule)
 
-    result = await repository.get_by_id(
-        schedule_id
-    )
+    result = await repository.get_by_id(schedule_id)
 
     assert result is not None
     assert result.id == schedule_id
-    assert (
-        result.day_of_week
-        == WeekDay.MONDAY
-    )
+    assert result.day_of_week == WeekDay.MONDAY
     assert result.start_time == time(
         9,
         0,
@@ -110,13 +94,9 @@ async def test_get_schedule_by_id(
 async def test_get_schedule_by_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
-    result = await repository.get_by_id(
-        uuid.uuid4()
-    )
+    result = await repository.get_by_id(uuid.uuid4())
 
     assert result is None
 
@@ -130,32 +110,19 @@ async def test_get_schedules_by_master_id_sorted_and_scoped(
     day_off_schedule: MasterSchedule,
     foreign_schedule: MasterSchedule,
 ):
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
-    result = await repository.get_by_master_id(
-        master.id
-    )
+    result = await repository.get_by_master_id(master.id)
 
-    assert [
-        schedule.id
-        for schedule in result
-    ] == [
+    assert [schedule.id for schedule in result] == [
         monday_schedule.id,
         tuesday_schedule.id,
         day_off_schedule.id,
     ]
 
-    assert all(
-        schedule.master_id == master.id
-        for schedule in result
-    )
+    assert all(schedule.master_id == master.id for schedule in result)
 
-    assert foreign_schedule.id not in {
-        schedule.id
-        for schedule in result
-    }
+    assert foreign_schedule.id not in {schedule.id for schedule in result}
 
 
 @pytest.mark.anyio
@@ -163,13 +130,9 @@ async def test_get_schedules_by_master_id_empty(
     db_session: AsyncSession,
     second_master: Master,
 ):
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
-    result = await repository.get_by_master_id(
-        second_master.id
-    )
+    result = await repository.get_by_master_id(second_master.id)
 
     assert result == []
 
@@ -180,24 +143,17 @@ async def test_get_schedule_by_master_and_day(
     master: Master,
     monday_schedule: MasterSchedule,
 ):
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
-    result = (
-        await repository.get_by_master_and_day(
-            master_id=master.id,
-            day_of_week=WeekDay.MONDAY,
-        )
+    result = await repository.get_by_master_and_day(
+        master_id=master.id,
+        day_of_week=WeekDay.MONDAY,
     )
 
     assert result is not None
     assert result.id == monday_schedule.id
     assert result.master_id == master.id
-    assert (
-        result.day_of_week
-        == WeekDay.MONDAY
-    )
+    assert result.day_of_week == WeekDay.MONDAY
 
 
 @pytest.mark.anyio
@@ -205,15 +161,11 @@ async def test_get_schedule_by_master_and_day_not_found(
     db_session: AsyncSession,
     master: Master,
 ):
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
-    result = (
-        await repository.get_by_master_and_day(
-            master_id=master.id,
-            day_of_week=WeekDay.FRIDAY,
-        )
+    result = await repository.get_by_master_and_day(
+        master_id=master.id,
+        day_of_week=WeekDay.FRIDAY,
     )
 
     assert result is None
@@ -224,9 +176,7 @@ async def test_update_schedule(
     db_session: AsyncSession,
     monday_schedule: MasterSchedule,
 ):
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
     monday_schedule.start_time = time(
         10,
@@ -238,9 +188,7 @@ async def test_update_schedule(
         0,
     )
 
-    result = await repository.update(
-        monday_schedule
-    )
+    result = await repository.update(monday_schedule)
 
     assert result.start_time == time(
         10,
@@ -253,32 +201,20 @@ async def test_update_schedule(
 
     schedule_id = result.id
 
-    db_session.expunge(
-        result
-    )
+    db_session.expunge(result)
 
-    schedule_from_database = (
-        await repository.get_by_id(
-            schedule_id
-        )
-    )
+    schedule_from_database = await repository.get_by_id(schedule_id)
 
     assert schedule_from_database is not None
 
-    assert (
-        schedule_from_database.start_time
-        == time(
-            10,
-            30,
-        )
+    assert schedule_from_database.start_time == time(
+        10,
+        30,
     )
 
-    assert (
-        schedule_from_database.end_time
-        == time(
-            19,
-            0,
-        )
+    assert schedule_from_database.end_time == time(
+        19,
+        0,
     )
 
 
@@ -287,18 +223,12 @@ async def test_delete_schedule(
     db_session: AsyncSession,
     monday_schedule: MasterSchedule,
 ):
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
     schedule_id = monday_schedule.id
 
-    await repository.delete(
-        monday_schedule
-    )
+    await repository.delete(monday_schedule)
 
-    result = await repository.get_by_id(
-        schedule_id
-    )
+    result = await repository.get_by_id(schedule_id)
 
     assert result is None

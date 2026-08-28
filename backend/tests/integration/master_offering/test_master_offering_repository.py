@@ -45,9 +45,7 @@ async def test_create_offering(
     category: Category,
     tag: Tag,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
     offering = make_offering(
         master_id=master.id,
@@ -58,9 +56,7 @@ async def test_create_offering(
         tag,
     ]
 
-    result = await repository.create(
-        offering
-    )
+    result = await repository.create(offering)
 
     assert result.id is not None
     assert isinstance(
@@ -73,10 +69,7 @@ async def test_create_offering(
     assert result.title == "Classic Cut"
     assert result.price == Decimal("25.00")
 
-    assert {
-        item.id
-        for item in result.tags
-    } == {
+    assert {item.id for item in result.tags} == {
         tag.id,
     }
 
@@ -90,16 +83,11 @@ async def test_get_all_offerings(
     inactive_offering: MasterOffering,
     second_master_offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
     result = await repository.get_all()
 
-    assert {
-        item.id
-        for item in result
-    } == {
+    assert {item.id for item in result} == {
         offering.id,
         inactive_offering.id,
         second_master_offering.id,
@@ -111,19 +99,13 @@ async def test_get_offering_by_id(
     db_session: AsyncSession,
     offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
     offering_id = offering.id
 
-    db_session.expunge(
-        offering
-    )
+    db_session.expunge(offering)
 
-    result = await repository.get_by_id(
-        offering_id
-    )
+    result = await repository.get_by_id(offering_id)
 
     assert result is not None
     assert result.id == offering_id
@@ -131,22 +113,16 @@ async def test_get_offering_by_id(
 
     assert result.master is not None
 
-    assert len(
-        result.tags
-    ) == 1
+    assert len(result.tags) == 1
 
 
 @pytest.mark.anyio
 async def test_get_offering_by_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result = await repository.get_by_id(
-        uuid.uuid4()
-    )
+    result = await repository.get_by_id(uuid.uuid4())
 
     assert result is None
 
@@ -156,13 +132,9 @@ async def test_get_public_offering_by_id(
     db_session: AsyncSession,
     offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result = await repository.get_public_by_id(
-        offering.id
-    )
+    result = await repository.get_public_by_id(offering.id)
 
     assert result is not None
     assert result.id == offering.id
@@ -173,13 +145,9 @@ async def test_get_public_offering_by_id_excludes_inactive(
     db_session: AsyncSession,
     inactive_offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result = await repository.get_public_by_id(
-        inactive_offering.id
-    )
+    result = await repository.get_public_by_id(inactive_offering.id)
 
     assert result is None
 
@@ -191,19 +159,14 @@ async def test_get_by_master_id_active_only(
     offering: MasterOffering,
     inactive_offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
     result = await repository.get_by_master_id(
         master_id=master.id,
         active_only=True,
     )
 
-    ids = {
-        item.id
-        for item in result
-    }
+    ids = {item.id for item in result}
 
     assert offering.id in ids
     assert inactive_offering.id not in ids
@@ -216,19 +179,14 @@ async def test_get_by_master_id_includes_inactive(
     offering: MasterOffering,
     inactive_offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
     result = await repository.get_by_master_id(
         master_id=master.id,
         active_only=False,
     )
 
-    ids = {
-        item.id
-        for item in result
-    }
+    ids = {item.id for item in result}
 
     assert offering.id in ids
     assert inactive_offering.id in ids
@@ -241,9 +199,7 @@ async def test_update_offering(
     second_category: Category,
     second_tag: Tag,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
     await db_session.refresh(
         offering,
@@ -259,55 +215,29 @@ async def test_update_offering(
         second_tag,
     ]
 
-    result = await repository.update(
-        offering
-    )
+    result = await repository.update(offering)
 
     assert result.title == "Updated Service"
-    assert (
-        result.description
-        == "Updated description."
-    )
+    assert result.description == "Updated description."
     assert result.price == Decimal("45.75")
     assert result.duration_minutes == 90
-    assert (
-        result.category_id
-        == second_category.id
-    )
+    assert result.category_id == second_category.id
 
-    assert {
-        tag.id
-        for tag in result.tags
-    } == {
+    assert {tag.id for tag in result.tags} == {
         second_tag.id,
     }
 
     offering_id = result.id
 
-    db_session.expunge(
-        result
-    )
+    db_session.expunge(result)
 
-    offering_from_database = (
-        await repository.get_by_id(
-            offering_id
-        )
-    )
+    offering_from_database = await repository.get_by_id(offering_id)
 
     assert offering_from_database is not None
-    assert (
-        offering_from_database.title
-        == "Updated Service"
-    )
-    assert (
-        offering_from_database.price
-        == Decimal("45.75")
-    )
+    assert offering_from_database.title == "Updated Service"
+    assert offering_from_database.price == Decimal("45.75")
 
-    assert {
-        tag.id
-        for tag in offering_from_database.tags
-    } == {
+    assert {tag.id for tag in offering_from_database.tags} == {
         second_tag.id,
     }
 
@@ -317,19 +247,13 @@ async def test_hard_delete_offering(
     db_session: AsyncSession,
     offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
     offering_id = offering.id
 
-    await repository.hard_delete(
-        offering
-    )
+    await repository.hard_delete(offering)
 
-    result = await repository.get_by_id(
-        offering_id
-    )
+    result = await repository.get_by_id(offering_id)
 
     assert result is None
 
@@ -339,13 +263,9 @@ async def test_has_bookings_false(
     db_session: AsyncSession,
     offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result = await repository.has_bookings(
-        offering.id
-    )
+    result = await repository.has_bookings(offering.id)
 
     assert result is False
 
@@ -356,13 +276,9 @@ async def test_has_bookings_true(
     offering: MasterOffering,
     booking: Booking,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result = await repository.has_bookings(
-        offering.id
-    )
+    result = await repository.has_bookings(offering.id)
 
     assert result is True
 
@@ -377,9 +293,7 @@ async def test_public_offerings_exclude_inactive_entities(
     offering: MasterOffering,
     inactive_offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
     inactive_master_offering = make_offering(
         master_id=inactive_master.id,
@@ -387,9 +301,7 @@ async def test_public_offerings_exclude_inactive_entities(
         title="Inactive Master Service",
     )
 
-    await repository.create(
-        inactive_master_offering
-    )
+    await repository.create(inactive_master_offering)
 
     inactive_category_offering = make_offering(
         master_id=master.id,
@@ -397,18 +309,11 @@ async def test_public_offerings_exclude_inactive_entities(
         title="Inactive Category Service",
     )
 
-    await repository.create(
-        inactive_category_offering
-    )
+    await repository.create(inactive_category_offering)
 
-    result, total = (
-        await repository.get_public_offerings()
-    )
+    result, total = await repository.get_public_offerings()
 
-    ids = {
-        item.id
-        for item in result
-    }
+    ids = {item.id for item in result}
 
     assert total == 1
 
@@ -417,14 +322,8 @@ async def test_public_offerings_exclude_inactive_entities(
     }
 
     assert inactive_offering.id not in ids
-    assert (
-        inactive_master_offering.id
-        not in ids
-    )
-    assert (
-        inactive_category_offering.id
-        not in ids
-    )
+    assert inactive_master_offering.id not in ids
+    assert inactive_category_offering.id not in ids
 
 
 @pytest.mark.anyio
@@ -434,22 +333,15 @@ async def test_public_offerings_category_filter_includes_children(
     offering: MasterOffering,
     child_category_offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result, total = (
-        await repository.get_public_offerings(
-            category_id=category.id,
-        )
+    result, total = await repository.get_public_offerings(
+        category_id=category.id,
     )
 
     assert total == 2
 
-    assert {
-        item.id
-        for item in result
-    } == {
+    assert {item.id for item in result} == {
         offering.id,
         child_category_offering.id,
     }
@@ -462,38 +354,20 @@ async def test_public_offerings_price_filter(
     second_master_offering: MasterOffering,
     child_category_offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result, total = (
-        await repository.get_public_offerings(
-            min_price=Decimal("30.00"),
-            max_price=Decimal("50.00"),
-        )
+    result, total = await repository.get_public_offerings(
+        min_price=Decimal("30.00"),
+        max_price=Decimal("50.00"),
     )
 
     assert total == 1
 
-    assert [
-        item.id
-        for item in result
-    ] == [
-        second_master_offering.id
-    ]
+    assert [item.id for item in result] == [second_master_offering.id]
 
-    assert offering.id not in {
-        item.id
-        for item in result
-    }
+    assert offering.id not in {item.id for item in result}
 
-    assert (
-        child_category_offering.id
-        not in {
-            item.id
-            for item in result
-        }
-    )
+    assert child_category_offering.id not in {item.id for item in result}
 
 
 @pytest.mark.anyio
@@ -504,33 +378,18 @@ async def test_public_offerings_location_filter(
     city: City,
     district: District,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result, total = (
-        await repository.get_public_offerings(
-            city_id=city.id,
-            district_id=district.id,
-        )
+    result, total = await repository.get_public_offerings(
+        city_id=city.id,
+        district_id=district.id,
     )
 
     assert total == 1
 
-    assert [
-        item.id
-        for item in result
-    ] == [
-        offering.id
-    ]
+    assert [item.id for item in result] == [offering.id]
 
-    assert (
-        second_master_offering.id
-        not in {
-            item.id
-            for item in result
-        }
-    )
+    assert second_master_offering.id not in {item.id for item in result}
 
 
 @pytest.mark.anyio
@@ -539,32 +398,17 @@ async def test_public_offerings_search_by_tag(
     offering: MasterOffering,
     second_master_offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result, total = (
-        await repository.get_public_offerings(
-            search="hair",
-        )
+    result, total = await repository.get_public_offerings(
+        search="hair",
     )
 
     assert total == 1
 
-    assert [
-        item.id
-        for item in result
-    ] == [
-        offering.id
-    ]
+    assert [item.id for item in result] == [offering.id]
 
-    assert (
-        second_master_offering.id
-        not in {
-            item.id
-            for item in result
-        }
-    )
+    assert second_master_offering.id not in {item.id for item in result}
 
 
 @pytest.mark.anyio
@@ -600,22 +444,15 @@ async def test_public_offerings_price_sort(
     sort: OfferingSort,
     expected_order: list[str],
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result, total = (
-        await repository.get_public_offerings(
-            sort=sort,
-        )
+    result, total = await repository.get_public_offerings(
+        sort=sort,
     )
 
     assert total == 3
 
-    assert [
-        item.title
-        for item in result
-    ] == expected_order
+    assert [item.title for item in result] == expected_order
 
 
 @pytest.mark.anyio
@@ -628,9 +465,7 @@ async def test_public_offerings_popular_sort_excludes_cancelled_bookings(
     second_booking: Booking,
     future_booking_date: date,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
     booking.status = BookingStatus.CANCELLED
     second_booking.status = BookingStatus.CANCELLED
@@ -654,29 +489,19 @@ async def test_public_offerings_popular_sort_excludes_cancelled_bookings(
         status=BookingStatus.PENDING,
     )
 
-    db_session.add(
-        active_booking
-    )
+    db_session.add(active_booking)
 
     await db_session.commit()
 
-    result, total = (
-        await repository.get_public_offerings(
-            sort=OfferingSort.POPULAR,
-        )
+    result, total = await repository.get_public_offerings(
+        sort=OfferingSort.POPULAR,
     )
 
     assert total == 3
 
-    assert (
-        result[0].id
-        == second_master_offering.id
-    )
+    assert result[0].id == second_master_offering.id
 
-    assert {
-        item.id
-        for item in result
-    } == {
+    assert {item.id for item in result} == {
         offering.id,
         second_master_offering.id,
         child_category_offering.id,
@@ -690,24 +515,15 @@ async def test_public_offerings_pagination(
     second_master_offering: MasterOffering,
     child_category_offering: MasterOffering,
 ):
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    result, total = (
-        await repository.get_public_offerings(
-            offset=1,
-            limit=1,
-        )
+    result, total = await repository.get_public_offerings(
+        offset=1,
+        limit=1,
     )
 
     assert total == 3
 
-    assert len(
-        result
-    ) == 1
+    assert len(result) == 1
 
-    assert (
-        result[0].id
-        == child_category_offering.id
-    )
+    assert result[0].id == child_category_offering.id

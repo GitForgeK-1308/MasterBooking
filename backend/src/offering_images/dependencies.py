@@ -9,17 +9,11 @@ from src.offering_images.storage import LocalImageStorage
 
 
 def get_offering_image_service(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
+    session: AsyncSession = Depends(get_async_session),
 ) -> OfferingImageService:
-    image_repository = OfferingImageRepository(
-        session
-    )
+    image_repository = OfferingImageRepository(session)
 
-    offering_repository = MasterOfferingRepository(
-        session
-    )
+    offering_repository = MasterOfferingRepository(session)
 
     storage = LocalImageStorage()
 

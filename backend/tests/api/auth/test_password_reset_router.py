@@ -17,13 +17,9 @@ async def test_forgot_password(
     ac: AsyncClient,
 ):
     service = AsyncMock()
-    service.request_password_reset = AsyncMock(
-        return_value="reset-token"
-    )
+    service.request_password_reset = AsyncMock(return_value="reset-token")
 
-    app.dependency_overrides[
-        get_password_reset_service
-    ] = lambda: service
+    app.dependency_overrides[get_password_reset_service] = lambda: service
 
     try:
         response = await ac.post(
@@ -47,9 +43,7 @@ async def test_forgot_password(
         )
     }
 
-    service.request_password_reset.assert_awaited_once_with(
-        "USER@example.com"
-    )
+    service.request_password_reset.assert_awaited_once_with("USER@example.com")
 
 
 @pytest.mark.anyio
@@ -57,13 +51,9 @@ async def test_forgot_password_user_not_found(
     ac: AsyncClient,
 ):
     service = AsyncMock()
-    service.request_password_reset = AsyncMock(
-        return_value=None
-    )
+    service.request_password_reset = AsyncMock(return_value=None)
 
-    app.dependency_overrides[
-        get_password_reset_service
-    ] = lambda: service
+    app.dependency_overrides[get_password_reset_service] = lambda: service
 
     try:
         response = await ac.post(
@@ -87,9 +77,7 @@ async def test_forgot_password_user_not_found(
         )
     }
 
-    service.request_password_reset.assert_awaited_once_with(
-        "unknown@example.com"
-    )
+    service.request_password_reset.assert_awaited_once_with("unknown@example.com")
 
 
 @pytest.mark.anyio
@@ -97,13 +85,9 @@ async def test_reset_password(
     ac: AsyncClient,
 ):
     service = AsyncMock()
-    service.reset_password = AsyncMock(
-        return_value=None
-    )
+    service.reset_password = AsyncMock(return_value=None)
 
-    app.dependency_overrides[
-        get_password_reset_service
-    ] = lambda: service
+    app.dependency_overrides[get_password_reset_service] = lambda: service
 
     try:
         response = await ac.post(
@@ -121,9 +105,7 @@ async def test_reset_password(
 
     assert response.status_code == 200
 
-    assert response.json() == {
-        "message": "Пароль успешно изменён."
-    }
+    assert response.json() == {"message": "Пароль успешно изменён."}
 
     service.reset_password.assert_awaited_once_with(
         token="a" * 32,
@@ -136,13 +118,9 @@ async def test_reset_password_invalid_token(
     ac: AsyncClient,
 ):
     service = AsyncMock()
-    service.reset_password = AsyncMock(
-        side_effect=InvalidPasswordResetTokenError
-    )
+    service.reset_password = AsyncMock(side_effect=InvalidPasswordResetTokenError)
 
-    app.dependency_overrides[
-        get_password_reset_service
-    ] = lambda: service
+    app.dependency_overrides[get_password_reset_service] = lambda: service
 
     try:
         response = await ac.post(
@@ -161,8 +139,5 @@ async def test_reset_password_invalid_token(
     assert response.status_code == 400
 
     assert response.json() == {
-        "detail": (
-            "Токен восстановления пароля "
-            "недействителен или истёк."
-        )
+        "detail": ("Токен восстановления пароля недействителен или истёк.")
     }

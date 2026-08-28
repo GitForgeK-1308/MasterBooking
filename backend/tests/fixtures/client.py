@@ -14,15 +14,11 @@ async def ac(
     async def override_get_async_session():
         yield db_session
 
-    app.dependency_overrides[
-        get_async_session
-    ] = override_get_async_session
+    app.dependency_overrides[get_async_session] = override_get_async_session
 
     try:
         async with AsyncClient(
-            transport=ASGITransport(
-                app=app
-            ),
+            transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
             yield client

@@ -32,18 +32,14 @@ def make_tag(
 
 @pytest.fixture
 def tag_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=TagRepository
-    )
+    return AsyncMock(spec=TagRepository)
 
 
 @pytest.fixture
 def tag_service(
     tag_repository: AsyncMock,
 ) -> TagService:
-    return TagService(
-        repository=tag_repository
-    )
+    return TagService(repository=tag_repository)
 
 
 @pytest.mark.anyio
@@ -103,28 +99,18 @@ async def test_create_tag(
 
     tag_repository.get_by_name.return_value = None
     tag_repository.get_by_slug.return_value = None
-    tag_repository.create.side_effect = (
-        lambda tag: tag
-    )
+    tag_repository.create.side_effect = lambda tag: tag
 
-    result = await tag_service.create_tag(
-        data
-    )
+    result = await tag_service.create_tag(data)
 
     assert result.name == "Hair Styling"
     assert result.slug == "hair-styling"
 
-    tag_repository.get_by_name.assert_awaited_once_with(
-        "Hair Styling"
-    )
+    tag_repository.get_by_name.assert_awaited_once_with("Hair Styling")
 
-    tag_repository.get_by_slug.assert_awaited_once_with(
-        "hair-styling"
-    )
+    tag_repository.get_by_slug.assert_awaited_once_with("hair-styling")
 
-    tag_repository.create.assert_awaited_once_with(
-        result
-    )
+    tag_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -134,25 +120,17 @@ async def test_create_tag_duplicate_name(
 ):
     existing_tag = make_tag()
 
-    tag_repository.get_by_name.return_value = (
-        existing_tag
-    )
+    tag_repository.get_by_name.return_value = existing_tag
 
     data = TagCreate(
         name="  Hair ",
         slug="other",
     )
 
-    with pytest.raises(
-        TagAlreadyExistsError
-    ):
-        await tag_service.create_tag(
-            data
-        )
+    with pytest.raises(TagAlreadyExistsError):
+        await tag_service.create_tag(data)
 
-    tag_repository.get_by_name.assert_awaited_once_with(
-        "Hair"
-    )
+    tag_repository.get_by_name.assert_awaited_once_with("Hair")
 
     tag_repository.get_by_slug.assert_not_awaited()
     tag_repository.create.assert_not_awaited()
@@ -166,25 +144,17 @@ async def test_create_tag_duplicate_slug(
     existing_tag = make_tag()
 
     tag_repository.get_by_name.return_value = None
-    tag_repository.get_by_slug.return_value = (
-        existing_tag
-    )
+    tag_repository.get_by_slug.return_value = existing_tag
 
     data = TagCreate(
         name="Other",
         slug=" HAIR ",
     )
 
-    with pytest.raises(
-        TagAlreadyExistsError
-    ):
-        await tag_service.create_tag(
-            data
-        )
+    with pytest.raises(TagAlreadyExistsError):
+        await tag_service.create_tag(data)
 
-    tag_repository.get_by_slug.assert_awaited_once_with(
-        "hair"
-    )
+    tag_repository.get_by_slug.assert_awaited_once_with("hair")
 
     tag_repository.create.assert_not_awaited()
 
@@ -198,21 +168,15 @@ async def test_update_tag_not_found(
 
     tag_repository.get_by_id.return_value = None
 
-    data = TagUpdate(
-        name="Hair"
-    )
+    data = TagUpdate(name="Hair")
 
-    with pytest.raises(
-        TagNotFoundError
-    ):
+    with pytest.raises(TagNotFoundError):
         await tag_service.update_tag(
             tag_id=tag_id,
             data=data,
         )
 
-    tag_repository.get_by_id.assert_awaited_once_with(
-        tag_id
-    )
+    tag_repository.get_by_id.assert_awaited_once_with(tag_id)
 
     tag_repository.update.assert_not_awaited()
 
@@ -227,9 +191,7 @@ async def test_update_tag(
     tag_repository.get_by_id.return_value = tag
     tag_repository.get_by_name.return_value = None
     tag_repository.get_by_slug.return_value = None
-    tag_repository.update.side_effect = (
-        lambda tag: tag
-    )
+    tag_repository.update.side_effect = lambda tag: tag
 
     data = TagUpdate(
         name="  Hair   Design ",
@@ -247,17 +209,11 @@ async def test_update_tag(
     assert tag.slug == "hair-design"
     assert tag.is_active is False
 
-    tag_repository.get_by_name.assert_awaited_once_with(
-        "Hair Design"
-    )
+    tag_repository.get_by_name.assert_awaited_once_with("Hair Design")
 
-    tag_repository.get_by_slug.assert_awaited_once_with(
-        "hair-design"
-    )
+    tag_repository.get_by_slug.assert_awaited_once_with("hair-design")
 
-    tag_repository.update.assert_awaited_once_with(
-        tag
-    )
+    tag_repository.update.assert_awaited_once_with(tag)
 
 
 @pytest.mark.anyio
@@ -273,17 +229,11 @@ async def test_update_tag_duplicate_name(
     )
 
     tag_repository.get_by_id.return_value = tag
-    tag_repository.get_by_name.return_value = (
-        existing_tag
-    )
+    tag_repository.get_by_name.return_value = existing_tag
 
-    data = TagUpdate(
-        name="Nails"
-    )
+    data = TagUpdate(name="Nails")
 
-    with pytest.raises(
-        TagAlreadyExistsError
-    ):
+    with pytest.raises(TagAlreadyExistsError):
         await tag_service.update_tag(
             tag_id=tag.id,
             data=data,
@@ -305,17 +255,11 @@ async def test_update_tag_duplicate_slug(
     )
 
     tag_repository.get_by_id.return_value = tag
-    tag_repository.get_by_slug.return_value = (
-        existing_tag
-    )
+    tag_repository.get_by_slug.return_value = existing_tag
 
-    data = TagUpdate(
-        slug="nails"
-    )
+    data = TagUpdate(slug="nails")
 
-    with pytest.raises(
-        TagAlreadyExistsError
-    ):
+    with pytest.raises(TagAlreadyExistsError):
         await tag_service.update_tag(
             tag_id=tag.id,
             data=data,
@@ -334,9 +278,7 @@ async def test_update_tag_allows_same_name_and_slug(
     tag_repository.get_by_id.return_value = tag
     tag_repository.get_by_name.return_value = tag
     tag_repository.get_by_slug.return_value = tag
-    tag_repository.update.side_effect = (
-        lambda tag: tag
-    )
+    tag_repository.update.side_effect = lambda tag: tag
 
     data = TagUpdate(
         name="  Hair ",
@@ -352,9 +294,7 @@ async def test_update_tag_allows_same_name_and_slug(
     assert tag.name == "Hair"
     assert tag.slug == "hair"
 
-    tag_repository.update.assert_awaited_once_with(
-        tag
-    )
+    tag_repository.update.assert_awaited_once_with(tag)
 
 
 @pytest.mark.anyio
@@ -365,13 +305,9 @@ async def test_deactivate_tag(
     tag = make_tag()
 
     tag_repository.get_by_id.return_value = tag
-    tag_repository.update.side_effect = (
-        lambda tag: tag
-    )
+    tag_repository.update.side_effect = lambda tag: tag
 
-    data = TagUpdate(
-        is_active=False
-    )
+    data = TagUpdate(is_active=False)
 
     result = await tag_service.update_tag(
         tag_id=tag.id,
@@ -384,6 +320,4 @@ async def test_deactivate_tag(
     tag_repository.get_by_name.assert_not_awaited()
     tag_repository.get_by_slug.assert_not_awaited()
 
-    tag_repository.update.assert_awaited_once_with(
-        tag
-    )
+    tag_repository.update.assert_awaited_once_with(tag)

@@ -14,9 +14,7 @@ async def test_get_public_offerings(
     offering: MasterOffering,
     inactive_offering: MasterOffering,
 ):
-    response = await ac.get(
-        "/offerings"
-    )
+    response = await ac.get("/offerings")
 
     assert response.status_code == 200
 
@@ -27,19 +25,9 @@ async def test_get_public_offerings(
     assert data["page_size"] == 12
     assert data["total_pages"] == 1
 
-    assert [
-        item["id"]
-        for item in data["items"]
-    ] == [
-        str(offering.id)
-    ]
+    assert [item["id"] for item in data["items"]] == [str(offering.id)]
 
-    assert str(
-        inactive_offering.id
-    ) not in {
-        item["id"]
-        for item in data["items"]
-    }
+    assert str(inactive_offering.id) not in {item["id"] for item in data["items"]}
 
 
 @pytest.mark.anyio
@@ -47,27 +35,17 @@ async def test_get_public_offering_by_id(
     ac: AsyncClient,
     offering: MasterOffering,
 ):
-    response = await ac.get(
-        f"/offerings/{offering.id}"
-    )
+    response = await ac.get(f"/offerings/{offering.id}")
 
     assert response.status_code == 200
 
     data = response.json()
 
-    assert data["id"] == str(
-        offering.id
-    )
+    assert data["id"] == str(offering.id)
     assert data["title"] == "Classic Cut"
-    assert (
-        Decimal(data["price"])
-        == Decimal("25.00")
-    )
+    assert Decimal(data["price"]) == Decimal("25.00")
 
-    assert (
-        data["master"]["id"]
-        == str(offering.master_id)
-    )
+    assert data["master"]["id"] == str(offering.master_id)
 
 
 @pytest.mark.anyio
@@ -75,14 +53,10 @@ async def test_get_inactive_offering_by_id_returns_404(
     ac: AsyncClient,
     inactive_offering: MasterOffering,
 ):
-    response = await ac.get(
-        f"/offerings/{inactive_offering.id}"
-    )
+    response = await ac.get(f"/offerings/{inactive_offering.id}")
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Услуга не найдена!"
-    }
+    assert response.json() == {"detail": "Услуга не найдена!"}
 
 
 @pytest.mark.anyio
@@ -95,9 +69,7 @@ async def test_filter_offerings_by_parent_category(
     response = await ac.get(
         "/offerings",
         params={
-            "category_id": str(
-                category.id
-            ),
+            "category_id": str(category.id),
         },
     )
 
@@ -105,10 +77,7 @@ async def test_filter_offerings_by_parent_category(
 
     data = response.json()
 
-    assert {
-        item["id"]
-        for item in data["items"]
-    } == {
+    assert {item["id"] for item in data["items"]} == {
         str(offering.id),
         str(child_category_offering.id),
     }
@@ -134,10 +103,7 @@ async def test_search_offering_by_tag(
 
     assert data["total"] == 1
 
-    assert (
-        data["items"][0]["id"]
-        == str(offering.id)
-    )
+    assert data["items"][0]["id"] == str(offering.id)
 
 
 @pytest.mark.anyio
@@ -149,9 +115,7 @@ async def test_filter_offerings_by_city(
     response = await ac.get(
         "/offerings",
         params={
-            "city_id": str(
-                city.id
-            ),
+            "city_id": str(city.id),
         },
     )
 
@@ -160,10 +124,7 @@ async def test_filter_offerings_by_city(
     data = response.json()
 
     assert data["total"] == 1
-    assert (
-        data["items"][0]["id"]
-        == str(offering.id)
-    )
+    assert data["items"][0]["id"] == str(offering.id)
 
 
 @pytest.mark.anyio
@@ -190,9 +151,7 @@ async def test_public_offerings_pagination(
     assert data["page_size"] == 2
     assert data["total_pages"] == 2
 
-    assert len(
-        data["items"]
-    ) == 2
+    assert len(data["items"]) == 2
 
 
 @pytest.mark.anyio

@@ -34,9 +34,7 @@ class ReviewService:
         client_id: uuid.UUID,
         data: ReviewCreate,
     ) -> Review:
-        booking = await self.booking_repository.get_by_id(
-            booking_id
-        )
+        booking = await self.booking_repository.get_by_id(booking_id)
 
         if booking is None:
             raise ReviewBookingNotFoundError
@@ -47,11 +45,7 @@ class ReviewService:
         if booking.status != BookingStatus.COMPLETED:
             raise BookingNotCompletedError
 
-        existing_review = (
-            await self.repository.get_by_booking_id(
-                booking_id
-            )
-        )
+        existing_review = await self.repository.get_by_booking_id(booking_id)
 
         if existing_review is not None:
             raise ReviewAlreadyExistsError
@@ -64,17 +58,13 @@ class ReviewService:
             comment=data.comment,
         )
 
-        return await self.repository.create(
-            review
-        )
+        return await self.repository.create(review)
 
     async def get_public_master_reviews(
         self,
         master_id: uuid.UUID,
     ) -> list[ReviewPublicResponse]:
-        rows = await self.repository.get_public_by_master_id(
-            master_id
-        )
+        rows = await self.repository.get_public_by_master_id(master_id)
 
         return [
             ReviewPublicResponse(
@@ -94,10 +84,8 @@ class ReviewService:
         self,
         master_id: uuid.UUID,
     ) -> ReviewStatsResponse:
-        average_rating, reviews_count = (
-            await self.repository.get_master_stats(
-                master_id
-            )
+        average_rating, reviews_count = await self.repository.get_master_stats(
+            master_id
         )
 
         return ReviewStatsResponse(
@@ -109,21 +97,13 @@ class ReviewService:
         self,
         master_id: uuid.UUID,
     ) -> MasterReviewsResponse:
-        reviews = await self.get_public_master_reviews(
+        reviews = await self.get_public_master_reviews(master_id)
+
+        average_rating, reviews_count = await self.repository.get_master_stats(
             master_id
         )
 
-        average_rating, reviews_count = (
-            await self.repository.get_master_stats(
-                master_id
-            )
-        )
-
-        rating_distribution = (
-            await self.repository.get_rating_distribution(
-                master_id
-            )
-        )
+        rating_distribution = await self.repository.get_rating_distribution(master_id)
 
         return MasterReviewsResponse(
             average_rating=average_rating,
@@ -136,9 +116,7 @@ class ReviewService:
         self,
         master_id: uuid.UUID,
     ) -> list[MasterReviewResponse]:
-        rows = await self.repository.get_for_master_dashboard(
-            master_id
-        )
+        rows = await self.repository.get_for_master_dashboard(master_id)
 
         return [
             MasterReviewResponse(

@@ -25,12 +25,8 @@ async def test_get_available_slots(
     response = await ac.get(
         f"/masters/{master.id}/available-slots",
         params={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
         },
     )
 
@@ -38,18 +34,11 @@ async def test_get_available_slots(
 
     data = response.json()
 
-    assert data["master_id"] == str(
-        master.id
-    )
+    assert data["master_id"] == str(master.id)
 
-    assert data["offering_id"] == str(
-        offering.id
-    )
+    assert data["offering_id"] == str(offering.id)
 
-    assert (
-        data["booking_date"]
-        == future_booking_date.isoformat()
-    )
+    assert data["booking_date"] == future_booking_date.isoformat()
 
     assert data["slots"] == [
         "09:00:00",
@@ -82,12 +71,8 @@ async def test_available_slots_exclude_conflicting_booking(
     response = await ac.get(
         f"/masters/{master.id}/available-slots",
         params={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
         },
     )
 
@@ -121,12 +106,8 @@ async def test_cancelled_booking_does_not_block_slots(
     response = await ac.get(
         f"/masters/{master.id}/available-slots",
         params={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
         },
     )
 
@@ -147,33 +128,19 @@ async def test_available_slots_in_past(
     master: Master,
     offering: MasterOffering,
 ):
-    past_date = (
-        date.today()
-        - timedelta(
-            days=1
-        )
-    )
+    past_date = date.today() - timedelta(days=1)
 
     response = await ac.get(
         f"/masters/{master.id}/available-slots",
         params={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                past_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (past_date.isoformat()),
         },
     )
 
     assert response.status_code == 422
 
-    assert response.json() == {
-        "detail": (
-            "Нельзя получить слоты "
-            "на прошедшую дату!"
-        )
-    }
+    assert response.json() == {"detail": ("Нельзя получить слоты на прошедшую дату!")}
 
 
 @pytest.mark.anyio
@@ -183,25 +150,16 @@ async def test_available_slots_master_not_found(
     future_booking_date: date,
 ):
     response = await ac.get(
-        (
-            f"/masters/"
-            f"{uuid.uuid4()}/available-slots"
-        ),
+        (f"/masters/{uuid.uuid4()}/available-slots"),
         params={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
         },
     )
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Мастер не найден!"
-    }
+    assert response.json() == {"detail": "Мастер не найден!"}
 
 
 @pytest.mark.anyio
@@ -212,27 +170,16 @@ async def test_available_slots_inactive_master(
     future_booking_date: date,
 ):
     response = await ac.get(
-        (
-            f"/masters/"
-            f"{inactive_master.id}/available-slots"
-        ),
+        (f"/masters/{inactive_master.id}/available-slots"),
         params={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
         },
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Мастер сейчас не принимает записи!"
-        )
-    }
+    assert response.json() == {"detail": ("Мастер сейчас не принимает записи!")}
 
 
 @pytest.mark.anyio
@@ -244,20 +191,14 @@ async def test_available_slots_offering_not_found(
     response = await ac.get(
         f"/masters/{master.id}/available-slots",
         params={
-            "offering_id": str(
-                uuid.uuid4()
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(uuid.uuid4()),
+            "booking_date": (future_booking_date.isoformat()),
         },
     )
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Услуга не найдена!"
-    }
+    assert response.json() == {"detail": "Услуга не найдена!"}
 
 
 @pytest.mark.anyio
@@ -270,22 +211,14 @@ async def test_available_slots_inactive_offering(
     response = await ac.get(
         f"/masters/{master.id}/available-slots",
         params={
-            "offering_id": str(
-                inactive_offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(inactive_offering.id),
+            "booking_date": (future_booking_date.isoformat()),
         },
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Услуга сейчас недоступна!"
-        )
-    }
+    assert response.json() == {"detail": ("Услуга сейчас недоступна!")}
 
 
 @pytest.mark.anyio
@@ -298,23 +231,14 @@ async def test_available_slots_offering_from_other_master(
     response = await ac.get(
         f"/masters/{master.id}/available-slots",
         params={
-            "offering_id": str(
-                second_master_offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(second_master_offering.id),
+            "booking_date": (future_booking_date.isoformat()),
         },
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Услуга не принадлежит "
-            "выбранному мастеру!"
-        )
-    }
+    assert response.json() == {"detail": ("Услуга не принадлежит выбранному мастеру!")}
 
 
 @pytest.mark.anyio
@@ -327,20 +251,11 @@ async def test_available_slots_schedule_unavailable(
     response = await ac.get(
         f"/masters/{master.id}/available-slots",
         params={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
         },
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Мастер не работает "
-            "в выбранный день!"
-        )
-    }
+    assert response.json() == {"detail": ("Мастер не работает в выбранный день!")}

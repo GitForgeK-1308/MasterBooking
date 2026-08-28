@@ -7,9 +7,7 @@ from anyio import to_thread
 class LocalImageStorage:
     def __init__(self) -> None:
         self.uploads_dir = Path("uploads")
-        self.offerings_dir = (
-            self.uploads_dir / "offerings"
-        )
+        self.offerings_dir = self.uploads_dir / "offerings"
 
         self.offerings_dir.mkdir(
             parents=True,
@@ -21,13 +19,9 @@ class LocalImageStorage:
         content: bytes,
         extension: str,
     ) -> str:
-        file_name = (
-            f"{uuid.uuid4()}.{extension}"
-        )
+        file_name = f"{uuid.uuid4()}.{extension}"
 
-        file_path = (
-            self.offerings_dir / file_name
-        )
+        file_path = self.offerings_dir / file_name
 
         await to_thread.run_sync(
             file_path.write_bytes,
@@ -40,16 +34,12 @@ class LocalImageStorage:
         self,
         storage_key: str,
     ) -> None:
-        file_path = (
-            self.uploads_dir / storage_key
-        )
+        file_path = self.uploads_dir / storage_key
 
         if not file_path.exists():
             return
 
-        await to_thread.run_sync(
-            file_path.unlink
-        )
+        await to_thread.run_sync(file_path.unlink)
 
     def get_url(
         self,

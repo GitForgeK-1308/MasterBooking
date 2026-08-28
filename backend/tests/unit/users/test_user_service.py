@@ -19,16 +19,12 @@ from src.users.service import UserService
 
 @pytest.fixture
 def user_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=UserRepository
-    )
+    return AsyncMock(spec=UserRepository)
 
 
 @pytest.fixture
 def master_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterRepository
-    )
+    return AsyncMock(spec=MasterRepository)
 
 
 @pytest.fixture
@@ -66,15 +62,11 @@ async def test_get_user_by_id(
 
     user_repository.get_by_id.return_value = user
 
-    result = await user_service.get_user_by_id(
-        user.id
-    )
+    result = await user_service.get_user_by_id(user.id)
 
     assert result is user
 
-    user_repository.get_by_id.assert_awaited_once_with(
-        user.id
-    )
+    user_repository.get_by_id.assert_awaited_once_with(user.id)
 
 
 @pytest.mark.anyio
@@ -87,13 +79,9 @@ async def test_get_user_by_id_not_found(
     user_repository.get_by_id.return_value = None
 
     with pytest.raises(UserNotFoundError):
-        await user_service.get_user_by_id(
-            user_id
-        )
+        await user_service.get_user_by_id(user_id)
 
-    user_repository.get_by_id.assert_awaited_once_with(
-        user_id
-    )
+    user_repository.get_by_id.assert_awaited_once_with(user_id)
 
 
 @pytest.mark.anyio
@@ -116,17 +104,13 @@ async def test_register_user(
     ) -> User:
         return user
 
-    user_repository.create.side_effect = (
-        return_created_user
-    )
+    user_repository.create.side_effect = return_created_user
 
     with patch(
         "src.users.service.hash_password",
         return_value="hashed-password",
     ) as hash_password_mock:
-        result = await user_service.register_user(
-            data
-        )
+        result = await user_service.register_user(data)
 
     assert result.email == "user@example.com"
     assert result.hashed_password == "hashed-password"
@@ -134,19 +118,13 @@ async def test_register_user(
     assert result.last_name == "Ivanov"
     assert result.phone == "+79991234567"
 
-    user_repository.get_by_email.assert_awaited_once_with(
-        "user@example.com"
-    )
+    user_repository.get_by_email.assert_awaited_once_with("user@example.com")
 
-    hash_password_mock.assert_called_once_with(
-        "StrongPassword123!"
-    )
+    hash_password_mock.assert_called_once_with("StrongPassword123!")
 
     user_repository.create.assert_awaited_once()
 
-    created_user = (
-        user_repository.create.await_args.args[0]
-    )
+    created_user = user_repository.create.await_args.args[0]
 
     assert created_user is result
 
@@ -158,9 +136,7 @@ async def test_register_user_duplicate_email(
 ):
     existing_user = make_user()
 
-    user_repository.get_by_email.return_value = (
-        existing_user
-    )
+    user_repository.get_by_email.return_value = existing_user
 
     data = UserRegister(
         email="USER@example.com",
@@ -169,16 +145,10 @@ async def test_register_user_duplicate_email(
         last_name="Ivanov",
     )
 
-    with pytest.raises(
-        EmailAlreadyExistsError
-    ):
-        await user_service.register_user(
-            data
-        )
+    with pytest.raises(EmailAlreadyExistsError):
+        await user_service.register_user(data)
 
-    user_repository.get_by_email.assert_awaited_once_with(
-        "user@example.com"
-    )
+    user_repository.get_by_email.assert_awaited_once_with("user@example.com")
 
     user_repository.create.assert_not_awaited()
 
@@ -203,9 +173,7 @@ async def test_authenticate_user(
 
     assert result is user
 
-    user_repository.get_by_email.assert_awaited_once_with(
-        "user@example.com"
-    )
+    user_repository.get_by_email.assert_awaited_once_with("user@example.com")
 
     verify_password_mock.assert_called_once_with(
         plain_password="StrongPassword123!",
@@ -220,17 +188,13 @@ async def test_authenticate_user_not_found(
 ):
     user_repository.get_by_email.return_value = None
 
-    with pytest.raises(
-        InvalidCredentialsError
-    ):
+    with pytest.raises(InvalidCredentialsError):
         await user_service.authenticate_user(
             email="missing@example.com",
             password="StrongPassword123!",
         )
 
-    user_repository.get_by_email.assert_awaited_once_with(
-        "missing@example.com"
-    )
+    user_repository.get_by_email.assert_awaited_once_with("missing@example.com")
 
 
 @pytest.mark.anyio
@@ -246,9 +210,7 @@ async def test_authenticate_user_wrong_password(
         "src.users.service.verify_password",
         return_value=False,
     ):
-        with pytest.raises(
-            InvalidCredentialsError
-        ):
+        with pytest.raises(InvalidCredentialsError):
             await user_service.authenticate_user(
                 email=user.email,
                 password="WrongPassword123!",
@@ -260,9 +222,7 @@ async def test_authenticate_inactive_user(
     user_service: UserService,
     user_repository: AsyncMock,
 ):
-    user = make_user(
-        is_active=False
-    )
+    user = make_user(is_active=False)
 
     user_repository.get_by_email.return_value = user
 
@@ -270,9 +230,7 @@ async def test_authenticate_inactive_user(
         "src.users.service.verify_password",
         return_value=True,
     ):
-        with pytest.raises(
-            InactiveUserError
-        ):
+        with pytest.raises(InactiveUserError):
             await user_service.authenticate_user(
                 email=user.email,
                 password="StrongPassword123!",
@@ -292,18 +250,14 @@ async def test_update_profile(
         last_name="Ivanov",
     )
 
-    master_repository.get_by_user_id.return_value = (
-        master
-    )
+    master_repository.get_by_user_id.return_value = master
 
     async def return_updated_user(
         user: User,
     ) -> User:
         return user
 
-    user_repository.update.side_effect = (
-        return_updated_user
-    )
+    user_repository.update.side_effect = return_updated_user
 
     data = UserProfileUpdate(
         first_name="Petr",
@@ -325,13 +279,9 @@ async def test_update_profile(
     assert master.first_name == "Petr"
     assert master.last_name == "Petrov"
 
-    master_repository.get_by_user_id.assert_awaited_once_with(
-        user.id
-    )
+    master_repository.get_by_user_id.assert_awaited_once_with(user.id)
 
-    user_repository.update.assert_awaited_once_with(
-        user
-    )
+    user_repository.update.assert_awaited_once_with(user)
 
 
 @pytest.mark.anyio
@@ -342,18 +292,14 @@ async def test_update_profile_without_master(
 ):
     user = make_user()
 
-    master_repository.get_by_user_id.return_value = (
-        None
-    )
+    master_repository.get_by_user_id.return_value = None
 
     async def return_updated_user(
         user: User,
     ) -> User:
         return user
 
-    user_repository.update.side_effect = (
-        return_updated_user
-    )
+    user_repository.update.side_effect = return_updated_user
 
     data = UserProfileUpdate(
         first_name="Petr",
@@ -367,13 +313,9 @@ async def test_update_profile_without_master(
     assert result.first_name == "Petr"
     assert result.last_name == "Ivanov"
 
-    master_repository.get_by_user_id.assert_awaited_once_with(
-        user.id
-    )
+    master_repository.get_by_user_id.assert_awaited_once_with(user.id)
 
-    user_repository.update.assert_awaited_once_with(
-        user
-    )
+    user_repository.update.assert_awaited_once_with(user)
 
 
 @pytest.mark.anyio
@@ -384,18 +326,14 @@ async def test_update_profile_clear_phone(
 ):
     user = make_user()
 
-    master_repository.get_by_user_id.return_value = (
-        None
-    )
+    master_repository.get_by_user_id.return_value = None
 
     async def return_updated_user(
         user: User,
     ) -> User:
         return user
 
-    user_repository.update.side_effect = (
-        return_updated_user
-    )
+    user_repository.update.side_effect = return_updated_user
 
     data = UserProfileUpdate(
         phone=None,
@@ -408,6 +346,4 @@ async def test_update_profile_clear_phone(
 
     assert result.phone is None
 
-    user_repository.update.assert_awaited_once_with(
-        user
-    )
+    user_repository.update.assert_awaited_once_with(user)

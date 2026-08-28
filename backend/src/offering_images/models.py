@@ -33,9 +33,7 @@ class OfferingImage(Base):
             "uq_offering_images_one_primary",
             "offering_id",
             unique=True,
-            postgresql_where=text(
-                "is_primary = true"
-            ),
+            postgresql_where=text("is_primary = true"),
         ),
     )
 

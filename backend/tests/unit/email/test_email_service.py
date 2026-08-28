@@ -52,10 +52,6 @@ def test_password_reset_email_contains_reset_url():
 
     body = message.get_content()
 
-    assert (
-        "http://localhost:3000/reset-password"
-        "?token=test-token"
-        in body
-    )
+    assert "http://localhost:3000/reset-password?token=test-token" in body
 
     assert message["To"] == "user@example.com"

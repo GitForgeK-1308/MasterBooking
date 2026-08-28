@@ -11,10 +11,7 @@ from src.users.models import User, UserRole
 from src.users.repository import UserRepository
 
 MASTER_PROFILE_DATA = {
-    "description": (
-        "Professional beauty specialist "
-        "with several years of experience."
-    ),
+    "description": ("Professional beauty specialist with several years of experience."),
     "experience": 5,
     "education": "Beauty Academy",
 }
@@ -39,10 +36,7 @@ async def test_create_master_profile(
 
     assert data["first_name"] == user.first_name
     assert data["last_name"] == user.last_name
-    assert (
-        data["description"]
-        == MASTER_PROFILE_DATA["description"]
-    )
+    assert data["description"] == MASTER_PROFILE_DATA["description"]
     assert data["experience"] == 5
     assert data["education"] == "Beauty Academy"
     assert data["city_id"] is None
@@ -50,33 +44,18 @@ async def test_create_master_profile(
     assert data["is_active"] is True
     assert data["phone"] == user.phone
 
-    master_repository = MasterRepository(
-        db_session
-    )
+    master_repository = MasterRepository(db_session)
 
-    master = (
-        await master_repository.get_by_user_id(
-            user.id
-        )
-    )
+    master = await master_repository.get_by_user_id(user.id)
 
     assert master is not None
 
-    user_repository = UserRepository(
-        db_session
-    )
+    user_repository = UserRepository(db_session)
 
-    user_from_database = (
-        await user_repository.get_by_id(
-            user.id
-        )
-    )
+    user_from_database = await user_repository.get_by_id(user.id)
 
     assert user_from_database is not None
-    assert (
-        user_from_database.role
-        == UserRole.MASTER
-    )
+    assert user_from_database.role == UserRole.MASTER
 
 
 @pytest.mark.anyio
@@ -92,12 +71,8 @@ async def test_create_master_profile_with_location(
         headers=auth_headers,
         json={
             **MASTER_PROFILE_DATA,
-            "city_id": str(
-                city.id
-            ),
-            "district_id": str(
-                district.id
-            ),
+            "city_id": str(city.id),
+            "district_id": str(district.id),
             "address": "Main Street 10",
         },
     )
@@ -106,12 +81,8 @@ async def test_create_master_profile_with_location(
 
     data = response.json()
 
-    assert data["city_id"] == str(
-        city.id
-    )
-    assert data["district_id"] == str(
-        district.id
-    )
+    assert data["city_id"] == str(city.id)
+    assert data["district_id"] == str(district.id)
     assert data["city"] == city.name
     assert data["district"] == district.name
     assert data["address"] == "Main Street 10"
@@ -156,12 +127,7 @@ async def test_create_master_profile_duplicate(
     )
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": (
-            "Профиль мастера уже "
-            "существует!"
-        )
-    }
+    assert response.json() == {"detail": ("Профиль мастера уже существует!")}
 
 
 @pytest.mark.anyio
@@ -175,19 +141,12 @@ async def test_create_master_profile_only_city(
         headers=auth_headers,
         json={
             **MASTER_PROFILE_DATA,
-            "city_id": str(
-                city.id
-            ),
+            "city_id": str(city.id),
         },
     )
 
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": (
-            "Город и район должны быть "
-            "выбраны вместе."
-        )
-    }
+    assert response.json() == {"detail": ("Город и район должны быть выбраны вместе.")}
 
 
 @pytest.mark.anyio
@@ -201,22 +160,13 @@ async def test_create_master_profile_city_not_found(
         headers=auth_headers,
         json={
             **MASTER_PROFILE_DATA,
-            "city_id": str(
-                uuid.uuid4()
-            ),
-            "district_id": str(
-                district.id
-            ),
+            "city_id": str(uuid.uuid4()),
+            "district_id": str(district.id),
         },
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": (
-            "Город не найден или "
-            "недоступен!"
-        )
-    }
+    assert response.json() == {"detail": ("Город не найден или недоступен!")}
 
 
 @pytest.mark.anyio
@@ -230,22 +180,13 @@ async def test_create_master_profile_district_not_found(
         headers=auth_headers,
         json={
             **MASTER_PROFILE_DATA,
-            "city_id": str(
-                city.id
-            ),
-            "district_id": str(
-                uuid.uuid4()
-            ),
+            "city_id": str(city.id),
+            "district_id": str(uuid.uuid4()),
         },
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": (
-            "Район не найден или "
-            "недоступен!"
-        )
-    }
+    assert response.json() == {"detail": ("Район не найден или недоступен!")}
 
 
 @pytest.mark.anyio
@@ -260,21 +201,14 @@ async def test_create_master_profile_location_mismatch(
         headers=auth_headers,
         json={
             **MASTER_PROFILE_DATA,
-            "city_id": str(
-                second_city.id
-            ),
-            "district_id": str(
-                district.id
-            ),
+            "city_id": str(second_city.id),
+            "district_id": str(district.id),
         },
     )
 
     assert response.status_code == 400
     assert response.json() == {
-        "detail": (
-            "Выбранный район не относится "
-            "к выбранному городу!"
-        )
+        "detail": ("Выбранный район не относится к выбранному городу!")
     }
 
 
@@ -290,22 +224,13 @@ async def test_create_master_profile_inactive_city(
         headers=auth_headers,
         json={
             **MASTER_PROFILE_DATA,
-            "city_id": str(
-                inactive_city.id
-            ),
-            "district_id": str(
-                inactive_city_district.id
-            ),
+            "city_id": str(inactive_city.id),
+            "district_id": str(inactive_city_district.id),
         },
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": (
-            "Город не найден или "
-            "недоступен!"
-        )
-    }
+    assert response.json() == {"detail": ("Город не найден или недоступен!")}
 
 
 @pytest.mark.anyio
@@ -320,22 +245,13 @@ async def test_create_master_profile_inactive_district(
         headers=auth_headers,
         json={
             **MASTER_PROFILE_DATA,
-            "city_id": str(
-                city.id
-            ),
-            "district_id": str(
-                inactive_district.id
-            ),
+            "city_id": str(city.id),
+            "district_id": str(inactive_district.id),
         },
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": (
-            "Район не найден или "
-            "недоступен!"
-        )
-    }
+    assert response.json() == {"detail": ("Район не найден или недоступен!")}
 
 
 @pytest.mark.anyio
@@ -353,9 +269,7 @@ async def test_get_my_master_profile(
 
     data = response.json()
 
-    assert data["id"] == str(
-        master.id
-    )
+    assert data["id"] == str(master.id)
     assert data["first_name"] == "Anna"
     assert data["last_name"] == "Petrova"
     assert data["phone"] == "+37120000001"
@@ -372,12 +286,7 @@ async def test_get_my_master_profile_as_client(
     )
 
     assert response.status_code == 403
-    assert response.json() == {
-        "detail": (
-            "Доступ разрешён только "
-            "мастерам!"
-        )
-    }
+    assert response.json() == {"detail": ("Доступ разрешён только мастерам!")}
 
 
 @pytest.mark.anyio
@@ -391,11 +300,7 @@ async def test_get_my_master_profile_not_found(
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": (
-            "Профиль мастера не найден!"
-        )
-    }
+    assert response.json() == {"detail": ("Профиль мастера не найден!")}
 
 
 @pytest.mark.anyio
@@ -409,10 +314,7 @@ async def test_update_my_master_profile(
         "/masters/me",
         headers=master_auth_headers,
         json={
-            "description": (
-                "Updated professional "
-                "description."
-            ),
+            "description": ("Updated professional description."),
             "experience": 8,
             "education": "Updated Academy",
             "address": "New Street 20",
@@ -423,32 +325,17 @@ async def test_update_my_master_profile(
 
     data = response.json()
 
-    assert (
-        data["description"]
-        == "Updated professional description."
-    )
+    assert data["description"] == "Updated professional description."
     assert data["experience"] == 8
-    assert (
-        data["education"]
-        == "Updated Academy"
-    )
+    assert data["education"] == "Updated Academy"
     assert data["address"] == "New Street 20"
 
-    repository = MasterRepository(
-        db_session
-    )
+    repository = MasterRepository(db_session)
 
-    master_from_database = (
-        await repository.get_by_id(
-            master.id
-        )
-    )
+    master_from_database = await repository.get_by_id(master.id)
 
     assert master_from_database is not None
-    assert (
-        master_from_database.experience
-        == 8
-    )
+    assert master_from_database.experience == 8
 
 
 @pytest.mark.anyio
@@ -466,20 +353,14 @@ async def test_update_my_master_location(
 
     db_session.add(second_district)
     await db_session.commit()
-    await db_session.refresh(
-        second_district
-    )
+    await db_session.refresh(second_district)
 
     response = await ac.patch(
         "/masters/me",
         headers=master_auth_headers,
         json={
-            "city_id": str(
-                second_city.id
-            ),
-            "district_id": str(
-                second_district.id
-            ),
+            "city_id": str(second_city.id),
+            "district_id": str(second_district.id),
         },
     )
 
@@ -487,17 +368,10 @@ async def test_update_my_master_location(
 
     data = response.json()
 
-    assert data["city_id"] == str(
-        second_city.id
-    )
-    assert data["district_id"] == str(
-        second_district.id
-    )
+    assert data["city_id"] == str(second_city.id)
+    assert data["district_id"] == str(second_district.id)
     assert data["city"] == second_city.name
-    assert (
-        data["district"]
-        == second_district.name
-    )
+    assert data["district"] == second_district.name
 
 
 @pytest.mark.anyio
@@ -536,19 +410,14 @@ async def test_update_my_master_city_mismatch(
         "/masters/me",
         headers=master_auth_headers,
         json={
-            "city_id": str(
-                second_city.id
-            ),
+            "city_id": str(second_city.id),
         },
     )
 
     assert response.status_code == 400
 
     assert response.json() == {
-        "detail": (
-            "Выбранный район не относится "
-            "к выбранному городу!"
-        )
+        "detail": ("Выбранный район не относится к выбранному городу!")
     }
 
 
@@ -568,12 +437,7 @@ async def test_update_my_master_cannot_clear_only_city(
 
     assert response.status_code == 400
 
-    assert response.json() == {
-        "detail": (
-            "Город и район должны быть "
-            "выбраны вместе."
-        )
-    }
+    assert response.json() == {"detail": ("Город и район должны быть выбраны вместе.")}
 
 
 @pytest.mark.anyio

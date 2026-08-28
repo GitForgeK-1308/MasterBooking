@@ -46,9 +46,7 @@ async def test_create_booking(
     offering: MasterOffering,
     future_booking_date: date,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
     booking = make_booking(
         client_id=user.id,
@@ -65,9 +63,7 @@ async def test_create_booking(
         ),
     )
 
-    result = await repository.create(
-        booking
-    )
+    result = await repository.create(booking)
 
     assert result.id is not None
     assert isinstance(
@@ -79,10 +75,7 @@ async def test_create_booking(
     assert result.master_id == master.id
     assert result.offering_id == offering.id
 
-    assert (
-        result.booking_date
-        == future_booking_date
-    )
+    assert result.booking_date == future_booking_date
 
     assert result.start_time == time(
         9,
@@ -94,10 +87,7 @@ async def test_create_booking(
         0,
     )
 
-    assert (
-        result.status
-        == BookingStatus.PENDING
-    )
+    assert result.status == BookingStatus.PENDING
 
     assert result.created_at is not None
 
@@ -107,40 +97,27 @@ async def test_get_booking_by_id(
     db_session: AsyncSession,
     booking: Booking,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
     booking_id = booking.id
 
-    db_session.expunge(
-        booking
-    )
+    db_session.expunge(booking)
 
-    result = await repository.get_by_id(
-        booking_id
-    )
+    result = await repository.get_by_id(booking_id)
 
     assert result is not None
     assert result.id == booking_id
 
-    assert (
-        result.status
-        == BookingStatus.PENDING
-    )
+    assert result.status == BookingStatus.PENDING
 
 
 @pytest.mark.anyio
 async def test_get_booking_by_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
-    result = await repository.get_by_id(
-        uuid.uuid4()
-    )
+    result = await repository.get_by_id(uuid.uuid4())
 
     assert result is None
 
@@ -157,9 +134,7 @@ async def test_get_by_master_and_date_sorted_and_scoped(
     foreign_booking: Booking,
     future_booking_date: date,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
     other_master_booking = make_booking(
         client_id=user.id,
@@ -176,35 +151,22 @@ async def test_get_by_master_and_date_sorted_and_scoped(
         ),
     )
 
-    await repository.create(
-        other_master_booking
+    await repository.create(other_master_booking)
+
+    result = await repository.get_by_master_and_date(
+        master_id=master.id,
+        booking_date=future_booking_date,
     )
 
-    result = (
-        await repository.get_by_master_and_date(
-            master_id=master.id,
-            booking_date=future_booking_date,
-        )
-    )
-
-    assert [
-        item.id
-        for item in result
-    ] == [
+    assert [item.id for item in result] == [
         booking.id,
         second_booking.id,
         foreign_booking.id,
     ]
 
-    assert all(
-        item.master_id == master.id
-        for item in result
-    )
+    assert all(item.master_id == master.id for item in result)
 
-    assert other_master_booking.id not in {
-        item.id
-        for item in result
-    }
+    assert other_master_booking.id not in {item.id for item in result}
 
 
 @pytest.mark.anyio
@@ -213,20 +175,11 @@ async def test_get_by_master_and_date_empty(
     master: Master,
     future_booking_date: date,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
-    result = (
-        await repository.get_by_master_and_date(
-            master_id=master.id,
-            booking_date=(
-                future_booking_date
-                + timedelta(
-                    days=1
-                )
-            ),
-        )
+    result = await repository.get_by_master_and_date(
+        master_id=master.id,
+        booking_date=(future_booking_date + timedelta(days=1)),
     )
 
     assert result == []
@@ -241,39 +194,25 @@ async def test_get_active_by_master_and_date_excludes_cancelled(
     foreign_booking: Booking,
     future_booking_date: date,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
-    second_booking.status = (
-        BookingStatus.CANCELLED
-    )
+    second_booking.status = BookingStatus.CANCELLED
 
-    foreign_booking.status = (
-        BookingStatus.COMPLETED
-    )
+    foreign_booking.status = BookingStatus.COMPLETED
 
     await db_session.commit()
 
-    result = (
-        await repository.get_active_by_master_and_date(
-            master_id=master.id,
-            booking_date=future_booking_date,
-        )
+    result = await repository.get_active_by_master_and_date(
+        master_id=master.id,
+        booking_date=future_booking_date,
     )
 
-    assert [
-        item.id
-        for item in result
-    ] == [
+    assert [item.id for item in result] == [
         booking.id,
         foreign_booking.id,
     ]
 
-    assert second_booking.id not in {
-        item.id
-        for item in result
-    }
+    assert second_booking.id not in {item.id for item in result}
 
 
 @pytest.mark.anyio
@@ -283,23 +222,19 @@ async def test_get_conflicting_booking(
     booking: Booking,
     future_booking_date: date,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
-    result = (
-        await repository.get_conflicting_booking(
-            master_id=master.id,
-            booking_date=future_booking_date,
-            start_time=time(
-                10,
-                30,
-            ),
-            end_time=time(
-                11,
-                30,
-            ),
-        )
+    result = await repository.get_conflicting_booking(
+        master_id=master.id,
+        booking_date=future_booking_date,
+        start_time=time(
+            10,
+            30,
+        ),
+        end_time=time(
+            11,
+            30,
+        ),
     )
 
     assert result is not None
@@ -313,23 +248,19 @@ async def test_adjacent_booking_does_not_conflict(
     booking: Booking,
     future_booking_date: date,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
-    result = (
-        await repository.get_conflicting_booking(
-            master_id=master.id,
-            booking_date=future_booking_date,
-            start_time=time(
-                11,
-                0,
-            ),
-            end_time=time(
-                12,
-                0,
-            ),
-        )
+    result = await repository.get_conflicting_booking(
+        master_id=master.id,
+        booking_date=future_booking_date,
+        start_time=time(
+            11,
+            0,
+        ),
+        end_time=time(
+            12,
+            0,
+        ),
     )
 
     assert result is None
@@ -342,27 +273,23 @@ async def test_cancelled_booking_does_not_conflict(
     booking: Booking,
     future_booking_date: date,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
     booking.status = BookingStatus.CANCELLED
 
     await db_session.commit()
 
-    result = (
-        await repository.get_conflicting_booking(
-            master_id=master.id,
-            booking_date=future_booking_date,
-            start_time=time(
-                10,
-                30,
-            ),
-            end_time=time(
-                11,
-                30,
-            ),
-        )
+    result = await repository.get_conflicting_booking(
+        master_id=master.id,
+        booking_date=future_booking_date,
+        start_time=time(
+            10,
+            30,
+        ),
+        end_time=time(
+            11,
+            30,
+        ),
     )
 
     assert result is None
@@ -376,31 +303,18 @@ async def test_get_by_client_id_sorted_and_scoped(
     second_booking: Booking,
     foreign_booking: Booking,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
-    result = await repository.get_by_client_id(
-        user.id
-    )
+    result = await repository.get_by_client_id(user.id)
 
-    assert [
-        item.id
-        for item in result
-    ] == [
+    assert [item.id for item in result] == [
         booking.id,
         second_booking.id,
     ]
 
-    assert all(
-        item.client_id == user.id
-        for item in result
-    )
+    assert all(item.client_id == user.id for item in result)
 
-    assert foreign_booking.id not in {
-        item.id
-        for item in result
-    }
+    assert foreign_booking.id not in {item.id for item in result}
 
 
 @pytest.mark.anyio
@@ -408,13 +322,9 @@ async def test_get_by_client_id_empty(
     db_session: AsyncSession,
     second_booking_user: User,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
-    result = await repository.get_by_client_id(
-        second_booking_user.id
-    )
+    result = await repository.get_by_client_id(second_booking_user.id)
 
     assert result == []
 
@@ -424,36 +334,20 @@ async def test_update_booking_status(
     db_session: AsyncSession,
     booking: Booking,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
     booking.status = BookingStatus.CONFIRMED
 
-    result = await repository.update(
-        booking
-    )
+    result = await repository.update(booking)
 
-    assert (
-        result.status
-        == BookingStatus.CONFIRMED
-    )
+    assert result.status == BookingStatus.CONFIRMED
 
     booking_id = result.id
 
-    db_session.expunge(
-        result
-    )
+    db_session.expunge(result)
 
-    booking_from_database = (
-        await repository.get_by_id(
-            booking_id
-        )
-    )
+    booking_from_database = await repository.get_by_id(booking_id)
 
     assert booking_from_database is not None
 
-    assert (
-        booking_from_database.status
-        == BookingStatus.CONFIRMED
-    )
+    assert booking_from_database.status == BookingStatus.CONFIRMED

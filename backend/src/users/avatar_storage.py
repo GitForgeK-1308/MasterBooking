@@ -38,9 +38,7 @@ class LocalAvatarStorage:
         if not file_path.exists():
             return
 
-        await to_thread.run_sync(
-            file_path.unlink
-        )
+        await to_thread.run_sync(file_path.unlink)
 
     def get_url(
         self,

@@ -20,10 +20,7 @@ async def test_create_review(
     db_session: AsyncSession,
 ):
     response = await ac.post(
-        (
-            f"/bookings/"
-            f"{completed_booking.id}/review"
-        ),
+        (f"/bookings/{completed_booking.id}/review"),
         headers=auth_headers,
         json={
             "rating": 5,
@@ -35,52 +32,27 @@ async def test_create_review(
 
     data = response.json()
 
-    assert (
-        data["booking_id"]
-        == str(completed_booking.id)
-    )
+    assert data["booking_id"] == str(completed_booking.id)
 
-    assert (
-        data["master_id"]
-        == str(completed_booking.master_id)
-    )
+    assert data["master_id"] == str(completed_booking.master_id)
 
-    assert data["client_id"] == str(
-        user.id
-    )
+    assert data["client_id"] == str(user.id)
 
     assert data["rating"] == 5
 
-    assert (
-        data["comment"]
-        == "Отличная работа!"
-    )
+    assert data["comment"] == "Отличная работа!"
 
-    review_id = uuid.UUID(
-        data["id"]
-    )
+    review_id = uuid.UUID(data["id"])
 
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    review_from_database = (
-        await repository.get_by_id(
-            review_id
-        )
-    )
+    review_from_database = await repository.get_by_id(review_id)
 
     assert review_from_database is not None
 
-    assert (
-        review_from_database.booking_id
-        == completed_booking.id
-    )
+    assert review_from_database.booking_id == completed_booking.id
 
-    assert (
-        review_from_database.rating
-        == 5
-    )
+    assert review_from_database.rating == 5
 
 
 @pytest.mark.anyio
@@ -90,10 +62,7 @@ async def test_create_review_without_comment(
     auth_headers: dict[str, str],
 ):
     response = await ac.post(
-        (
-            f"/bookings/"
-            f"{completed_booking.id}/review"
-        ),
+        (f"/bookings/{completed_booking.id}/review"),
         headers=auth_headers,
         json={
             "rating": 4,
@@ -114,10 +83,7 @@ async def test_create_review_without_token(
     completed_booking: Booking,
 ):
     response = await ac.post(
-        (
-            f"/bookings/"
-            f"{completed_booking.id}/review"
-        ),
+        (f"/bookings/{completed_booking.id}/review"),
         json={
             "rating": 5,
             "comment": "Отлично",
@@ -135,10 +101,7 @@ async def test_create_review_as_master_forbidden(
     master_auth_headers: dict[str, str],
 ):
     response = await ac.post(
-        (
-            f"/bookings/"
-            f"{completed_booking.id}/review"
-        ),
+        (f"/bookings/{completed_booking.id}/review"),
         headers=master_auth_headers,
         json={
             "rating": 5,
@@ -165,9 +128,7 @@ async def test_create_review_booking_not_found(
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Запись не найдена!"
-    }
+    assert response.json() == {"detail": "Запись не найдена!"}
 
 
 @pytest.mark.anyio
@@ -177,10 +138,7 @@ async def test_create_review_for_foreign_booking_forbidden(
     auth_headers: dict[str, str],
 ):
     response = await ac.post(
-        (
-            f"/bookings/"
-            f"{foreign_completed_booking.id}/review"
-        ),
+        (f"/bookings/{foreign_completed_booking.id}/review"),
         headers=auth_headers,
         json={
             "rating": 5,
@@ -191,10 +149,7 @@ async def test_create_review_for_foreign_booking_forbidden(
     assert response.status_code == 403
 
     assert response.json() == {
-        "detail": (
-            "Вы не можете оставить отзыв "
-            "для чужой записи!"
-        )
+        "detail": ("Вы не можете оставить отзыв для чужой записи!")
     }
 
 
@@ -216,10 +171,7 @@ async def test_create_review_booking_not_completed(
     assert response.status_code == 409
 
     assert response.json() == {
-        "detail": (
-            "Отзыв можно оставить только "
-            "после завершения записи!"
-        )
+        "detail": ("Отзыв можно оставить только после завершения записи!")
     }
 
 
@@ -231,10 +183,7 @@ async def test_create_second_review_rejected(
     auth_headers: dict[str, str],
 ):
     response = await ac.post(
-        (
-            f"/bookings/"
-            f"{completed_booking.id}/review"
-        ),
+        (f"/bookings/{completed_booking.id}/review"),
         headers=auth_headers,
         json={
             "rating": 4,
@@ -244,12 +193,7 @@ async def test_create_second_review_rejected(
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Для этой записи отзыв "
-            "уже оставлен!"
-        )
-    }
+    assert response.json() == {"detail": ("Для этой записи отзыв уже оставлен!")}
 
 
 @pytest.mark.anyio
@@ -259,10 +203,7 @@ async def test_create_review_rating_below_minimum(
     auth_headers: dict[str, str],
 ):
     response = await ac.post(
-        (
-            f"/bookings/"
-            f"{completed_booking.id}/review"
-        ),
+        (f"/bookings/{completed_booking.id}/review"),
         headers=auth_headers,
         json={
             "rating": 0,
@@ -280,10 +221,7 @@ async def test_create_review_rating_above_maximum(
     auth_headers: dict[str, str],
 ):
     response = await ac.post(
-        (
-            f"/bookings/"
-            f"{completed_booking.id}/review"
-        ),
+        (f"/bookings/{completed_booking.id}/review"),
         headers=auth_headers,
         json={
             "rating": 6,
@@ -301,10 +239,7 @@ async def test_create_review_comment_too_long(
     auth_headers: dict[str, str],
 ):
     response = await ac.post(
-        (
-            f"/bookings/"
-            f"{completed_booking.id}/review"
-        ),
+        (f"/bookings/{completed_booking.id}/review"),
         headers=auth_headers,
         json={
             "rating": 5,
@@ -322,10 +257,7 @@ async def test_create_review_rejects_extra_fields(
     auth_headers: dict[str, str],
 ):
     response = await ac.post(
-        (
-            f"/bookings/"
-            f"{completed_booking.id}/review"
-        ),
+        (f"/bookings/{completed_booking.id}/review"),
         headers=auth_headers,
         json={
             "rating": 5,

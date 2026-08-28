@@ -23,12 +23,13 @@ async def test_get_bookings_for_reminder(
     offering,
 ):
     start_time = (
-        datetime.now()
-        + timedelta(hours=1)
-    ).replace(
-        microsecond=0,
-        second=0,
-    ).time()
+        (datetime.now() + timedelta(hours=1))
+        .replace(
+            microsecond=0,
+            second=0,
+        )
+        .time()
+    )
 
     booking = Booking(
         id=uuid.uuid4(),
@@ -53,9 +54,7 @@ async def test_get_bookings_for_reminder(
     db_session.add(booking)
     await db_session.commit()
 
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
     bookings = await repository.get_bookings_for_reminder(
         datetime.combine(

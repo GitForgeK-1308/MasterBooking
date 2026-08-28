@@ -22,9 +22,7 @@ class OfferingImageRepository:
         image_id: uuid.UUID,
     ) -> OfferingImage | None:
         return await self.session.scalar(
-            select(OfferingImage).where(
-                OfferingImage.id == image_id
-            )
+            select(OfferingImage).where(OfferingImage.id == image_id)
         )
 
     async def get_by_offering_id(
@@ -33,10 +31,7 @@ class OfferingImageRepository:
     ) -> list[OfferingImage]:
         result = await self.session.scalars(
             select(OfferingImage)
-            .where(
-                OfferingImage.offering_id
-                == offering_id
-            )
+            .where(OfferingImage.offering_id == offering_id)
             .order_by(
                 OfferingImage.is_primary.desc(),
                 OfferingImage.sort_order.asc(),
@@ -51,13 +46,8 @@ class OfferingImageRepository:
         offering_id: uuid.UUID,
     ) -> int:
         count = await self.session.scalar(
-            select(
-                func.count(
-                    OfferingImage.id
-                )
-            ).where(
-                OfferingImage.offering_id
-                == offering_id
+            select(func.count(OfferingImage.id)).where(
+                OfferingImage.offering_id == offering_id
             )
         )
 
@@ -69,8 +59,7 @@ class OfferingImageRepository:
     ) -> OfferingImage | None:
         return await self.session.scalar(
             select(OfferingImage).where(
-                OfferingImage.offering_id
-                == offering_id,
+                OfferingImage.offering_id == offering_id,
                 OfferingImage.is_primary.is_(True),
             )
         )
@@ -79,14 +68,10 @@ class OfferingImageRepository:
         self,
         image: OfferingImage,
     ) -> OfferingImage:
-        self.session.add(
-            image
-        )
+        self.session.add(image)
 
         await self.session.commit()
-        await self.session.refresh(
-            image
-        )
+        await self.session.refresh(image)
 
         return image
 
@@ -95,9 +80,7 @@ class OfferingImageRepository:
         image: OfferingImage,
     ) -> OfferingImage:
         await self.session.commit()
-        await self.session.refresh(
-            image
-        )
+        await self.session.refresh(image)
 
         return image
 
@@ -105,9 +88,7 @@ class OfferingImageRepository:
         self,
         image: OfferingImage,
     ) -> None:
-        await self.session.delete(
-            image
-        )
+        await self.session.delete(image)
 
         await self.session.commit()
 
@@ -119,8 +100,7 @@ class OfferingImageRepository:
         image = await self.session.scalar(
             select(OfferingImage).where(
                 OfferingImage.id == image_id,
-                OfferingImage.offering_id
-                == offering_id,
+                OfferingImage.offering_id == offering_id,
             )
         )
 
@@ -130,31 +110,23 @@ class OfferingImageRepository:
         await self.session.execute(
             update(OfferingImage)
             .where(
-                OfferingImage.offering_id
-                == offering_id,
+                OfferingImage.offering_id == offering_id,
                 OfferingImage.is_primary.is_(True),
             )
-            .values(
-                is_primary=False
-            )
+            .values(is_primary=False)
         )
 
         await self.session.execute(
             update(OfferingImage)
             .where(
                 OfferingImage.id == image_id,
-                OfferingImage.offering_id
-                == offering_id,
+                OfferingImage.offering_id == offering_id,
             )
-            .values(
-                is_primary=True
-            )
+            .values(is_primary=True)
         )
 
         await self.session.commit()
-        await self.session.refresh(
-            image
-        )
+        await self.session.refresh(image)
 
         return image
 
@@ -165,19 +137,14 @@ class OfferingImageRepository:
         was_primary = image.is_primary
         offering_id = image.offering_id
 
-        await self.session.delete(
-            image
-        )
+        await self.session.delete(image)
 
         await self.session.flush()
 
         if was_primary:
             next_image = await self.session.scalar(
                 select(OfferingImage)
-                .where(
-                    OfferingImage.offering_id
-                    == offering_id
-                )
+                .where(OfferingImage.offering_id == offering_id)
                 .order_by(
                     OfferingImage.sort_order.asc(),
                     OfferingImage.created_at.asc(),

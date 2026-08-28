@@ -22,9 +22,7 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    url = config.get_main_option(
-        "sqlalchemy.url"
-    )
+    url = config.get_main_option("sqlalchemy.url")
 
     context.configure(
         url=url,
@@ -62,17 +60,13 @@ async def run_async_migrations() -> None:
     )
 
     async with connectable.connect() as connection:
-        await connection.run_sync(
-            do_run_migrations
-        )
+        await connection.run_sync(do_run_migrations)
 
     await connectable.dispose()
 
 
 def run_migrations_online() -> None:
-    asyncio.run(
-        run_async_migrations()
-    )
+    asyncio.run(run_async_migrations())
 
 
 if context.is_offline_mode():

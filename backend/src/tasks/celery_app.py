@@ -8,7 +8,7 @@ celery_app = Celery(
     broker=settings.celery_broker_url,
     include=[
         "src.tasks.email_tasks",
-         "src.tasks.booking_tasks",
+        "src.tasks.booking_tasks",
     ],
 )
 

@@ -17,21 +17,13 @@ class UserRepository:
         self,
         user_id: uuid.UUID,
     ) -> User | None:
-        return await self.session.scalar(
-            select(User).where(
-                User.id == user_id
-            )
-        )
+        return await self.session.scalar(select(User).where(User.id == user_id))
 
     async def get_by_email(
         self,
         email: str,
     ) -> User | None:
-        return await self.session.scalar(
-            select(User).where(
-                User.email == email
-            )
-        )
+        return await self.session.scalar(select(User).where(User.email == email))
 
     async def create(
         self,

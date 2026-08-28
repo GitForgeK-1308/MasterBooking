@@ -71,15 +71,11 @@ app.add_middleware(
         "Content-Type",
     ],
 )
-    
-
 
 
 app.mount(
     "/uploads",
-    StaticFiles(
-        directory=UPLOADS_DIR
-    ),
+    StaticFiles(directory=UPLOADS_DIR),
     name="uploads",
 )
 

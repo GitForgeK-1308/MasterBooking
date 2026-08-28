@@ -36,10 +36,8 @@ async def test_send_reminders():
     )
 
     with patch(
-        "src.bookings.reminder_service."
-        "send_booking_reminder_email.delay"
+        "src.bookings.reminder_service.send_booking_reminder_email.delay"
     ) as send_email:
-
         await service.send_reminders()
 
     send_email.assert_called_once_with(
@@ -49,9 +47,8 @@ async def test_send_reminders():
 
     assert booking.reminder_sent is True
 
-    repository.update.assert_awaited_once_with(
-        booking
-    )
+    repository.update.assert_awaited_once_with(booking)
+
 
 @pytest.mark.anyio
 async def test_send_reminders_without_email():
@@ -81,10 +78,8 @@ async def test_send_reminders_without_email():
     )
 
     with patch(
-        "src.bookings.reminder_service."
-        "send_booking_reminder_email.delay"
+        "src.bookings.reminder_service.send_booking_reminder_email.delay"
     ) as send_email:
-
         await service.send_reminders()
 
     send_email.assert_not_called()

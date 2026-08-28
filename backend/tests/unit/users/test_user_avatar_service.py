@@ -50,16 +50,12 @@ def make_user(
 
 @pytest.fixture
 def user_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=UserRepository
-    )
+    return AsyncMock(spec=UserRepository)
 
 
 @pytest.fixture
 def avatar_storage() -> MagicMock:
-    return MagicMock(
-        spec=LocalAvatarStorage
-    )
+    return MagicMock(spec=LocalAvatarStorage)
 
 
 @pytest.fixture
@@ -81,20 +77,14 @@ async def test_upload_avatar(
 ):
     user = make_user()
 
-    content = make_image_bytes(
-        "PNG"
-    )
+    content = make_image_bytes("PNG")
 
     file = AsyncMock()
     file.read.return_value = content
 
-    avatar_storage.save.return_value = (
-        "avatars/new-avatar.png"
-    )
+    avatar_storage.save.return_value = "avatars/new-avatar.png"
 
-    user_repository.update.return_value = (
-        user
-    )
+    user_repository.update.return_value = user
 
     result = await avatar_service.upload_avatar(
         user=user,
@@ -102,23 +92,16 @@ async def test_upload_avatar(
     )
 
     assert result is user
-    assert (
-        user.avatar_storage_key
-        == "avatars/new-avatar.png"
-    )
+    assert user.avatar_storage_key == "avatars/new-avatar.png"
 
-    file.read.assert_awaited_once_with(
-        MAX_AVATAR_SIZE + 1
-    )
+    file.read.assert_awaited_once_with(MAX_AVATAR_SIZE + 1)
 
     avatar_storage.save.assert_awaited_once_with(
         content=content,
         extension="png",
     )
 
-    user_repository.update.assert_awaited_once_with(
-        user
-    )
+    user_repository.update.assert_awaited_once_with(user)
 
     avatar_storage.delete.assert_not_awaited()
 
@@ -129,24 +112,16 @@ async def test_upload_avatar_replaces_old_avatar(
     user_repository: AsyncMock,
     avatar_storage: MagicMock,
 ):
-    user = make_user(
-        avatar_storage_key="avatars/old.png"
-    )
+    user = make_user(avatar_storage_key="avatars/old.png")
 
-    content = make_image_bytes(
-        "JPEG"
-    )
+    content = make_image_bytes("JPEG")
 
     file = AsyncMock()
     file.read.return_value = content
 
-    avatar_storage.save.return_value = (
-        "avatars/new.jpg"
-    )
+    avatar_storage.save.return_value = "avatars/new.jpg"
 
-    user_repository.update.return_value = (
-        user
-    )
+    user_repository.update.return_value = user
 
     result = await avatar_service.upload_avatar(
         user=user,
@@ -154,23 +129,16 @@ async def test_upload_avatar_replaces_old_avatar(
     )
 
     assert result is user
-    assert (
-        user.avatar_storage_key
-        == "avatars/new.jpg"
-    )
+    assert user.avatar_storage_key == "avatars/new.jpg"
 
     avatar_storage.save.assert_awaited_once_with(
         content=content,
         extension="jpg",
     )
 
-    user_repository.update.assert_awaited_once_with(
-        user
-    )
+    user_repository.update.assert_awaited_once_with(user)
 
-    avatar_storage.delete.assert_awaited_once_with(
-        "avatars/old.png"
-    )
+    avatar_storage.delete.assert_awaited_once_with("avatars/old.png")
 
 
 @pytest.mark.anyio
@@ -180,13 +148,9 @@ async def test_upload_avatar_invalid_file(
     avatar_storage: MagicMock,
 ):
     file = AsyncMock()
-    file.read.return_value = (
-        b"not-an-image"
-    )
+    file.read.return_value = b"not-an-image"
 
-    with pytest.raises(
-        InvalidAvatarTypeError
-    ):
+    with pytest.raises(InvalidAvatarTypeError):
         await avatar_service.upload_avatar(
             user=make_user(),
             file=file,
@@ -203,16 +167,12 @@ async def test_upload_avatar_unsupported_format(
     user_repository: AsyncMock,
     avatar_storage: MagicMock,
 ):
-    content = make_image_bytes(
-        "GIF"
-    )
+    content = make_image_bytes("GIF")
 
     file = AsyncMock()
     file.read.return_value = content
 
-    with pytest.raises(
-        InvalidAvatarTypeError
-    ):
+    with pytest.raises(InvalidAvatarTypeError):
         await avatar_service.upload_avatar(
             user=make_user(),
             file=file,
@@ -230,21 +190,15 @@ async def test_upload_avatar_too_large(
     avatar_storage: MagicMock,
 ):
     file = AsyncMock()
-    file.read.return_value = (
-        b"x" * (MAX_AVATAR_SIZE + 1)
-    )
+    file.read.return_value = b"x" * (MAX_AVATAR_SIZE + 1)
 
-    with pytest.raises(
-        AvatarTooLargeError
-    ):
+    with pytest.raises(AvatarTooLargeError):
         await avatar_service.upload_avatar(
             user=make_user(),
             file=file,
         )
 
-    file.read.assert_awaited_once_with(
-        MAX_AVATAR_SIZE + 1
-    )
+    file.read.assert_awaited_once_with(MAX_AVATAR_SIZE + 1)
 
     avatar_storage.save.assert_not_awaited()
     user_repository.update.assert_not_awaited()
@@ -260,24 +214,16 @@ async def test_upload_avatar_cleans_new_file_when_update_fails(
     old_storage_key = "avatars/old.png"
     new_storage_key = "avatars/new.png"
 
-    user = make_user(
-        avatar_storage_key=old_storage_key
-    )
+    user = make_user(avatar_storage_key=old_storage_key)
 
-    content = make_image_bytes(
-        "PNG"
-    )
+    content = make_image_bytes("PNG")
 
     file = AsyncMock()
     file.read.return_value = content
 
-    avatar_storage.save.return_value = (
-        new_storage_key
-    )
+    avatar_storage.save.return_value = new_storage_key
 
-    user_repository.update.side_effect = (
-        RuntimeError("database error")
-    )
+    user_repository.update.side_effect = RuntimeError("database error")
 
     with pytest.raises(
         RuntimeError,
@@ -288,14 +234,9 @@ async def test_upload_avatar_cleans_new_file_when_update_fails(
             file=file,
         )
 
-    avatar_storage.delete.assert_awaited_once_with(
-        new_storage_key
-    )
+    avatar_storage.delete.assert_awaited_once_with(new_storage_key)
 
-    assert (
-        user.avatar_storage_key
-        == old_storage_key
-    )
+    assert user.avatar_storage_key == old_storage_key
 
 
 def test_get_avatar_url(
@@ -304,19 +245,10 @@ def test_get_avatar_url(
 ):
     storage_key = "avatars/avatar.png"
 
-    avatar_storage.get_url.return_value = (
-        "/uploads/avatars/avatar.png"
-    )
+    avatar_storage.get_url.return_value = "/uploads/avatars/avatar.png"
 
-    result = avatar_service.get_avatar_url(
-        storage_key
-    )
+    result = avatar_service.get_avatar_url(storage_key)
 
-    assert (
-        result
-        == "/uploads/avatars/avatar.png"
-    )
+    assert result == "/uploads/avatars/avatar.png"
 
-    avatar_storage.get_url.assert_called_once_with(
-        storage_key
-    )
+    avatar_storage.get_url.assert_called_once_with(storage_key)

@@ -19,12 +19,8 @@ async def test_create_booking_invalid_master_uuid(
         "/masters/not-a-uuid/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
@@ -44,9 +40,7 @@ async def test_create_booking_invalid_offering_uuid(
         headers=auth_headers,
         json={
             "offering_id": "not-a-uuid",
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
@@ -65,9 +59,7 @@ async def test_create_booking_invalid_date(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
+            "offering_id": str(offering.id),
             "booking_date": "not-a-date",
             "start_time": "10:00:00",
         },
@@ -88,12 +80,8 @@ async def test_create_booking_invalid_start_time(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "not-a-time",
         },
     )
@@ -110,9 +98,7 @@ async def test_available_slots_missing_offering_id(
     response = await ac.get(
         f"/masters/{master.id}/available-slots",
         params={
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "booking_date": (future_booking_date.isoformat()),
         },
     )
 
@@ -128,9 +114,7 @@ async def test_available_slots_invalid_date(
     response = await ac.get(
         f"/masters/{master.id}/available-slots",
         params={
-            "offering_id": str(
-                offering.id
-            ),
+            "offering_id": str(offering.id),
             "booking_date": "not-a-date",
         },
     )
@@ -171,14 +155,9 @@ async def test_update_booking_invalid_status(
     master_auth_headers: dict[str, str],
 ):
     response = await ac.patch(
-        (
-            "/masters/me/bookings/"
-            f"{booking.id}/status"
-        ),
+        (f"/masters/me/bookings/{booking.id}/status"),
         headers=master_auth_headers,
-        json={
-            "status": "unknown-status"
-        },
+        json={"status": "unknown-status"},
     )
 
     assert response.status_code == 422
@@ -193,9 +172,7 @@ async def test_get_master_bookings_invalid_date(
     response = await ac.get(
         "/masters/me/bookings",
         headers=master_auth_headers,
-        params={
-            "booking_date": "not-a-date"
-        },
+        params={"booking_date": "not-a-date"},
     )
 
     assert response.status_code == 422

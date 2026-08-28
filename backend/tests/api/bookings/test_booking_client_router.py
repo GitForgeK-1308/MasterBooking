@@ -32,35 +32,21 @@ async def test_get_my_bookings(
 
     data = response.json()
 
-    assert [
-        item["id"]
-        for item in data
-    ] == [
+    assert [item["id"] for item in data] == [
         str(booking.id),
         str(second_booking.id),
     ]
 
-    assert all(
-        item["client_id"]
-        == str(user.id)
-        for item in data
-    )
+    assert all(item["client_id"] == str(user.id) for item in data)
 
-    assert str(
-        foreign_booking.id
-    ) not in {
-        item["id"]
-        for item in data
-    }
+    assert str(foreign_booking.id) not in {item["id"] for item in data}
 
 
 @pytest.mark.anyio
 async def test_get_my_bookings_without_token(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        "/users/me/bookings"
-    )
+    response = await ac.get("/users/me/bookings")
 
     assert response.status_code == 401
 
@@ -81,13 +67,9 @@ async def test_get_booking_by_id_as_client(
 
     data = response.json()
 
-    assert data["id"] == str(
-        booking.id
-    )
+    assert data["id"] == str(booking.id)
 
-    assert data["client_id"] == str(
-        user.id
-    )
+    assert data["client_id"] == str(user.id)
 
     assert data["status"] == "pending"
 
@@ -104,9 +86,7 @@ async def test_get_booking_by_id_not_found(
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Бронирование не найдено!"
-    }
+    assert response.json() == {"detail": "Бронирование не найдено!"}
 
 
 @pytest.mark.anyio
@@ -122,12 +102,7 @@ async def test_get_foreign_booking_forbidden(
 
     assert response.status_code == 403
 
-    assert response.json() == {
-        "detail": (
-            "У вас нет доступа "
-            "к этому бронированию!"
-        )
-    }
+    assert response.json() == {"detail": ("У вас нет доступа к этому бронированию!")}
 
 
 @pytest.mark.anyio
@@ -135,9 +110,7 @@ async def test_get_booking_without_token(
     ac: AsyncClient,
     booking: Booking,
 ):
-    response = await ac.get(
-        f"/bookings/{booking.id}"
-    )
+    response = await ac.get(f"/bookings/{booking.id}")
 
     assert response.status_code == 401
 
@@ -152,10 +125,7 @@ async def test_cancel_pending_booking(
     booking_id = booking.id
 
     response = await ac.patch(
-        (
-            "/users/me/bookings/"
-            f"{booking_id}/cancel"
-        ),
+        (f"/users/me/bookings/{booking_id}/cancel"),
         headers=auth_headers,
     )
 
@@ -163,28 +133,17 @@ async def test_cancel_pending_booking(
 
     data = response.json()
 
-    assert data["id"] == str(
-        booking_id
-    )
+    assert data["id"] == str(booking_id)
 
     assert data["status"] == "cancelled"
 
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
-    booking_from_database = (
-        await repository.get_by_id(
-            booking_id
-        )
-    )
+    booking_from_database = await repository.get_by_id(booking_id)
 
     assert booking_from_database is not None
 
-    assert (
-        booking_from_database.status
-        == BookingStatus.CANCELLED
-    )
+    assert booking_from_database.status == BookingStatus.CANCELLED
 
 
 @pytest.mark.anyio
@@ -193,25 +152,16 @@ async def test_cancel_confirmed_booking(
     second_booking: Booking,
     auth_headers: dict[str, str],
 ):
-    assert (
-        second_booking.status
-        == BookingStatus.CONFIRMED
-    )
+    assert second_booking.status == BookingStatus.CONFIRMED
 
     response = await ac.patch(
-        (
-            "/users/me/bookings/"
-            f"{second_booking.id}/cancel"
-        ),
+        (f"/users/me/bookings/{second_booking.id}/cancel"),
         headers=auth_headers,
     )
 
     assert response.status_code == 200
 
-    assert (
-        response.json()["status"]
-        == "cancelled"
-    )
+    assert response.json()["status"] == "cancelled"
 
 
 @pytest.mark.anyio
@@ -226,20 +176,13 @@ async def test_cancel_completed_booking_rejected(
     await db_session.commit()
 
     response = await ac.patch(
-        (
-            "/users/me/bookings/"
-            f"{booking.id}/cancel"
-        ),
+        (f"/users/me/bookings/{booking.id}/cancel"),
         headers=auth_headers,
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Это бронирование нельзя отменить!"
-        )
-    }
+    assert response.json() == {"detail": ("Это бронирование нельзя отменить!")}
 
 
 @pytest.mark.anyio
@@ -254,20 +197,13 @@ async def test_cancel_already_cancelled_booking_rejected(
     await db_session.commit()
 
     response = await ac.patch(
-        (
-            "/users/me/bookings/"
-            f"{booking.id}/cancel"
-        ),
+        (f"/users/me/bookings/{booking.id}/cancel"),
         headers=auth_headers,
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Это бронирование нельзя отменить!"
-        )
-    }
+    assert response.json() == {"detail": ("Это бронирование нельзя отменить!")}
 
 
 @pytest.mark.anyio
@@ -277,21 +213,13 @@ async def test_cancel_foreign_booking_forbidden(
     auth_headers: dict[str, str],
 ):
     response = await ac.patch(
-        (
-            "/users/me/bookings/"
-            f"{foreign_booking.id}/cancel"
-        ),
+        (f"/users/me/bookings/{foreign_booking.id}/cancel"),
         headers=auth_headers,
     )
 
     assert response.status_code == 403
 
-    assert response.json() == {
-        "detail": (
-            "Вы не можете отменить "
-            "чужое бронирование!"
-        )
-    }
+    assert response.json() == {"detail": ("Вы не можете отменить чужое бронирование!")}
 
 
 @pytest.mark.anyio
@@ -300,18 +228,13 @@ async def test_cancel_booking_not_found(
     auth_headers: dict[str, str],
 ):
     response = await ac.patch(
-        (
-            "/users/me/bookings/"
-            f"{uuid.uuid4()}/cancel"
-        ),
+        (f"/users/me/bookings/{uuid.uuid4()}/cancel"),
         headers=auth_headers,
     )
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Бронирование не найдено!"
-    }
+    assert response.json() == {"detail": "Бронирование не найдено!"}
 
 
 @pytest.mark.anyio
@@ -319,11 +242,6 @@ async def test_cancel_booking_without_token(
     ac: AsyncClient,
     booking: Booking,
 ):
-    response = await ac.patch(
-        (
-            "/users/me/bookings/"
-            f"{booking.id}/cancel"
-        )
-    )
+    response = await ac.patch((f"/users/me/bookings/{booking.id}/cancel"))
 
     assert response.status_code == 401

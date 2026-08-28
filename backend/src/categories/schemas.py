@@ -31,9 +31,7 @@ class CategoryUpdate(BaseModel):
 
 
 class CategoryResponse(BaseModel):
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     parent_id: uuid.UUID | None
@@ -48,6 +46,4 @@ class CategoryTreeResponse(BaseModel):
     slug: str
     parent_id: uuid.UUID | None
     is_active: bool
-    children: list["CategoryTreeResponse"] = Field(
-        default_factory=list
-    )
+    children: list["CategoryTreeResponse"] = Field(default_factory=list)

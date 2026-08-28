@@ -16,9 +16,7 @@ def second_master_auth_headers(
 ) -> dict[str, str]:
     assert second_master.user_id is not None
 
-    token = create_access_token(
-        user_id=second_master.user_id
-    )
+    token = create_access_token(user_id=second_master.user_id)
 
     return {
         "Authorization": f"Bearer {token}",

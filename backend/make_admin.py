@@ -23,25 +23,17 @@ async def main(email: str) -> None:
     normalized_email = email.strip().lower()
 
     async with AsyncSessionLocal() as session:
-        user = await session.scalar(
-            select(User).where(
-                User.email == normalized_email
-            )
-        )
+        user = await session.scalar(select(User).where(User.email == normalized_email))
 
         if user is None:
-            print(
-                f"Пользователь {normalized_email} не найден"
-            )
+            print(f"Пользователь {normalized_email} не найден")
             return
 
         user.role = UserRole.ADMIN
 
         await session.commit()
 
-        print(
-            f"Пользователь {user.email} теперь администратор"
-        )
+        print(f"Пользователь {user.email} теперь администратор")
 
 
 if __name__ == "__main__":

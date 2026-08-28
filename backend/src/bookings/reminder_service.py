@@ -13,25 +13,17 @@ class BookingReminderService:
         self.booking_repository = booking_repository
 
     async def send_reminders(self) -> None:
-        target_datetime = (
-            datetime.now()
-            + timedelta(hours=1)
-        ).replace(
+        target_datetime = (datetime.now() + timedelta(hours=1)).replace(
             second=0,
             microsecond=0,
         )
 
-        bookings = await (
-            self.booking_repository
-            .get_bookings_for_reminder(
-                target_datetime
-            )
+        bookings = await self.booking_repository.get_bookings_for_reminder(
+            target_datetime
         )
 
         for booking in bookings:
-            await self._send_reminder(
-                booking
-            )
+            await self._send_reminder(booking)
 
     async def _send_reminder(
         self,
@@ -47,6 +39,4 @@ class BookingReminderService:
 
         booking.reminder_sent = True
 
-        await self.booking_repository.update(
-            booking
-        )
+        await self.booking_repository.update(booking)

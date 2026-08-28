@@ -36,32 +36,21 @@ async def test_create_schedule(
 
     data = response.json()
 
-    assert data["master_id"] == str(
-        master.id
-    )
+    assert data["master_id"] == str(master.id)
     assert data["day_of_week"] == "wednesday"
     assert data["start_time"] == "09:00:00"
     assert data["end_time"] == "17:00:00"
     assert data["is_working"] is True
 
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
-    schedule = (
-        await repository.get_by_master_and_day(
-            master_id=master.id,
-            day_of_week=WeekDay.WEDNESDAY,
-        )
+    schedule = await repository.get_by_master_and_day(
+        master_id=master.id,
+        day_of_week=WeekDay.WEDNESDAY,
     )
 
     assert schedule is not None
-    assert (
-        schedule.id
-        == uuid.UUID(
-            data["id"]
-        )
-    )
+    assert schedule.id == uuid.UUID(data["id"])
 
 
 @pytest.mark.anyio
@@ -145,12 +134,7 @@ async def test_create_duplicate_schedule(
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Расписание на этот день "
-            "уже существует!"
-        )
-    }
+    assert response.json() == {"detail": ("Расписание на этот день уже существует!")}
 
 
 @pytest.mark.anyio
@@ -230,19 +214,13 @@ async def test_get_my_schedules(
 
     data = response.json()
 
-    assert [
-        item["day_of_week"]
-        for item in data
-    ] == [
+    assert [item["day_of_week"] for item in data] == [
         "monday",
         "tuesday",
         "sunday",
     ]
 
-    assert {
-        item["id"]
-        for item in data
-    } == {
+    assert {item["id"] for item in data} == {
         str(monday_schedule.id),
         str(tuesday_schedule.id),
         str(day_off_schedule.id),
@@ -274,23 +252,13 @@ async def test_update_schedule(
     assert data["end_time"] == "19:00:00"
     assert data["is_working"] is True
 
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
-    schedule = await repository.get_by_id(
-        monday_schedule.id
-    )
+    schedule = await repository.get_by_id(monday_schedule.id)
 
     assert schedule is not None
-    assert (
-        schedule.start_time.isoformat()
-        == "10:00:00"
-    )
-    assert (
-        schedule.end_time.isoformat()
-        == "19:00:00"
-    )
+    assert schedule.start_time.isoformat() == "10:00:00"
+    assert schedule.end_time.isoformat() == "19:00:00"
 
 
 @pytest.mark.anyio
@@ -335,10 +303,7 @@ async def test_update_day_off_to_working_requires_time(
     assert response.status_code == 422
 
     assert response.json() == {
-        "detail": (
-            "Для рабочего дня необходимо "
-            "указать время начала и окончания"
-        )
+        "detail": ("Для рабочего дня необходимо указать время начала и окончания")
     }
 
 
@@ -360,12 +325,7 @@ async def test_update_schedule_duplicate_day(
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Расписание на этот день "
-            "уже существует!"
-        )
-    }
+    assert response.json() == {"detail": ("Расписание на этот день уже существует!")}
 
 
 @pytest.mark.anyio
@@ -385,12 +345,7 @@ async def test_update_foreign_schedule_forbidden(
 
     assert response.status_code == 403
 
-    assert response.json() == {
-        "detail": (
-            "Вы не можете изменять "
-            "чужое расписание!"
-        )
-    }
+    assert response.json() == {"detail": ("Вы не можете изменять чужое расписание!")}
 
 
 @pytest.mark.anyio
@@ -409,9 +364,7 @@ async def test_update_schedule_not_found(
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Расписание не найдено!"
-    }
+    assert response.json() == {"detail": "Расписание не найдено!"}
 
 
 @pytest.mark.anyio
@@ -432,13 +385,9 @@ async def test_delete_schedule(
     assert response.status_code == 204
     assert response.text == ""
 
-    repository = MasterScheduleRepository(
-        db_session
-    )
+    repository = MasterScheduleRepository(db_session)
 
-    schedule = await repository.get_by_id(
-        schedule_id
-    )
+    schedule = await repository.get_by_id(schedule_id)
 
     assert schedule is None
 
@@ -457,12 +406,7 @@ async def test_delete_foreign_schedule_forbidden(
 
     assert response.status_code == 403
 
-    assert response.json() == {
-        "detail": (
-            "Вы не можете удалять "
-            "чужое расписание!"
-        )
-    }
+    assert response.json() == {"detail": ("Вы не можете удалять чужое расписание!")}
 
 
 @pytest.mark.anyio
@@ -478,6 +422,4 @@ async def test_delete_schedule_not_found(
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Расписание не найдено!"
-    }
+    assert response.json() == {"detail": "Расписание не найдено!"}

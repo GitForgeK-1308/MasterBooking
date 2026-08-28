@@ -31,15 +31,11 @@ def make_master(
 async def test_create_master(
     db_session: AsyncSession,
 ):
-    repository = MasterRepository(
-        db_session
-    )
+    repository = MasterRepository(db_session)
 
     master = make_master()
 
-    result = await repository.create(
-        master
-    )
+    result = await repository.create(master)
 
     assert result.id is not None
     assert isinstance(
@@ -48,9 +44,7 @@ async def test_create_master(
     )
     assert result.first_name == "Anna"
     assert result.last_name == "Petrova"
-    assert result.description == (
-        "Professional beauty master."
-    )
+    assert result.description == ("Professional beauty master.")
     assert result.experience == 5
     assert result.education == "Beauty Academy"
     assert result.address == "Main Street 10"
@@ -61,9 +55,7 @@ async def test_create_master(
 async def test_get_all_masters_sorted(
     db_session: AsyncSession,
 ):
-    repository = MasterRepository(
-        db_session
-    )
+    repository = MasterRepository(db_session)
 
     await repository.create(
         make_master(
@@ -115,9 +107,7 @@ async def test_get_all_masters_sorted(
 async def test_get_active_masters(
     db_session: AsyncSession,
 ):
-    repository = MasterRepository(
-        db_session
-    )
+    repository = MasterRepository(db_session)
 
     await repository.create(
         make_master(
@@ -160,38 +150,24 @@ async def test_get_active_masters(
         ),
     ]
 
-    assert all(
-        master.is_active
-        for master in result
-    )
+    assert all(master.is_active for master in result)
 
-    assert inactive_master.id not in {
-        master.id
-        for master in result
-    }
+    assert inactive_master.id not in {master.id for master in result}
 
 
 @pytest.mark.anyio
 async def test_get_master_by_id(
     db_session: AsyncSession,
 ):
-    repository = MasterRepository(
-        db_session
-    )
+    repository = MasterRepository(db_session)
 
-    master = await repository.create(
-        make_master()
-    )
+    master = await repository.create(make_master())
 
     master_id = master.id
 
-    db_session.expunge(
-        master
-    )
+    db_session.expunge(master)
 
-    result = await repository.get_by_id(
-        master_id
-    )
+    result = await repository.get_by_id(master_id)
 
     assert result is not None
     assert result.id == master_id
@@ -203,13 +179,9 @@ async def test_get_master_by_id(
 async def test_get_master_by_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = MasterRepository(
-        db_session
-    )
+    repository = MasterRepository(db_session)
 
-    result = await repository.get_by_id(
-        uuid.uuid4()
-    )
+    result = await repository.get_by_id(uuid.uuid4())
 
     assert result is None
 
@@ -219,9 +191,7 @@ async def test_get_master_by_user_id(
     db_session: AsyncSession,
     user: User,
 ):
-    repository = MasterRepository(
-        db_session
-    )
+    repository = MasterRepository(db_session)
 
     master = await repository.create(
         make_master(
@@ -233,13 +203,9 @@ async def test_get_master_by_user_id(
 
     master_id = master.id
 
-    db_session.expunge(
-        master
-    )
+    db_session.expunge(master)
 
-    result = await repository.get_by_user_id(
-        user.id
-    )
+    result = await repository.get_by_user_id(user.id)
 
     assert result is not None
     assert result.id == master_id
@@ -253,23 +219,16 @@ async def test_get_master_by_user_id(
     if user.avatar_storage_key is None:
         assert result.avatar_url is None
     else:
-        assert (
-            result.avatar_url
-            == f"/uploads/{user.avatar_storage_key}"
-        )
+        assert result.avatar_url == f"/uploads/{user.avatar_storage_key}"
 
 
 @pytest.mark.anyio
 async def test_get_master_by_user_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = MasterRepository(
-        db_session
-    )
+    repository = MasterRepository(db_session)
 
-    result = await repository.get_by_user_id(
-        uuid.uuid4()
-    )
+    result = await repository.get_by_user_id(uuid.uuid4())
 
     assert result is None
 
@@ -278,13 +237,9 @@ async def test_get_master_by_user_id_not_found(
 async def test_update_master(
     db_session: AsyncSession,
 ):
-    repository = MasterRepository(
-        db_session
-    )
+    repository = MasterRepository(db_session)
 
-    master = await repository.create(
-        make_master()
-    )
+    master = await repository.create(make_master())
 
     master.first_name = "Maria"
     master.description = "Updated description."
@@ -293,15 +248,10 @@ async def test_update_master(
     master.address = "New Street 20"
     master.is_active = False
 
-    result = await repository.update(
-        master
-    )
+    result = await repository.update(master)
 
     assert result.first_name == "Maria"
-    assert (
-        result.description
-        == "Updated description."
-    )
+    assert result.description == "Updated description."
     assert result.experience == 10
     assert result.education == "Updated Academy"
     assert result.address == "New Street 20"
@@ -309,63 +259,31 @@ async def test_update_master(
 
     master_id = result.id
 
-    db_session.expunge(
-        result
-    )
+    db_session.expunge(result)
 
-    master_from_database = (
-        await repository.get_by_id(
-            master_id
-        )
-    )
+    master_from_database = await repository.get_by_id(master_id)
 
     assert master_from_database is not None
-    assert (
-        master_from_database.first_name
-        == "Maria"
-    )
-    assert (
-        master_from_database.description
-        == "Updated description."
-    )
-    assert (
-        master_from_database.experience
-        == 10
-    )
-    assert (
-        master_from_database.education
-        == "Updated Academy"
-    )
-    assert (
-        master_from_database.address
-        == "New Street 20"
-    )
-    assert (
-        master_from_database.is_active
-        is False
-    )
+    assert master_from_database.first_name == "Maria"
+    assert master_from_database.description == "Updated description."
+    assert master_from_database.experience == 10
+    assert master_from_database.education == "Updated Academy"
+    assert master_from_database.address == "New Street 20"
+    assert master_from_database.is_active is False
 
 
 @pytest.mark.anyio
 async def test_delete_master(
     db_session: AsyncSession,
 ):
-    repository = MasterRepository(
-        db_session
-    )
+    repository = MasterRepository(db_session)
 
-    master = await repository.create(
-        make_master()
-    )
+    master = await repository.create(make_master())
 
     master_id = master.id
 
-    await repository.delete(
-        master
-    )
+    await repository.delete(master)
 
-    result = await repository.get_by_id(
-        master_id
-    )
+    result = await repository.get_by_id(master_id)
 
     assert result is None

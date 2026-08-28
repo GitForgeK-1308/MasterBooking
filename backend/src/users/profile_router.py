@@ -36,9 +36,7 @@ router = APIRouter(
     response_model=UserResponse,
 )
 async def get_my_profile(
-    current_user: User = Depends(
-        get_current_user
-    ),
+    current_user: User = Depends(get_current_user),
 ) -> User:
     return current_user
 
@@ -49,12 +47,8 @@ async def get_my_profile(
 )
 async def update_my_profile(
     data: UserProfileUpdate,
-    current_user: User = Depends(
-        get_current_user
-    ),
-    service: UserService = Depends(
-        get_user_service
-    ),
+    current_user: User = Depends(get_current_user),
+    service: UserService = Depends(get_user_service),
 ) -> User:
     return await service.update_profile(
         user=current_user,
@@ -68,12 +62,8 @@ async def update_my_profile(
 )
 async def upload_my_avatar(
     file: UploadFile = File(...),
-    current_user: User = Depends(
-        get_current_user
-    ),
-    service: UserAvatarService = Depends(
-        get_user_avatar_service
-    ),
+    current_user: User = Depends(get_current_user),
+    service: UserAvatarService = Depends(get_user_avatar_service),
 ) -> UserAvatarResponse:
     try:
         user = await service.upload_avatar(
@@ -92,9 +82,7 @@ async def upload_my_avatar(
         ) from None
 
     return UserAvatarResponse(
-        avatar_url=service.get_avatar_url(
-            user.avatar_storage_key
-        )
+        avatar_url=service.get_avatar_url(user.avatar_storage_key)
     )
 
 
@@ -103,13 +91,7 @@ async def upload_my_avatar(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_my_avatar(
-    current_user: User = Depends(
-        get_current_user
-    ),
-    service: UserAvatarService = Depends(
-        get_user_avatar_service
-    ),
+    current_user: User = Depends(get_current_user),
+    service: UserAvatarService = Depends(get_user_avatar_service),
 ) -> None:
-    await service.delete_avatar(
-        user=current_user
-    )
+    await service.delete_avatar(user=current_user)

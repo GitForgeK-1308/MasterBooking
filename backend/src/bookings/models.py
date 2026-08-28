@@ -115,9 +115,7 @@ class Booking(Base):
         SQLAlchemyEnum(
             BookingStatus,
             name="booking_status_enum",
-            values_callable=lambda enum: [
-                status.value for status in enum
-            ],
+            values_callable=lambda enum: [status.value for status in enum],
         ),
         default=BookingStatus.PENDING,
         nullable=False,
@@ -147,8 +145,8 @@ class Booking(Base):
     )
 
     review: Mapped["Review | None"] = relationship(
-    uselist=False,
-    lazy="selectin",
+        uselist=False,
+        lazy="selectin",
     )
 
     @property

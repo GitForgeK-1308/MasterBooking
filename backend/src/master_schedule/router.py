@@ -22,9 +22,7 @@ from src.master_schedule.schemas import (
 from src.master_schedule.service import MasterScheduleService
 from src.masters.models import Master
 
-router = APIRouter(
-    tags=["Master schedules"]
-)
+router = APIRouter(tags=["Master schedules"])
 
 
 @router.post(
@@ -34,12 +32,8 @@ router = APIRouter(
 )
 async def create_schedule(
     data: MasterScheduleCreate,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: MasterScheduleService = Depends(
-        get_schedule_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: MasterScheduleService = Depends(get_schedule_service),
 ):
     try:
         return await service.create_schedule(
@@ -65,16 +59,10 @@ async def create_schedule(
     response_model=list[MasterScheduleResponse],
 )
 async def get_my_schedules(
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: MasterScheduleService = Depends(
-        get_schedule_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: MasterScheduleService = Depends(get_schedule_service),
 ):
-    return await service.get_master_schedules(
-        master_id=current_master.id
-    )
+    return await service.get_master_schedules(master_id=current_master.id)
 
 
 @router.get(
@@ -83,13 +71,9 @@ async def get_my_schedules(
 )
 async def get_master_schedules(
     master_id: uuid.UUID,
-    service: MasterScheduleService = Depends(
-        get_schedule_service
-    ),
+    service: MasterScheduleService = Depends(get_schedule_service),
 ):
-    return await service.get_master_schedules(
-        master_id=master_id
-    )
+    return await service.get_master_schedules(master_id=master_id)
 
 
 @router.get(
@@ -98,13 +82,9 @@ async def get_master_schedules(
 )
 async def get_schedule_by_id(
     schedule_id: uuid.UUID,
-    service: MasterScheduleService = Depends(
-        get_schedule_service
-    ),
+    service: MasterScheduleService = Depends(get_schedule_service),
 ):
-    schedule = await service.get_schedule_by_id(
-        schedule_id
-    )
+    schedule = await service.get_schedule_by_id(schedule_id)
 
     if schedule is None:
         raise HTTPException(
@@ -122,12 +102,8 @@ async def get_schedule_by_id(
 async def update_schedule(
     schedule_id: uuid.UUID,
     data: MasterScheduleUpdate,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: MasterScheduleService = Depends(
-        get_schedule_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: MasterScheduleService = Depends(get_schedule_service),
 ):
     try:
         schedule = await service.update_schedule(
@@ -169,12 +145,8 @@ async def update_schedule(
 )
 async def delete_schedule(
     schedule_id: uuid.UUID,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: MasterScheduleService = Depends(
-        get_schedule_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: MasterScheduleService = Depends(get_schedule_service),
 ) -> None:
     try:
         deleted = await service.delete_schedule(

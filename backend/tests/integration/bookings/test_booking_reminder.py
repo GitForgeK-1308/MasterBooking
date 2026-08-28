@@ -17,9 +17,7 @@ async def test_booking_reminder_marks_booking_as_sent(
     db_session: AsyncSession,
     reminder_booking: Booking,
 ):
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
     service = BookingReminderService(
         booking_repository=repository,
@@ -31,16 +29,12 @@ async def test_booking_reminder_marks_booking_as_sent(
     await db_session.commit()
 
     with patch(
-        "src.bookings.reminder_service."
-        "send_booking_reminder_email.delay"
+        "src.bookings.reminder_service.send_booking_reminder_email.delay"
     ) as send_email:
-
         await service.send_reminders()
 
     send_email.assert_called_once()
 
-    await db_session.refresh(
-        reminder_booking
-    )
+    await db_session.refresh(reminder_booking)
 
     assert reminder_booking.reminder_sent is True

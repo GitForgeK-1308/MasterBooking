@@ -35,15 +35,11 @@ def make_district(
 async def test_create_city(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
     city = make_city()
 
-    result = await repository.create_city(
-        city
-    )
+    result = await repository.create_city(city)
 
     assert result.id is not None
     assert isinstance(
@@ -58,33 +54,20 @@ async def test_create_city(
 async def test_get_cities_sorted(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    await repository.create_city(
-        make_city(
-            name="Riga"
-        )
-    )
+    await repository.create_city(make_city(name="Riga"))
     await repository.create_city(
         make_city(
             name="Daugavpils",
             is_active=False,
         )
     )
-    await repository.create_city(
-        make_city(
-            name="Jurmala"
-        )
-    )
+    await repository.create_city(make_city(name="Jurmala"))
 
     result = await repository.get_cities()
 
-    assert [
-        city.name
-        for city in result
-    ] == [
+    assert [city.name for city in result] == [
         "Daugavpils",
         "Jurmala",
         "Riga",
@@ -95,60 +78,36 @@ async def test_get_cities_sorted(
 async def test_get_cities_active_only(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    await repository.create_city(
-        make_city(
-            name="Riga"
-        )
-    )
+    await repository.create_city(make_city(name="Riga"))
     await repository.create_city(
         make_city(
             name="Daugavpils",
             is_active=False,
         )
     )
-    await repository.create_city(
-        make_city(
-            name="Jurmala"
-        )
-    )
+    await repository.create_city(make_city(name="Jurmala"))
 
-    result = await repository.get_cities(
-        active_only=True
-    )
+    result = await repository.get_cities(active_only=True)
 
-    assert [
-        city.name
-        for city in result
-    ] == [
+    assert [city.name for city in result] == [
         "Jurmala",
         "Riga",
     ]
 
-    assert all(
-        city.is_active
-        for city in result
-    )
+    assert all(city.is_active for city in result)
 
 
 @pytest.mark.anyio
 async def test_get_city_by_id(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.create_city(
-        make_city()
-    )
+    city = await repository.create_city(make_city())
 
-    result = await repository.get_city_by_id(
-        city.id
-    )
+    result = await repository.get_city_by_id(city.id)
 
     assert result is not None
     assert result.id == city.id
@@ -159,13 +118,9 @@ async def test_get_city_by_id(
 async def test_get_city_by_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    result = await repository.get_city_by_id(
-        uuid.uuid4()
-    )
+    result = await repository.get_city_by_id(uuid.uuid4())
 
     assert result is None
 
@@ -174,17 +129,11 @@ async def test_get_city_by_id_not_found(
 async def test_get_city_by_name(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.create_city(
-        make_city()
-    )
+    city = await repository.create_city(make_city())
 
-    result = await repository.get_city_by_name(
-        "Riga"
-    )
+    result = await repository.get_city_by_name("Riga")
 
     assert result is not None
     assert result.id == city.id
@@ -194,13 +143,9 @@ async def test_get_city_by_name(
 async def test_get_city_by_name_not_found(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    result = await repository.get_city_by_name(
-        "Missing"
-    )
+    result = await repository.get_city_by_name("Missing")
 
     assert result is None
 
@@ -209,35 +154,23 @@ async def test_get_city_by_name_not_found(
 async def test_update_city(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.create_city(
-        make_city()
-    )
+    city = await repository.create_city(make_city())
 
     city.name = "Jurmala"
     city.is_active = False
 
-    result = await repository.update_city(
-        city
-    )
+    result = await repository.update_city(city)
 
     assert result.name == "Jurmala"
     assert result.is_active is False
 
     city_id = result.id
 
-    db_session.expunge(
-        result
-    )
+    db_session.expunge(result)
 
-    city_from_database = (
-        await repository.get_city_by_id(
-            city_id
-        )
-    )
+    city_from_database = await repository.get_city_by_id(city_id)
 
     assert city_from_database is not None
     assert city_from_database.id == city_id
@@ -249,21 +182,13 @@ async def test_update_city(
 async def test_create_district(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.create_city(
-        make_city()
-    )
+    city = await repository.create_city(make_city())
 
-    district = make_district(
-        city_id=city.id
-    )
+    district = make_district(city_id=city.id)
 
-    result = await repository.create_district(
-        district
-    )
+    result = await repository.create_district(district)
 
     assert result.id is not None
     assert isinstance(
@@ -279,13 +204,9 @@ async def test_create_district(
 async def test_get_districts_by_city_sorted(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.create_city(
-        make_city()
-    )
+    city = await repository.create_city(make_city())
 
     await repository.create_district(
         make_district(
@@ -307,16 +228,9 @@ async def test_get_districts_by_city_sorted(
         )
     )
 
-    result = (
-        await repository.get_districts_by_city(
-            city.id
-        )
-    )
+    result = await repository.get_districts_by_city(city.id)
 
-    assert [
-        district.name
-        for district in result
-    ] == [
+    assert [district.name for district in result] == [
         "Agenskalns",
         "Centrs",
         "Vecpilseta",
@@ -327,13 +241,9 @@ async def test_get_districts_by_city_sorted(
 async def test_get_districts_by_city_active_only(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.create_city(
-        make_city()
-    )
+    city = await repository.create_city(make_city())
 
     await repository.create_district(
         make_district(
@@ -355,48 +265,30 @@ async def test_get_districts_by_city_active_only(
         )
     )
 
-    result = (
-        await repository.get_districts_by_city(
-            city_id=city.id,
-            active_only=True,
-        )
+    result = await repository.get_districts_by_city(
+        city_id=city.id,
+        active_only=True,
     )
 
-    assert [
-        district.name
-        for district in result
-    ] == [
+    assert [district.name for district in result] == [
         "Agenskalns",
         "Centrs",
     ]
 
-    assert all(
-        district.is_active
-        for district in result
-    )
+    assert all(district.is_active for district in result)
 
 
 @pytest.mark.anyio
 async def test_get_district_by_id(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.create_city(
-        make_city()
-    )
+    city = await repository.create_city(make_city())
 
-    district = await repository.create_district(
-        make_district(
-            city_id=city.id
-        )
-    )
+    district = await repository.create_district(make_district(city_id=city.id))
 
-    result = await repository.get_district_by_id(
-        district.id
-    )
+    result = await repository.get_district_by_id(district.id)
 
     assert result is not None
     assert result.id == district.id
@@ -407,13 +299,9 @@ async def test_get_district_by_id(
 async def test_get_district_by_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    result = await repository.get_district_by_id(
-        uuid.uuid4()
-    )
+    result = await repository.get_district_by_id(uuid.uuid4())
 
     assert result is None
 
@@ -422,19 +310,11 @@ async def test_get_district_by_id_not_found(
 async def test_get_district_by_name(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.create_city(
-        make_city()
-    )
+    city = await repository.create_city(make_city())
 
-    district = await repository.create_district(
-        make_district(
-            city_id=city.id
-        )
-    )
+    district = await repository.create_district(make_district(city_id=city.id))
 
     result = await repository.get_district_by_name(
         city_id=city.id,
@@ -449,13 +329,9 @@ async def test_get_district_by_name(
 async def test_get_district_by_name_not_found(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.create_city(
-        make_city()
-    )
+    city = await repository.create_city(make_city())
 
     result = await repository.get_district_by_name(
         city_id=city.id,
@@ -469,41 +345,25 @@ async def test_get_district_by_name_not_found(
 async def test_update_district(
     db_session: AsyncSession,
 ):
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.create_city(
-        make_city()
-    )
+    city = await repository.create_city(make_city())
 
-    district = await repository.create_district(
-        make_district(
-            city_id=city.id
-        )
-    )
+    district = await repository.create_district(make_district(city_id=city.id))
 
     district.name = "Old Town"
     district.is_active = False
 
-    result = await repository.update_district(
-        district
-    )
+    result = await repository.update_district(district)
 
     assert result.name == "Old Town"
     assert result.is_active is False
 
     district_id = result.id
 
-    db_session.expunge(
-        result
-    )
+    db_session.expunge(result)
 
-    district_from_database = (
-        await repository.get_district_by_id(
-            district_id
-        )
-    )
+    district_from_database = await repository.get_district_by_id(district_id)
 
     assert district_from_database is not None
     assert district_from_database.id == district_id

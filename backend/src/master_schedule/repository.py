@@ -21,10 +21,7 @@ class MasterScheduleRepository:
         schedule_id: uuid.UUID,
     ) -> MasterSchedule | None:
         return await self.session.scalar(
-            select(MasterSchedule).where(
-                MasterSchedule.id
-                == schedule_id
-            )
+            select(MasterSchedule).where(MasterSchedule.id == schedule_id)
         )
 
     async def get_by_master_id(
@@ -33,13 +30,8 @@ class MasterScheduleRepository:
     ) -> list[MasterSchedule]:
         result = await self.session.scalars(
             select(MasterSchedule)
-            .where(
-                MasterSchedule.master_id
-                == master_id
-            )
-            .order_by(
-                MasterSchedule.day_of_week.asc()
-            )
+            .where(MasterSchedule.master_id == master_id)
+            .order_by(MasterSchedule.day_of_week.asc())
         )
 
         return list(result.all())
@@ -51,10 +43,8 @@ class MasterScheduleRepository:
     ) -> MasterSchedule | None:
         return await self.session.scalar(
             select(MasterSchedule).where(
-                MasterSchedule.master_id
-                == master_id,
-                MasterSchedule.day_of_week
-                == day_of_week,
+                MasterSchedule.master_id == master_id,
+                MasterSchedule.day_of_week == day_of_week,
             )
         )
 
@@ -62,14 +52,10 @@ class MasterScheduleRepository:
         self,
         schedule: MasterSchedule,
     ) -> MasterSchedule:
-        self.session.add(
-            schedule
-        )
+        self.session.add(schedule)
 
         await self.session.commit()
-        await self.session.refresh(
-            schedule
-        )
+        await self.session.refresh(schedule)
 
         return schedule
 
@@ -78,9 +64,7 @@ class MasterScheduleRepository:
         schedule: MasterSchedule,
     ) -> MasterSchedule:
         await self.session.commit()
-        await self.session.refresh(
-            schedule
-        )
+        await self.session.refresh(schedule)
 
         return schedule
 
@@ -88,8 +72,6 @@ class MasterScheduleRepository:
         self,
         schedule: MasterSchedule,
     ) -> None:
-        await self.session.delete(
-            schedule
-        )
+        await self.session.delete(schedule)
 
         await self.session.commit()

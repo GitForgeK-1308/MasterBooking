@@ -41,9 +41,7 @@ from src.bookings.service import BookingService
 from src.masters.models import Master
 from src.users.models import User
 
-router = APIRouter(
-    tags=["Bookings"]
-)
+router = APIRouter(tags=["Bookings"])
 
 
 @router.post(
@@ -54,12 +52,8 @@ router = APIRouter(
 async def create_booking(
     master_id: uuid.UUID,
     data: BookingCreate,
-    current_user: User = Depends(
-        get_current_customer
-    ),
-    service: BookingService = Depends(
-        get_booking_service
-    ),
+    current_user: User = Depends(get_current_customer),
+    service: BookingService = Depends(get_booking_service),
 ):
     try:
         return await service.create_booking(
@@ -77,10 +71,7 @@ async def create_booking(
     except ClientPhoneRequiredError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Для бронирования необходимо "
-                "указать номер телефона!"
-            ),
+            detail=("Для бронирования необходимо указать номер телефона!"),
         ) from None
 
     except MasterNotFoundError:
@@ -110,10 +101,7 @@ async def create_booking(
     except OfferingDoesNotBelongToMasterError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Услуга не принадлежит "
-                "выбранному мастеру!"
-            ),
+            detail=("Услуга не принадлежит выбранному мастеру!"),
         ) from None
 
     except MasterScheduleUnavailableError:
@@ -131,19 +119,13 @@ async def create_booking(
     except BookingOutsideWorkingHoursError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Выбранное время находится вне "
-                "рабочего времени мастера!"
-            ),
+            detail=("Выбранное время находится вне рабочего времени мастера!"),
         ) from None
 
     except InvalidBookingStartTimeError:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=(
-                "Выбранное время не соответствует "
-                "доступному шагу записи!"
-            ),
+            detail=("Выбранное время не соответствует доступному шагу записи!"),
         ) from None
 
     except BookingTimeConflictError:
@@ -158,16 +140,10 @@ async def create_booking(
     response_model=list[BookingResponse],
 )
 async def get_my_bookings(
-    current_user: User = Depends(
-        get_current_user
-    ),
-    service: BookingService = Depends(
-        get_booking_service
-    ),
+    current_user: User = Depends(get_current_user),
+    service: BookingService = Depends(get_booking_service),
 ):
-    return await service.get_client_bookings(
-        client_id=current_user.id
-    )
+    return await service.get_client_bookings(client_id=current_user.id)
 
 
 @router.patch(
@@ -176,12 +152,8 @@ async def get_my_bookings(
 )
 async def cancel_my_booking(
     booking_id: uuid.UUID,
-    current_user: User = Depends(
-        get_current_user
-    ),
-    service: BookingService = Depends(
-        get_booking_service
-    ),
+    current_user: User = Depends(get_current_user),
+    service: BookingService = Depends(get_booking_service),
 ):
     try:
         return await service.cancel_client_booking(
@@ -198,10 +170,7 @@ async def cancel_my_booking(
     except BookingAccessDeniedError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "Вы не можете отменить "
-                "чужое бронирование!"
-            ),
+            detail=("Вы не можете отменить чужое бронирование!"),
         ) from None
 
     except InvalidBookingStatusTransitionError:
@@ -217,12 +186,8 @@ async def cancel_my_booking(
 )
 async def get_my_master_bookings(
     booking_date: date,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: BookingService = Depends(
-        get_booking_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: BookingService = Depends(get_booking_service),
 ):
     try:
         return await service.get_master_bookings(
@@ -244,12 +209,8 @@ async def get_my_master_bookings(
 async def update_booking_status(
     booking_id: uuid.UUID,
     data: BookingStatusUpdate,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: BookingService = Depends(
-        get_booking_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: BookingService = Depends(get_booking_service),
 ):
     try:
         return await service.update_booking_status(
@@ -267,19 +228,13 @@ async def update_booking_status(
     except BookingAccessDeniedError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "Вы не можете изменять "
-                "чужое бронирование!"
-            ),
+            detail=("Вы не можете изменять чужое бронирование!"),
         ) from None
 
     except InvalidBookingStatusTransitionError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Недопустимое изменение "
-                "статуса бронирования!"
-            ),
+            detail=("Недопустимое изменение статуса бронирования!"),
         ) from None
 
 
@@ -289,12 +244,8 @@ async def update_booking_status(
 )
 async def get_booking_by_id(
     booking_id: uuid.UUID,
-    current_user: User = Depends(
-        get_current_user
-    ),
-    service: BookingService = Depends(
-        get_booking_service
-    ),
+    current_user: User = Depends(get_current_user),
+    service: BookingService = Depends(get_booking_service),
 ):
     try:
         return await service.get_booking_for_user(
@@ -311,10 +262,7 @@ async def get_booking_by_id(
     except BookingAccessDeniedError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "У вас нет доступа "
-                "к этому бронированию!"
-            ),
+            detail=("У вас нет доступа к этому бронированию!"),
         ) from None
 
 
@@ -326,9 +274,7 @@ async def get_available_slots(
     master_id: uuid.UUID,
     offering_id: uuid.UUID,
     booking_date: date,
-    service: BookingService = Depends(
-        get_booking_service
-    ),
+    service: BookingService = Depends(get_booking_service),
 ):
     try:
         return await service.get_available_slots(
@@ -364,10 +310,7 @@ async def get_available_slots(
     except OfferingDoesNotBelongToMasterError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Услуга не принадлежит "
-                "выбранному мастеру!"
-            ),
+            detail=("Услуга не принадлежит выбранному мастеру!"),
         ) from None
 
     except MasterScheduleUnavailableError:

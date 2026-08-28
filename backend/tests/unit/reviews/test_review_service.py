@@ -57,16 +57,12 @@ def make_review(
 
 @pytest.fixture
 def review_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=ReviewRepository
-    )
+    return AsyncMock(spec=ReviewRepository)
 
 
 @pytest.fixture
 def booking_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=BookingRepository
-    )
+    return AsyncMock(spec=BookingRepository)
 
 
 @pytest.fixture
@@ -88,21 +84,13 @@ async def test_create_review(
 ):
     client_id = uuid.uuid4()
 
-    booking = make_booking(
-        client_id=client_id
-    )
+    booking = make_booking(client_id=client_id)
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    review_repository.get_by_booking_id.return_value = (
-        None
-    )
+    review_repository.get_by_booking_id.return_value = None
 
-    review_repository.create.side_effect = (
-        lambda review: review
-    )
+    review_repository.create.side_effect = lambda review: review
 
     data = ReviewCreate(
         rating=5,
@@ -125,22 +113,13 @@ async def test_create_review(
     assert result.client_id == client_id
     assert result.rating == 5
 
-    assert (
-        result.comment
-        == "Отличная работа!"
-    )
+    assert result.comment == "Отличная работа!"
 
-    booking_repository.get_by_id.assert_awaited_once_with(
-        booking.id
-    )
+    booking_repository.get_by_id.assert_awaited_once_with(booking.id)
 
-    review_repository.get_by_booking_id.assert_awaited_once_with(
-        booking.id
-    )
+    review_repository.get_by_booking_id.assert_awaited_once_with(booking.id)
 
-    review_repository.create.assert_awaited_once_with(
-        result
-    )
+    review_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -149,19 +128,13 @@ async def test_create_review_booking_not_found(
     review_repository: AsyncMock,
     booking_repository: AsyncMock,
 ):
-    booking_repository.get_by_id.return_value = (
-        None
-    )
+    booking_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        ReviewBookingNotFoundError
-    ):
+    with pytest.raises(ReviewBookingNotFoundError):
         await review_service.create_review(
             booking_id=uuid.uuid4(),
             client_id=uuid.uuid4(),
-            data=ReviewCreate(
-                rating=5
-            ),
+            data=ReviewCreate(rating=5),
         )
 
     review_repository.get_by_booking_id.assert_not_awaited()
@@ -176,19 +149,13 @@ async def test_create_review_access_denied(
 ):
     booking = make_booking()
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    with pytest.raises(
-        ReviewAccessDeniedError
-    ):
+    with pytest.raises(ReviewAccessDeniedError):
         await review_service.create_review(
             booking_id=booking.id,
             client_id=uuid.uuid4(),
-            data=ReviewCreate(
-                rating=5
-            ),
+            data=ReviewCreate(rating=5),
         )
 
     review_repository.get_by_booking_id.assert_not_awaited()
@@ -208,19 +175,13 @@ async def test_create_review_booking_not_completed(
         status=BookingStatus.CONFIRMED,
     )
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    with pytest.raises(
-        BookingNotCompletedError
-    ):
+    with pytest.raises(BookingNotCompletedError):
         await review_service.create_review(
             booking_id=booking.id,
             client_id=client_id,
-            data=ReviewCreate(
-                rating=5
-            ),
+            data=ReviewCreate(rating=5),
         )
 
     review_repository.get_by_booking_id.assert_not_awaited()
@@ -235,27 +196,17 @@ async def test_create_review_already_exists(
 ):
     client_id = uuid.uuid4()
 
-    booking = make_booking(
-        client_id=client_id
-    )
+    booking = make_booking(client_id=client_id)
 
-    booking_repository.get_by_id.return_value = (
-        booking
-    )
+    booking_repository.get_by_id.return_value = booking
 
-    review_repository.get_by_booking_id.return_value = (
-        make_review()
-    )
+    review_repository.get_by_booking_id.return_value = make_review()
 
-    with pytest.raises(
-        ReviewAlreadyExistsError
-    ):
+    with pytest.raises(ReviewAlreadyExistsError):
         await review_service.create_review(
             booking_id=booking.id,
             client_id=client_id,
-            data=ReviewCreate(
-                rating=5
-            ),
+            data=ReviewCreate(rating=5),
         )
 
     review_repository.create.assert_not_awaited()
@@ -291,33 +242,21 @@ async def test_get_public_master_reviews(
         ),
     ]
 
-    result = (
-        await review_service.get_public_master_reviews(
-            master_id
-        )
-    )
+    result = await review_service.get_public_master_reviews(master_id)
 
     assert len(result) == 2
 
     assert result[0].id == first_review.id
     assert result[0].rating == 5
 
-    assert (
-        result[0].client_name
-        == "Ivan Ivanov"
-    )
+    assert result[0].client_name == "Ivan Ivanov"
 
     assert result[1].id == second_review.id
     assert result[1].rating == 4
 
-    assert (
-        result[1].client_name
-        == "Petr"
-    )
+    assert result[1].client_name == "Petr"
 
-    review_repository.get_public_by_master_id.assert_awaited_once_with(
-        master_id
-    )
+    review_repository.get_public_by_master_id.assert_awaited_once_with(master_id)
 
 
 @pytest.mark.anyio
@@ -337,18 +276,11 @@ async def test_get_public_master_reviews_deleted_user(
         )
     ]
 
-    result = (
-        await review_service.get_public_master_reviews(
-            master_id
-        )
-    )
+    result = await review_service.get_public_master_reviews(master_id)
 
     assert len(result) == 1
 
-    assert (
-        result[0].client_name
-        == "Удалённый пользователь"
-    )
+    assert result[0].client_name == "Удалённый пользователь"
 
 
 @pytest.mark.anyio
@@ -363,16 +295,12 @@ async def test_get_master_stats(
         7,
     )
 
-    result = await review_service.get_master_stats(
-        master_id
-    )
+    result = await review_service.get_master_stats(master_id)
 
     assert result.average_rating == 4.3
     assert result.reviews_count == 7
 
-    review_repository.get_master_stats.assert_awaited_once_with(
-        master_id
-    )
+    review_repository.get_master_stats.assert_awaited_once_with(master_id)
 
 
 @pytest.mark.anyio
@@ -382,13 +310,9 @@ async def test_get_master_reviews_with_stats(
 ):
     master_id = uuid.uuid4()
 
-    first_review = make_review(
-        rating=5
-    )
+    first_review = make_review(rating=5)
 
-    second_review = make_review(
-        rating=4
-    )
+    second_review = make_review(rating=4)
 
     review_repository.get_public_by_master_id.return_value = [
         (
@@ -416,35 +340,20 @@ async def test_get_master_reviews_with_stats(
         5: 1,
     }
 
-    review_repository.get_rating_distribution.return_value = (
-        distribution
-    )
+    review_repository.get_rating_distribution.return_value = distribution
 
-    result = (
-        await review_service.get_master_reviews_with_stats(
-            master_id
-        )
-    )
+    result = await review_service.get_master_reviews_with_stats(master_id)
 
     assert result.average_rating == 4.5
     assert result.reviews_count == 2
 
-    assert (
-        result.rating_distribution
-        == distribution
-    )
+    assert result.rating_distribution == distribution
 
     assert len(result.reviews) == 2
 
-    assert (
-        result.reviews[0].client_name
-        == "Ivan Ivanov"
-    )
+    assert result.reviews[0].client_name == "Ivan Ivanov"
 
-    assert (
-        result.reviews[1].client_name
-        == "Petr Petrov"
-    )
+    assert result.reviews[1].client_name == "Petr Petrov"
 
 
 @pytest.mark.anyio
@@ -470,37 +379,22 @@ async def test_get_reviews_for_master_dashboard(
         )
     ]
 
-    result = (
-        await review_service.get_reviews_for_master_dashboard(
-            master_id
-        )
-    )
+    result = await review_service.get_reviews_for_master_dashboard(master_id)
 
     assert len(result) == 1
 
     assert result[0].id == review.id
     assert result[0].offering_id == offering_id
 
-    assert (
-        result[0].offering_title
-        == "Classic Cut"
-    )
+    assert result[0].offering_title == "Classic Cut"
 
     assert result[0].rating == 5
 
-    assert (
-        result[0].comment
-        == "Супер!"
-    )
+    assert result[0].comment == "Супер!"
 
-    assert (
-        result[0].client_name
-        == "Ivan Ivanov"
-    )
+    assert result[0].client_name == "Ivan Ivanov"
 
-    review_repository.get_for_master_dashboard.assert_awaited_once_with(
-        master_id
-    )
+    review_repository.get_for_master_dashboard.assert_awaited_once_with(master_id)
 
 
 @pytest.mark.anyio
@@ -523,16 +417,9 @@ async def test_get_reviews_for_master_dashboard_deleted_user(
         )
     ]
 
-    result = (
-        await review_service.get_reviews_for_master_dashboard(
-            master_id
-        )
-    )
+    result = await review_service.get_reviews_for_master_dashboard(master_id)
 
-    assert (
-        result[0].client_name
-        == "Удалённый пользователь"
-    )
+    assert result[0].client_name == "Удалённый пользователь"
 
 
 @pytest.mark.parametrize(

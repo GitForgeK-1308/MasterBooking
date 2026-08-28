@@ -65,9 +65,7 @@ class MasterSchedule(Base):
         SQLAlchemyEnum(
             WeekDay,
             name="week_day_enum",
-            values_callable=lambda enum: [
-                day.value for day in enum
-            ],
+            values_callable=lambda enum: [day.value for day in enum],
         ),
         nullable=False,
     )

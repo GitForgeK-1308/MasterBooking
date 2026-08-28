@@ -73,9 +73,7 @@ class BookingService:
         booking_id: uuid.UUID,
         current_user: User,
     ) -> Booking:
-        booking = await self.booking_repository.get_by_id(
-            booking_id
-        )
+        booking = await self.booking_repository.get_by_id(booking_id)
 
         if booking is None:
             raise BookingNotFoundError
@@ -83,14 +81,9 @@ class BookingService:
         if booking.client_id == current_user.id:
             return booking
 
-        master = await self.master_repository.get_by_user_id(
-            current_user.id
-        )
+        master = await self.master_repository.get_by_user_id(current_user.id)
 
-        if (
-            master is not None
-            and booking.master_id == master.id
-        ):
+        if master is not None and booking.master_id == master.id:
             return booking
 
         raise BookingAccessDeniedError
@@ -100,9 +93,7 @@ class BookingService:
         master_id: uuid.UUID,
         booking_date: date,
     ) -> list[Booking]:
-        master = await self.master_repository.get_by_id(
-            master_id
-        )
+        master = await self.master_repository.get_by_id(master_id)
 
         if master is None:
             raise MasterNotFoundError
@@ -119,14 +110,9 @@ class BookingService:
         data: BookingCreate,
     ) -> Booking:
 
-        current_master = await self.master_repository.get_by_user_id(
-            current_user.id
-        )
+        current_master = await self.master_repository.get_by_user_id(current_user.id)
 
-        if (
-            current_master is not None
-            and current_master.id == master_id
-        ):
+        if current_master is not None and current_master.id == master_id:
             raise SelfBookingNotAllowedError
 
         if not current_user.phone:
@@ -152,25 +138,17 @@ class BookingService:
             booking_date=data.booking_date,
         )
 
-        booking_end = booking_start + timedelta(
-            minutes=offering.duration_minutes
-        )
+        booking_end = booking_start + timedelta(minutes=offering.duration_minutes)
 
         if booking_end.date() != data.booking_date:
             raise BookingOutsideWorkingHoursError
 
         end_time = booking_end.time()
 
-        if (
-            schedule.start_time is None
-            or schedule.end_time is None
-        ):
+        if schedule.start_time is None or schedule.end_time is None:
             raise MasterScheduleUnavailableError
 
-        if (
-            data.start_time < schedule.start_time
-            or end_time > schedule.end_time
-        ):
+        if data.start_time < schedule.start_time or end_time > schedule.end_time:
             raise BookingOutsideWorkingHoursError
 
         if not self._is_valid_slot_start(
@@ -180,13 +158,11 @@ class BookingService:
         ):
             raise InvalidBookingStartTimeError
 
-        conflicting_booking = (
-            await self.booking_repository.get_conflicting_booking(
-                master_id=master_id,
-                booking_date=data.booking_date,
-                start_time=data.start_time,
-                end_time=end_time,
-            )
+        conflicting_booking = await self.booking_repository.get_conflicting_booking(
+            master_id=master_id,
+            booking_date=data.booking_date,
+            start_time=data.start_time,
+            end_time=end_time,
         )
 
         if conflicting_booking is not None:
@@ -199,17 +175,12 @@ class BookingService:
             booking_date=data.booking_date,
             start_time=data.start_time,
             end_time=end_time,
-            client_name=(
-                f"{current_user.first_name} "
-                f"{current_user.last_name}"
-            ),
+            client_name=(f"{current_user.first_name} {current_user.last_name}"),
             client_phone=current_user.phone,
             client_email=current_user.email,
         )
 
-        return await self.booking_repository.create(
-            new_booking
-        )
+        return await self.booking_repository.create(new_booking)
 
     async def update_booking_status(
         self,
@@ -217,9 +188,7 @@ class BookingService:
         master_id: uuid.UUID,
         data: BookingStatusUpdate,
     ) -> Booking:
-        booking = await self.booking_repository.get_by_id(
-            booking_id
-        )
+        booking = await self.booking_repository.get_by_id(booking_id)
 
         if booking is None:
             raise BookingNotFoundError
@@ -248,9 +217,7 @@ class BookingService:
 
         booking.status = data.status
 
-        return await self.booking_repository.update(
-            booking
-        )
+        return await self.booking_repository.update(booking)
 
     async def get_available_slots(
         self,
@@ -273,17 +240,12 @@ class BookingService:
             booking_date=booking_date,
         )
 
-        if (
-            schedule.start_time is None
-            or schedule.end_time is None
-        ):
+        if schedule.start_time is None or schedule.end_time is None:
             raise MasterScheduleUnavailableError
 
-        existing_bookings = (
-            await self.booking_repository.get_active_by_master_and_date(
-                master_id=master_id,
-                booking_date=booking_date,
-            )
+        existing_bookings = await self.booking_repository.get_active_by_master_and_date(
+            master_id=master_id,
+            booking_date=booking_date,
         )
 
         work_start = datetime.combine(
@@ -296,25 +258,16 @@ class BookingService:
             schedule.end_time,
         )
 
-        offering_duration = timedelta(
-            minutes=offering.duration_minutes
-        )
+        offering_duration = timedelta(minutes=offering.duration_minutes)
 
-        slot_step = timedelta(
-            minutes=SLOT_STEP_MINUTES
-        )
+        slot_step = timedelta(minutes=SLOT_STEP_MINUTES)
 
         available_slots: list[time] = []
 
         current_start = work_start
 
-        while (
-            current_start + offering_duration
-            <= work_end
-        ):
-            current_end = (
-                current_start + offering_duration
-            )
+        while current_start + offering_duration <= work_end:
+            current_end = current_start + offering_duration
 
             if current_start > now:
                 has_conflict = any(
@@ -327,9 +280,7 @@ class BookingService:
                 )
 
                 if not has_conflict:
-                    available_slots.append(
-                        current_start.time()
-                    )
+                    available_slots.append(current_start.time())
 
             current_start += slot_step
 
@@ -344,18 +295,14 @@ class BookingService:
         self,
         client_id: uuid.UUID,
     ) -> list[Booking]:
-        return await self.booking_repository.get_by_client_id(
-            client_id
-        )
+        return await self.booking_repository.get_by_client_id(client_id)
 
     async def cancel_client_booking(
         self,
         booking_id: uuid.UUID,
         client_id: uuid.UUID,
     ) -> Booking:
-        booking = await self.booking_repository.get_by_id(
-            booking_id
-        )
+        booking = await self.booking_repository.get_by_id(booking_id)
 
         if booking is None:
             raise BookingNotFoundError
@@ -371,18 +318,14 @@ class BookingService:
 
         booking.status = BookingStatus.CANCELLED
 
-        return await self.booking_repository.update(
-            booking
-        )
+        return await self.booking_repository.update(booking)
 
     async def _get_bookable_offering(
         self,
         master_id: uuid.UUID,
         offering_id: uuid.UUID,
     ) -> MasterOffering:
-        master = await self.master_repository.get_by_id(
-            master_id
-        )
+        master = await self.master_repository.get_by_id(master_id)
 
         if master is None:
             raise MasterNotFoundError
@@ -390,9 +333,7 @@ class BookingService:
         if not master.is_active:
             raise MasterInactiveError
 
-        offering = await self.offering_repository.get_by_id(
-            offering_id
-        )
+        offering = await self.offering_repository.get_by_id(offering_id)
 
         if offering is None:
             raise OfferingNotFoundError
@@ -410,15 +351,11 @@ class BookingService:
         master_id: uuid.UUID,
         booking_date: date,
     ) -> MasterSchedule:
-        day_of_week = WEEKDAY_BY_NUMBER[
-            booking_date.weekday()
-        ]
+        day_of_week = WEEKDAY_BY_NUMBER[booking_date.weekday()]
 
-        schedule = (
-            await self.schedule_repository.get_by_master_and_day(
-                master_id=master_id,
-                day_of_week=day_of_week,
-            )
+        schedule = await self.schedule_repository.get_by_master_and_day(
+            master_id=master_id,
+            day_of_week=day_of_week,
         )
 
         if (
@@ -447,20 +384,11 @@ class BookingService:
             requested_start,
         )
 
-        difference_seconds = (
-            requested_start_datetime - work_start
-        ).total_seconds()
+        difference_seconds = (requested_start_datetime - work_start).total_seconds()
 
-        slot_step_seconds = (
-            SLOT_STEP_MINUTES * 60
-        )
+        slot_step_seconds = SLOT_STEP_MINUTES * 60
 
-        return (
-            difference_seconds >= 0
-            and difference_seconds
-            % slot_step_seconds
-            == 0
-        )
+        return difference_seconds >= 0 and difference_seconds % slot_step_seconds == 0
 
     @staticmethod
     def _bookings_overlap(
@@ -478,7 +406,4 @@ class BookingService:
             existing_booking.end_time,
         )
 
-        return (
-            existing_start < requested_end
-            and existing_end > requested_start
-        )
+        return existing_start < requested_end and existing_end > requested_start

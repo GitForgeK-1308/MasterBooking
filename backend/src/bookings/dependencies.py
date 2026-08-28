@@ -14,25 +14,15 @@ from src.masters.repository import MasterRepository
 
 
 def get_booking_service(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
+    session: AsyncSession = Depends(get_async_session),
 ) -> BookingService:
-    booking_repository = BookingRepository(
-        session
-    )
+    booking_repository = BookingRepository(session)
 
-    master_repository = MasterRepository(
-        session
-    )
+    master_repository = MasterRepository(session)
 
-    offering_repository = MasterOfferingRepository(
-        session
-    )
+    offering_repository = MasterOfferingRepository(session)
 
-    schedule_repository = MasterScheduleRepository(
-        session
-    )
+    schedule_repository = MasterScheduleRepository(session)
 
     return BookingService(
         booking_repository=booking_repository,

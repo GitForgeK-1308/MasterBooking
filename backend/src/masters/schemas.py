@@ -8,9 +8,7 @@ from pydantic import (
 
 
 class MasterBase(BaseModel):
-    model_config = ConfigDict(
-        str_strip_whitespace=True
-    )
+    model_config = ConfigDict(str_strip_whitespace=True)
 
     first_name: str = Field(
         min_length=1,

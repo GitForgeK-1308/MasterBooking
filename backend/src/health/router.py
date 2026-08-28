@@ -16,17 +16,11 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
 )
 async def healthcheck(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
-    redis: Redis = Depends(
-        get_redis
-    ),
+    session: AsyncSession = Depends(get_async_session),
+    redis: Redis = Depends(get_redis),
 ):
     try:
-        await session.execute(
-            text("SELECT 1")
-        )
+        await session.execute(text("SELECT 1"))
 
         await redis.ping()
 

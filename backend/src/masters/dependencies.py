@@ -9,21 +9,13 @@ from src.masters.service import MasterService
 
 
 def get_master_service(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
+    session: AsyncSession = Depends(get_async_session),
 ) -> MasterService:
-    master_repository = MasterRepository(
-        session
-    )
+    master_repository = MasterRepository(session)
 
-    location_repository = LocationRepository(
-        session
-    )
+    location_repository = LocationRepository(session)
 
-    location_service = LocationService(
-        repository=location_repository
-    )
+    location_service = LocationService(repository=location_repository)
 
     return MasterService(
         repository=master_repository,

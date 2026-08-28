@@ -24,15 +24,11 @@ def make_tag(
 async def test_create_tag(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
     tag = make_tag()
 
-    result = await repository.create(
-        tag
-    )
+    result = await repository.create(tag)
 
     assert result.id is not None
     assert isinstance(
@@ -48,9 +44,7 @@ async def test_create_tag(
 async def test_get_all_tags_sorted(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
     await repository.create(
         make_tag(
@@ -76,10 +70,7 @@ async def test_get_all_tags_sorted(
 
     result = await repository.get_all()
 
-    assert [
-        tag.name
-        for tag in result
-    ] == [
+    assert [tag.name for tag in result] == [
         "Hair",
         "Massage",
         "Nails",
@@ -90,9 +81,7 @@ async def test_get_all_tags_sorted(
 async def test_get_active_tags(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
     await repository.create(
         make_tag(
@@ -118,35 +107,23 @@ async def test_get_active_tags(
 
     result = await repository.get_active()
 
-    assert [
-        tag.name
-        for tag in result
-    ] == [
+    assert [tag.name for tag in result] == [
         "Hair",
         "Nails",
     ]
 
-    assert all(
-        tag.is_active
-        for tag in result
-    )
+    assert all(tag.is_active for tag in result)
 
 
 @pytest.mark.anyio
 async def test_get_tag_by_id(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
-    tag = await repository.create(
-        make_tag()
-    )
+    tag = await repository.create(make_tag())
 
-    result = await repository.get_by_id(
-        tag.id
-    )
+    result = await repository.get_by_id(tag.id)
 
     assert result is not None
     assert result.id == tag.id
@@ -157,13 +134,9 @@ async def test_get_tag_by_id(
 async def test_get_tag_by_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
-    result = await repository.get_by_id(
-        uuid.uuid4()
-    )
+    result = await repository.get_by_id(uuid.uuid4())
 
     assert result is None
 
@@ -172,17 +145,11 @@ async def test_get_tag_by_id_not_found(
 async def test_get_tag_by_name(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
-    tag = await repository.create(
-        make_tag()
-    )
+    tag = await repository.create(make_tag())
 
-    result = await repository.get_by_name(
-        "Hair"
-    )
+    result = await repository.get_by_name("Hair")
 
     assert result is not None
     assert result.id == tag.id
@@ -193,13 +160,9 @@ async def test_get_tag_by_name(
 async def test_get_tag_by_name_not_found(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
-    result = await repository.get_by_name(
-        "Missing"
-    )
+    result = await repository.get_by_name("Missing")
 
     assert result is None
 
@@ -208,17 +171,11 @@ async def test_get_tag_by_name_not_found(
 async def test_get_tag_by_slug(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
-    tag = await repository.create(
-        make_tag()
-    )
+    tag = await repository.create(make_tag())
 
-    result = await repository.get_by_slug(
-        "hair"
-    )
+    result = await repository.get_by_slug("hair")
 
     assert result is not None
     assert result.id == tag.id
@@ -229,13 +186,9 @@ async def test_get_tag_by_slug(
 async def test_get_tag_by_slug_not_found(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
-    result = await repository.get_by_slug(
-        "missing"
-    )
+    result = await repository.get_by_slug("missing")
 
     assert result is None
 
@@ -244,9 +197,7 @@ async def test_get_tag_by_slug_not_found(
 async def test_get_tags_by_ids(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
     hair = await repository.create(
         make_tag(
@@ -276,10 +227,7 @@ async def test_get_tags_by_ids(
         ]
     )
 
-    assert {
-        tag.id
-        for tag in result
-    } == {
+    assert {tag.id for tag in result} == {
         hair.id,
         nails.id,
     }
@@ -289,13 +237,9 @@ async def test_get_tags_by_ids(
 async def test_get_tags_by_ids_empty(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
-    result = await repository.get_by_ids(
-        []
-    )
+    result = await repository.get_by_ids([])
 
     assert result == []
 
@@ -304,21 +248,15 @@ async def test_get_tags_by_ids_empty(
 async def test_update_tag(
     db_session: AsyncSession,
 ):
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
-    tag = await repository.create(
-        make_tag()
-    )
+    tag = await repository.create(make_tag())
 
     tag.name = "Hair Design"
     tag.slug = "hair-design"
     tag.is_active = False
 
-    result = await repository.update(
-        tag
-    )
+    result = await repository.update(tag)
 
     assert result.name == "Hair Design"
     assert result.slug == "hair-design"
@@ -326,27 +264,12 @@ async def test_update_tag(
 
     tag_id = result.id
 
-    db_session.expunge(
-        result
-    )
+    db_session.expunge(result)
 
-    tag_from_database = (
-        await repository.get_by_id(
-            tag_id
-        )
-    )
+    tag_from_database = await repository.get_by_id(tag_id)
 
     assert tag_from_database is not None
     assert tag_from_database.id == tag_id
-    assert (
-        tag_from_database.name
-        == "Hair Design"
-    )
-    assert (
-        tag_from_database.slug
-        == "hair-design"
-    )
-    assert (
-        tag_from_database.is_active
-        is False
-    )
+    assert tag_from_database.name == "Hair Design"
+    assert tag_from_database.slug == "hair-design"
+    assert tag_from_database.is_active is False

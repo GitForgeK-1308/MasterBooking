@@ -15,33 +15,20 @@ async def test_get_tags_returns_only_active_sorted(
     second_tag: Tag,
     inactive_tag: Tag,
 ):
-    response = await ac.get(
-        "/tags"
-    )
+    response = await ac.get("/tags")
 
     assert response.status_code == 200
 
     data = response.json()
 
-    assert [
-        item["name"]
-        for item in data
-    ] == [
+    assert [item["name"] for item in data] == [
         "Hair",
         "Nails",
     ]
 
-    assert all(
-        item["is_active"]
-        for item in data
-    )
+    assert all(item["is_active"] for item in data)
 
-    assert str(
-        inactive_tag.id
-    ) not in {
-        item["id"]
-        for item in data
-    }
+    assert str(inactive_tag.id) not in {item["id"] for item in data}
 
 
 @pytest.mark.anyio
@@ -59,10 +46,7 @@ async def test_get_all_tags_as_admin(
 
     assert response.status_code == 200
 
-    assert [
-        item["name"]
-        for item in response.json()
-    ] == [
+    assert [item["name"] for item in response.json()] == [
         "Hair",
         "Massage",
         "Nails",
@@ -73,9 +57,7 @@ async def test_get_all_tags_as_admin(
 async def test_get_all_tags_without_token(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        "/tags/admin"
-    )
+    response = await ac.get("/tags/admin")
 
     assert response.status_code == 401
 
@@ -92,12 +74,7 @@ async def test_get_all_tags_as_client_forbidden(
 
     assert response.status_code == 403
 
-    assert response.json() == {
-        "detail": (
-            "Доступ разрешён только "
-            "администраторам!"
-        )
-    }
+    assert response.json() == {"detail": ("Доступ разрешён только администраторам!")}
 
 
 @pytest.mark.anyio
@@ -123,18 +100,12 @@ async def test_create_tag(
     assert data["slug"] == "hair-styling"
     assert data["is_active"] is True
 
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
-    tag = await repository.get_by_slug(
-        "hair-styling"
-    )
+    tag = await repository.get_by_slug("hair-styling")
 
     assert tag is not None
-    assert tag.id == uuid.UUID(
-        data["id"]
-    )
+    assert tag.id == uuid.UUID(data["id"])
 
 
 @pytest.mark.anyio
@@ -187,10 +158,7 @@ async def test_create_tag_duplicate_name(
     assert response.status_code == 409
 
     assert response.json() == {
-        "detail": (
-            "Тег с таким названием или "
-            "slug уже существует!"
-        )
+        "detail": ("Тег с таким названием или slug уже существует!")
     }
 
 
@@ -212,10 +180,7 @@ async def test_create_tag_duplicate_slug(
     assert response.status_code == 409
 
     assert response.json() == {
-        "detail": (
-            "Тег с таким названием или "
-            "slug уже существует!"
-        )
+        "detail": ("Тег с таким названием или slug уже существует!")
     }
 
 
@@ -257,36 +222,19 @@ async def test_update_tag(
 
     data = response.json()
 
-    assert data["id"] == str(
-        tag.id
-    )
+    assert data["id"] == str(tag.id)
     assert data["name"] == "Hair Design"
     assert data["slug"] == "hair-design"
     assert data["is_active"] is False
 
-    repository = TagRepository(
-        db_session
-    )
+    repository = TagRepository(db_session)
 
-    tag_from_database = (
-        await repository.get_by_id(
-            tag.id
-        )
-    )
+    tag_from_database = await repository.get_by_id(tag.id)
 
     assert tag_from_database is not None
-    assert (
-        tag_from_database.name
-        == "Hair Design"
-    )
-    assert (
-        tag_from_database.slug
-        == "hair-design"
-    )
-    assert (
-        tag_from_database.is_active
-        is False
-    )
+    assert tag_from_database.name == "Hair Design"
+    assert tag_from_database.slug == "hair-design"
+    assert tag_from_database.is_active is False
 
 
 @pytest.mark.anyio
@@ -306,9 +254,7 @@ async def test_update_tag_not_found(
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Тег не найден!"
-    }
+    assert response.json() == {"detail": "Тег не найден!"}
 
 
 @pytest.mark.anyio
@@ -380,18 +326,11 @@ async def test_deactivate_tag_hides_it_from_public_list(
     assert response.status_code == 200
     assert response.json()["is_active"] is False
 
-    public_response = await ac.get(
-        "/tags"
-    )
+    public_response = await ac.get("/tags")
 
     assert public_response.status_code == 200
 
-    assert str(
-        tag.id
-    ) not in {
-        item["id"]
-        for item in public_response.json()
-    }
+    assert str(tag.id) not in {item["id"] for item in public_response.json()}
 
     admin_response = await ac.get(
         "/tags/admin",
@@ -400,9 +339,4 @@ async def test_deactivate_tag_hides_it_from_public_list(
 
     assert admin_response.status_code == 200
 
-    assert str(
-        tag.id
-    ) in {
-        item["id"]
-        for item in admin_response.json()
-    }
+    assert str(tag.id) in {item["id"] for item in admin_response.json()}

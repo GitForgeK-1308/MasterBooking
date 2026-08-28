@@ -14,11 +14,8 @@ from src.config import settings
 def create_access_token(
     user_id: uuid.UUID,
 ) -> str:
-    expires_at = (
-        datetime.now(timezone.utc)
-        + timedelta(
-            minutes=settings.access_token_expire_minutes
-        )
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.access_token_expire_minutes
     )
 
     payload = {
@@ -40,9 +37,7 @@ def decode_access_token(
         payload = jwt.decode(
             token,
             settings.secret_key,
-            algorithms=[
-                settings.algorithm
-            ],
+            algorithms=[settings.algorithm],
         )
 
         user_id = payload.get("sub")
@@ -53,9 +48,7 @@ def decode_access_token(
         ):
             raise InvalidTokenError
 
-        return uuid.UUID(
-            user_id
-        )
+        return uuid.UUID(user_id)
 
     except (
         InvalidTokenError,

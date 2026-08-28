@@ -23,10 +23,7 @@ async def test_get_all_categories_as_admin(
 
     assert response.status_code == 200
 
-    assert [
-        item["name"]
-        for item in response.json()
-    ] == [
+    assert [item["name"] for item in response.json()] == [
         "Beauty",
         "Massage",
         "Nails",
@@ -37,9 +34,7 @@ async def test_get_all_categories_as_admin(
 async def test_get_all_categories_without_token(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        "/categories/admin"
-    )
+    response = await ac.get("/categories/admin")
 
     assert response.status_code == 401
 
@@ -55,12 +50,7 @@ async def test_get_all_categories_as_client_forbidden(
     )
 
     assert response.status_code == 403
-    assert response.json() == {
-        "detail": (
-            "Доступ разрешён только "
-            "администраторам!"
-        )
-    }
+    assert response.json() == {"detail": ("Доступ разрешён только администраторам!")}
 
 
 @pytest.mark.anyio
@@ -87,18 +77,12 @@ async def test_create_category(
     assert data["parent_id"] is None
     assert data["is_active"] is True
 
-    repository = CategoryRepository(
-        db_session
-    )
+    repository = CategoryRepository(db_session)
 
-    category = await repository.get_by_slug(
-        "hair-styling"
-    )
+    category = await repository.get_by_slug("hair-styling")
 
     assert category is not None
-    assert category.id == uuid.UUID(
-        data["id"]
-    )
+    assert category.id == uuid.UUID(data["id"])
 
 
 @pytest.mark.anyio
@@ -150,10 +134,7 @@ async def test_create_category_duplicate_name(
 
     assert response.status_code == 409
     assert response.json() == {
-        "detail": (
-            "Категория с таким названием "
-            "или slug уже существует!"
-        )
+        "detail": ("Категория с таким названием или slug уже существует!")
     }
 
 
@@ -188,19 +169,12 @@ async def test_create_category_parent_not_found(
         json={
             "name": "Hair",
             "slug": "hair",
-            "parent_id": str(
-                parent_id
-            ),
+            "parent_id": str(parent_id),
         },
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": (
-            "Родительская категория "
-            "не найдена!"
-        )
-    }
+    assert response.json() == {"detail": ("Родительская категория не найдена!")}
 
 
 @pytest.mark.anyio
@@ -215,9 +189,7 @@ async def test_create_child_category(
         json={
             "name": "Hair",
             "slug": "hair",
-            "parent_id": str(
-                category.id
-            ),
+            "parent_id": str(category.id),
         },
     )
 
@@ -227,9 +199,7 @@ async def test_create_child_category(
 
     assert data["name"] == "Hair"
     assert data["slug"] == "hair"
-    assert data["parent_id"] == str(
-        category.id
-    )
+    assert data["parent_id"] == str(category.id)
 
 
 @pytest.mark.anyio
@@ -274,29 +244,14 @@ async def test_update_category(
     assert data["slug"] == "new-beauty"
     assert data["is_active"] is False
 
-    repository = CategoryRepository(
-        db_session
-    )
+    repository = CategoryRepository(db_session)
 
-    category_from_database = (
-        await repository.get_by_id(
-            category.id
-        )
-    )
+    category_from_database = await repository.get_by_id(category.id)
 
     assert category_from_database is not None
-    assert (
-        category_from_database.name
-        == "New Beauty"
-    )
-    assert (
-        category_from_database.slug
-        == "new-beauty"
-    )
-    assert (
-        category_from_database.is_active
-        is False
-    )
+    assert category_from_database.name == "New Beauty"
+    assert category_from_database.slug == "new-beauty"
+    assert category_from_database.is_active is False
 
 
 @pytest.mark.anyio
@@ -315,9 +270,7 @@ async def test_update_category_not_found(
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Категория не найдена!"
-    }
+    assert response.json() == {"detail": "Категория не найдена!"}
 
 
 @pytest.mark.anyio
@@ -366,18 +319,13 @@ async def test_update_category_cannot_be_own_parent(
         f"/categories/{category.id}",
         headers=admin_auth_headers,
         json={
-            "parent_id": str(
-                category.id
-            ),
+            "parent_id": str(category.id),
         },
     )
 
     assert response.status_code == 400
     assert response.json() == {
-        "detail": (
-            "Нельзя создать циклическую "
-            "иерархию категорий!"
-        )
+        "detail": ("Нельзя создать циклическую иерархию категорий!")
     }
 
 
@@ -392,9 +340,7 @@ async def test_update_category_prevents_cycle(
         f"/categories/{category.id}",
         headers=admin_auth_headers,
         json={
-            "parent_id": str(
-                child_category.id
-            ),
+            "parent_id": str(child_category.id),
         },
     )
 
@@ -416,10 +362,7 @@ async def test_update_category_can_remove_parent(
     )
 
     assert response.status_code == 200
-    assert (
-        response.json()["parent_id"]
-        is None
-    )
+    assert response.json()["parent_id"] is None
 
 
 @pytest.mark.anyio
@@ -439,18 +382,11 @@ async def test_deactivate_category_hides_it_from_public_list(
     assert response.status_code == 200
     assert response.json()["is_active"] is False
 
-    public_response = await ac.get(
-        "/categories"
-    )
+    public_response = await ac.get("/categories")
 
     assert public_response.status_code == 200
 
-    assert str(
-        category.id
-    ) not in {
-        item["id"]
-        for item in public_response.json()
-    }
+    assert str(category.id) not in {item["id"] for item in public_response.json()}
 
     admin_response = await ac.get(
         "/categories/admin",
@@ -459,9 +395,4 @@ async def test_deactivate_category_hides_it_from_public_list(
 
     assert admin_response.status_code == 200
 
-    assert str(
-        category.id
-    ) in {
-        item["id"]
-        for item in admin_response.json()
-    }
+    assert str(category.id) in {item["id"] for item in admin_response.json()}

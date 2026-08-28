@@ -37,9 +37,7 @@ async def test_get_my_profile(
 async def test_get_my_profile_without_token(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        "/users/me"
-    )
+    response = await ac.get("/users/me")
 
     assert response.status_code == 401
 
@@ -51,23 +49,14 @@ async def test_get_my_profile_invalid_token(
     response = await ac.get(
         "/users/me",
         headers={
-            "Authorization": (
-                "Bearer invalid-token"
-            ),
+            "Authorization": ("Bearer invalid-token"),
         },
     )
 
     assert response.status_code == 401
-    assert response.json() == {
-        "detail": (
-            "Не удалось подтвердить "
-            "пользователя!"
-        )
-    }
+    assert response.json() == {"detail": ("Не удалось подтвердить пользователя!")}
 
-    assert response.headers[
-        "www-authenticate"
-    ] == "Bearer"
+    assert response.headers["www-authenticate"] == "Bearer"
 
 
 @pytest.mark.anyio
@@ -81,12 +70,7 @@ async def test_get_my_profile_inactive_user(
     )
 
     assert response.status_code == 403
-    assert response.json() == {
-        "detail": (
-            "Аккаунт пользователя "
-            "отключён!"
-        )
-    }
+    assert response.json() == {"detail": ("Аккаунт пользователя отключён!")}
 
 
 @pytest.mark.anyio
@@ -115,23 +99,14 @@ async def test_update_my_profile(
     assert data["last_name"] == "Petrov"
     assert data["phone"] == "+79990000000"
 
-    repository = UserRepository(
-        db_session
-    )
+    repository = UserRepository(db_session)
 
-    user_from_database = (
-        await repository.get_by_id(
-            user.id
-        )
-    )
+    user_from_database = await repository.get_by_id(user.id)
 
     assert user_from_database is not None
     assert user_from_database.first_name == "Petr"
     assert user_from_database.last_name == "Petrov"
-    assert (
-        user_from_database.phone
-        == "+79990000000"
-    )
+    assert user_from_database.phone == "+79990000000"
 
 
 @pytest.mark.anyio
@@ -152,15 +127,9 @@ async def test_update_my_profile_clear_phone(
     assert response.status_code == 200
     assert response.json()["phone"] is None
 
-    repository = UserRepository(
-        db_session
-    )
+    repository = UserRepository(db_session)
 
-    user_from_database = (
-        await repository.get_by_id(
-            user.id
-        )
-    )
+    user_from_database = await repository.get_by_id(user.id)
 
     assert user_from_database is not None
     assert user_from_database.phone is None

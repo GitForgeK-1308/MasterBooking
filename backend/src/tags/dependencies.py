@@ -7,14 +7,8 @@ from src.tags.service import TagService
 
 
 def get_tag_service(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TagService:
-    repository = TagRepository(
-        session
-    )
+    repository = TagRepository(session)
 
-    return TagService(
-        repository=repository
-    )
+    return TagService(repository=repository)

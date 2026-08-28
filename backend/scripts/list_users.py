@@ -11,16 +11,11 @@ from src.users.models import UserRole
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Показать пользователей приложения."
-    )
+    parser = argparse.ArgumentParser(description="Показать пользователей приложения.")
 
     parser.add_argument(
         "--role",
-        choices=[
-            role.value
-            for role in UserRole
-        ],
+        choices=[role.value for role in UserRole],
         default=None,
         help="Фильтр по роли.",
     )
@@ -45,37 +40,23 @@ async def main(
     query = select(User)
 
     if role is not None:
-        query = query.where(
-            User.role == UserRole(role)
-        )
+        query = query.where(User.role == UserRole(role))
 
     if active is not None:
         is_active = active == "true"
 
-        query = query.where(
-            User.is_active == is_active
-        )
+        query = query.where(User.is_active == is_active)
 
-    query = query.order_by(
-        User.created_at.asc()
-    )
+    query = query.order_by(User.created_at.asc())
 
     async with AsyncSessionLocal() as session:
-        users = (
-            await session.scalars(
-                query
-            )
-        ).all()
+        users = (await session.scalars(query)).all()
 
     if not users:
-        print(
-            "Пользователи не найдены."
-        )
+        print("Пользователи не найдены.")
         return
 
-    print(
-        f"Найдено пользователей: {len(users)}"
-    )
+    print(f"Найдено пользователей: {len(users)}")
     print()
 
     for user in users:

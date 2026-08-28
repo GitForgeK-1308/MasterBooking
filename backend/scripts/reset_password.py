@@ -16,9 +16,7 @@ MAX_PASSWORD_LENGTH = 128
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description=(
-            "Изменить пароль существующего пользователя."
-        )
+        description=("Изменить пароль существующего пользователя.")
     )
 
     parser.add_argument(
@@ -34,25 +32,15 @@ async def main(
 ) -> None:
     normalized_email = email.strip().lower()
 
-    new_password = getpass(
-        "Новый пароль: "
-    )
+    new_password = getpass("Новый пароль: ")
 
-    password_confirmation = getpass(
-        "Повторите пароль: "
-    )
+    password_confirmation = getpass("Повторите пароль: ")
 
     if new_password != password_confirmation:
-        print(
-            "Пароли не совпадают."
-        )
+        print("Пароли не совпадают.")
         return
 
-    if not (
-        MIN_PASSWORD_LENGTH
-        <= len(new_password)
-        <= MAX_PASSWORD_LENGTH
-    ):
+    if not (MIN_PASSWORD_LENGTH <= len(new_password) <= MAX_PASSWORD_LENGTH):
         print(
             "Пароль должен содержать "
             f"от {MIN_PASSWORD_LENGTH} "
@@ -61,27 +49,17 @@ async def main(
         return
 
     async with AsyncSessionLocal() as session:
-        user = await session.scalar(
-            select(User).where(
-                User.email == normalized_email
-            )
-        )
+        user = await session.scalar(select(User).where(User.email == normalized_email))
 
         if user is None:
-            print(
-                f"Пользователь {normalized_email} не найден."
-            )
+            print(f"Пользователь {normalized_email} не найден.")
             return
 
-        user.hashed_password = hash_password(
-            new_password
-        )
+        user.hashed_password = hash_password(new_password)
 
         await session.commit()
 
-        print(
-            f"Пароль пользователя {user.email} изменён."
-        )
+        print(f"Пароль пользователя {user.email} изменён.")
 
 
 if __name__ == "__main__":

@@ -18,17 +18,11 @@ def image_storage(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> LocalImageStorage:
-    storage = LocalImageStorage.__new__(
-        LocalImageStorage
-    )
+    storage = LocalImageStorage.__new__(LocalImageStorage)
 
-    storage.uploads_dir = (
-        tmp_path / "uploads"
-    )
+    storage.uploads_dir = tmp_path / "uploads"
 
-    storage.offerings_dir = (
-        storage.uploads_dir / "offerings"
-    )
+    storage.offerings_dir = storage.uploads_dir / "offerings"
 
     storage.offerings_dir.mkdir(
         parents=True,
@@ -73,9 +67,7 @@ async def offering_image(
 ) -> OfferingImage:
     image = OfferingImage(
         offering_id=offering.id,
-        storage_key=(
-            "offerings/primary.png"
-        ),
+        storage_key=("offerings/primary.png"),
         is_primary=True,
         sort_order=10,
     )
@@ -94,9 +86,7 @@ async def second_offering_image(
 ) -> OfferingImage:
     image = OfferingImage(
         offering_id=offering.id,
-        storage_key=(
-            "offerings/secondary.png"
-        ),
+        storage_key=("offerings/secondary.png"),
         is_primary=False,
         sort_order=0,
     )
@@ -115,9 +105,7 @@ async def foreign_offering_image(
 ) -> OfferingImage:
     image = OfferingImage(
         offering_id=second_master_offering.id,
-        storage_key=(
-            "offerings/foreign.png"
-        ),
+        storage_key=("offerings/foreign.png"),
         is_primary=True,
         sort_order=0,
     )

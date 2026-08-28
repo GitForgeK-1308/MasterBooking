@@ -7,14 +7,8 @@ from src.database.session import get_async_session
 
 
 def get_category_service(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
+    session: AsyncSession = Depends(get_async_session),
 ) -> CategoryService:
-    repository = CategoryRepository(
-        session
-    )
+    repository = CategoryRepository(session)
 
-    return CategoryService(
-        repository=repository
-    )
+    return CategoryService(repository=repository)

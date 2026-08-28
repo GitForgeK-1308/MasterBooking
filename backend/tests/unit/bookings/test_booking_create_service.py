@@ -84,37 +84,27 @@ def make_schedule(
 
 
 def future_date() -> date:
-    return date.today() + timedelta(
-        days=7
-    )
+    return date.today() + timedelta(days=7)
 
 
 @pytest.fixture
 def booking_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=BookingRepository
-    )
+    return AsyncMock(spec=BookingRepository)
 
 
 @pytest.fixture
 def master_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterRepository
-    )
+    return AsyncMock(spec=MasterRepository)
 
 
 @pytest.fixture
 def offering_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterOfferingRepository
-    )
+    return AsyncMock(spec=MasterOfferingRepository)
 
 
 @pytest.fixture
 def schedule_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterScheduleRepository
-    )
+    return AsyncMock(spec=MasterScheduleRepository)
 
 
 @pytest.fixture
@@ -140,9 +130,7 @@ def prepare_bookable_data(
     master_id: uuid.UUID,
     duration_minutes: int = 60,
 ):
-    master = make_master(
-        master_id=master_id
-    )
+    master = make_master(master_id=master_id)
 
     offering = make_offering(
         master_id=master_id,
@@ -151,17 +139,11 @@ def prepare_bookable_data(
 
     schedule = make_schedule()
 
-    master_repository.get_by_id.return_value = (
-        master
-    )
+    master_repository.get_by_id.return_value = master
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    schedule_repository.get_by_master_and_day.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_master_and_day.return_value = schedule
 
     return (
         master,
@@ -188,13 +170,9 @@ async def test_create_booking(
         master_id=master_id,
     )
 
-    booking_repository.get_conflicting_booking.return_value = (
-        None
-    )
+    booking_repository.get_conflicting_booking.return_value = None
 
-    booking_repository.create.side_effect = (
-        lambda booking: booking
-    )
+    booking_repository.create.side_effect = lambda booking: booking
 
     booking_date = future_date()
 
@@ -232,10 +210,7 @@ async def test_create_booking(
         0,
     )
 
-    assert (
-        result.client_name
-        == "Ivan Ivanov"
-    )
+    assert result.client_name == "Ivan Ivanov"
     assert result.client_phone == user.phone
     assert result.client_email == user.email
 
@@ -252,9 +227,7 @@ async def test_create_booking(
         ),
     )
 
-    booking_repository.create.assert_awaited_once_with(
-        result
-    )
+    booking_repository.create.assert_awaited_once_with(result)
 
 
 @pytest.mark.anyio
@@ -263,13 +236,9 @@ async def test_create_booking_phone_required(
     booking_repository: AsyncMock,
     master_repository: AsyncMock,
 ):
-    user = make_user(
-        phone=None
-    )
+    user = make_user(phone=None)
 
-    with pytest.raises(
-        ClientPhoneRequiredError
-    ):
+    with pytest.raises(ClientPhoneRequiredError):
         await booking_service.create_booking(
             master_id=uuid.uuid4(),
             current_user=user,
@@ -296,9 +265,7 @@ async def test_create_booking_master_not_found(
 ):
     master_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        MasterNotFoundError
-    ):
+    with pytest.raises(MasterNotFoundError):
         await booking_service.create_booking(
             master_id=uuid.uuid4(),
             current_user=make_user(),
@@ -325,16 +292,12 @@ async def test_create_booking_master_inactive(
 ):
     master_id = uuid.uuid4()
 
-    master_repository.get_by_id.return_value = (
-        make_master(
-            master_id=master_id,
-            is_active=False,
-        )
+    master_repository.get_by_id.return_value = make_master(
+        master_id=master_id,
+        is_active=False,
     )
 
-    with pytest.raises(
-        MasterInactiveError
-    ):
+    with pytest.raises(MasterInactiveError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),
@@ -361,17 +324,11 @@ async def test_create_booking_offering_not_found(
 ):
     master_id = uuid.uuid4()
 
-    master_repository.get_by_id.return_value = (
-        make_master(
-            master_id=master_id
-        )
-    )
+    master_repository.get_by_id.return_value = make_master(master_id=master_id)
 
     offering_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingNotFoundError
-    ):
+    with pytest.raises(OfferingNotFoundError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),
@@ -397,22 +354,14 @@ async def test_create_booking_offering_inactive(
 ):
     master_id = uuid.uuid4()
 
-    master_repository.get_by_id.return_value = (
-        make_master(
-            master_id=master_id
-        )
+    master_repository.get_by_id.return_value = make_master(master_id=master_id)
+
+    offering_repository.get_by_id.return_value = make_offering(
+        master_id=master_id,
+        is_active=False,
     )
 
-    offering_repository.get_by_id.return_value = (
-        make_offering(
-            master_id=master_id,
-            is_active=False,
-        )
-    )
-
-    with pytest.raises(
-        OfferingInactiveError
-    ):
+    with pytest.raises(OfferingInactiveError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),
@@ -438,21 +387,11 @@ async def test_create_booking_offering_from_other_master(
 ):
     master_id = uuid.uuid4()
 
-    master_repository.get_by_id.return_value = (
-        make_master(
-            master_id=master_id
-        )
-    )
+    master_repository.get_by_id.return_value = make_master(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        make_offering(
-            master_id=uuid.uuid4()
-        )
-    )
+    offering_repository.get_by_id.return_value = make_offering(master_id=uuid.uuid4())
 
-    with pytest.raises(
-        OfferingDoesNotBelongToMasterError
-    ):
+    with pytest.raises(OfferingDoesNotBelongToMasterError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),
@@ -488,21 +427,14 @@ async def test_create_booking_in_past(
 
     data = BookingCreate(
         offering_id=offering.id,
-        booking_date=(
-            date.today()
-            - timedelta(
-                days=1
-            )
-        ),
+        booking_date=(date.today() - timedelta(days=1)),
         start_time=time(
             10,
             0,
         ),
     )
 
-    with pytest.raises(
-        BookingInPastError
-    ):
+    with pytest.raises(BookingInPastError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),
@@ -523,29 +455,17 @@ async def test_create_booking_schedule_unavailable(
 ):
     master_id = uuid.uuid4()
 
-    master = make_master(
-        master_id=master_id
-    )
+    master = make_master(master_id=master_id)
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    master_repository.get_by_id.return_value = (
-        master
-    )
+    master_repository.get_by_id.return_value = master
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    schedule_repository.get_by_master_and_day.return_value = (
-        None
-    )
+    schedule_repository.get_by_master_and_day.return_value = None
 
-    with pytest.raises(
-        MasterScheduleUnavailableError
-    ):
+    with pytest.raises(MasterScheduleUnavailableError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),
@@ -579,9 +499,7 @@ async def test_create_booking_before_working_hours(
         master_id=master_id,
     )
 
-    with pytest.raises(
-        BookingOutsideWorkingHoursError
-    ):
+    with pytest.raises(BookingOutsideWorkingHoursError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),
@@ -615,9 +533,7 @@ async def test_create_booking_ends_after_working_hours(
         master_id=master_id,
     )
 
-    with pytest.raises(
-        BookingOutsideWorkingHoursError
-    ):
+    with pytest.raises(BookingOutsideWorkingHoursError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),
@@ -652,9 +568,7 @@ async def test_create_booking_cannot_cross_midnight(
         duration_minutes=600,
     )
 
-    with pytest.raises(
-        BookingOutsideWorkingHoursError
-    ):
+    with pytest.raises(BookingOutsideWorkingHoursError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),
@@ -688,9 +602,7 @@ async def test_create_booking_invalid_slot_start(
         master_id=master_id,
     )
 
-    with pytest.raises(
-        InvalidBookingStartTimeError
-    ):
+    with pytest.raises(InvalidBookingStartTimeError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),
@@ -725,15 +637,11 @@ async def test_create_booking_time_conflict(
         master_id=master_id,
     )
 
-    booking_repository.get_conflicting_booking.return_value = (
-        SimpleNamespace(
-            id=uuid.uuid4()
-        )
+    booking_repository.get_conflicting_booking.return_value = SimpleNamespace(
+        id=uuid.uuid4()
     )
 
-    with pytest.raises(
-        BookingTimeConflictError
-    ):
+    with pytest.raises(BookingTimeConflictError):
         await booking_service.create_booking(
             master_id=master_id,
             current_user=make_user(),

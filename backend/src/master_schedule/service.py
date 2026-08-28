@@ -34,7 +34,6 @@ class MasterScheduleService:
         self.master_repository = master_repository
         self.redis = redis_client
 
-
     def _schedule_cache_key(
         self,
         master_id: uuid.UUID,
@@ -45,11 +44,7 @@ class MasterScheduleService:
         self,
         master_id: uuid.UUID,
     ) -> None:
-        await self.redis.delete(
-            self._schedule_cache_key(
-                master_id
-            )
-        )
+        await self.redis.delete(self._schedule_cache_key(master_id))
 
     def _serialize_schedules(
         self,
@@ -62,14 +57,10 @@ class MasterScheduleService:
                     "master_id": str(schedule.master_id),
                     "day_of_week": schedule.day_of_week.value,
                     "start_time": (
-                        schedule.start_time.isoformat()
-                        if schedule.start_time
-                        else None
+                        schedule.start_time.isoformat() if schedule.start_time else None
                     ),
                     "end_time": (
-                        schedule.end_time.isoformat()
-                        if schedule.end_time
-                        else None
+                        schedule.end_time.isoformat() if schedule.end_time else None
                     ),
                     "is_working": schedule.is_working,
                 }
@@ -87,20 +78,14 @@ class MasterScheduleService:
             MasterSchedule(
                 id=uuid.UUID(schedule["id"]),
                 master_id=uuid.UUID(schedule["master_id"]),
-                day_of_week=WeekDay(
-                    schedule["day_of_week"]
-                ),
+                day_of_week=WeekDay(schedule["day_of_week"]),
                 start_time=(
-                    time.fromisoformat(
-                        schedule["start_time"]
-                    )
+                    time.fromisoformat(schedule["start_time"])
                     if schedule["start_time"]
                     else None
                 ),
                 end_time=(
-                    time.fromisoformat(
-                        schedule["end_time"]
-                    )
+                    time.fromisoformat(schedule["end_time"])
                     if schedule["end_time"]
                     else None
                 ),
@@ -108,41 +93,29 @@ class MasterScheduleService:
             )
             for schedule in schedules
         ]
-    
+
     async def get_schedule_by_id(
         self,
         schedule_id: uuid.UUID,
     ) -> MasterSchedule | None:
-        return await self.schedule_repository.get_by_id(
-            schedule_id
-        )
+        return await self.schedule_repository.get_by_id(schedule_id)
 
     async def get_master_schedules(
         self,
         master_id: uuid.UUID,
     ) -> list[MasterSchedule]:
-        cache_key = self._schedule_cache_key(
-            master_id
-        )
+        cache_key = self._schedule_cache_key(master_id)
 
-        cached_schedule = await self.redis.get(
-            cache_key
-        )
+        cached_schedule = await self.redis.get(cache_key)
 
         if cached_schedule:
-            return self._deserialize_schedules(
-                cached_schedule
-            )
+            return self._deserialize_schedules(cached_schedule)
 
-        schedules = await self.schedule_repository.get_by_master_id(
-            master_id
-        )
+        schedules = await self.schedule_repository.get_by_master_id(master_id)
 
         await self.redis.set(
             cache_key,
-            self._serialize_schedules(
-                schedules
-            ),
+            self._serialize_schedules(schedules),
             ex=300,
         )
 
@@ -153,18 +126,14 @@ class MasterScheduleService:
         master_id: uuid.UUID,
         data: MasterScheduleCreate,
     ) -> MasterSchedule:
-        master = await self.master_repository.get_by_id(
-            master_id
-        )
+        master = await self.master_repository.get_by_id(master_id)
 
         if master is None:
             raise MasterNotFoundError
 
-        existing_schedule = (
-            await self.schedule_repository.get_by_master_and_day(
-                master_id=master_id,
-                day_of_week=data.day_of_week,
-            )
+        existing_schedule = await self.schedule_repository.get_by_master_and_day(
+            master_id=master_id,
+            day_of_week=data.day_of_week,
         )
 
         if existing_schedule is not None:
@@ -178,13 +147,9 @@ class MasterScheduleService:
             is_working=data.is_working,
         )
 
-        created_schedule = await self.schedule_repository.create(
-            new_schedule
-        )
+        created_schedule = await self.schedule_repository.create(new_schedule)
 
-        await self._invalidate_schedule_cache(
-            master_id
-        )
+        await self._invalidate_schedule_cache(master_id)
 
         return created_schedule
 
@@ -194,9 +159,7 @@ class MasterScheduleService:
         master_id: uuid.UUID,
         data: MasterScheduleUpdate,
     ) -> MasterSchedule | None:
-        schedule = await self.schedule_repository.get_by_id(
-            schedule_id
-        )
+        schedule = await self.schedule_repository.get_by_id(schedule_id)
 
         if schedule is None:
             return None
@@ -215,11 +178,9 @@ class MasterScheduleService:
         )
 
         if new_day_of_week != schedule.day_of_week:
-            existing_schedule = (
-                await self.schedule_repository.get_by_master_and_day(
-                    master_id=master_id,
-                    day_of_week=new_day_of_week,
-                )
+            existing_schedule = await self.schedule_repository.get_by_master_and_day(
+                master_id=master_id,
+                day_of_week=new_day_of_week,
             )
 
             if existing_schedule is not None:
@@ -255,13 +216,9 @@ class MasterScheduleService:
                 value,
             )
 
-        updated_schedule = await self.schedule_repository.update(
-            schedule
-        )
+        updated_schedule = await self.schedule_repository.update(schedule)
 
-        await self._invalidate_schedule_cache(
-            master_id
-        )
+        await self._invalidate_schedule_cache(master_id)
 
         return updated_schedule
 
@@ -270,9 +227,7 @@ class MasterScheduleService:
         schedule_id: uuid.UUID,
         master_id: uuid.UUID,
     ) -> bool | None:
-        schedule = await self.schedule_repository.get_by_id(
-            schedule_id
-        )
+        schedule = await self.schedule_repository.get_by_id(schedule_id)
 
         if schedule is None:
             return None
@@ -280,13 +235,9 @@ class MasterScheduleService:
         if schedule.master_id != master_id:
             raise ScheduleAccessDeniedError
 
-        await self.schedule_repository.delete(
-            schedule
-        )
+        await self.schedule_repository.delete(schedule)
 
-        await self._invalidate_schedule_cache(
-            master_id
-        )
+        await self._invalidate_schedule_cache(master_id)
 
         return True
 
@@ -299,19 +250,10 @@ class MasterScheduleService:
         if not is_working:
             return
 
-        if (
-            start_time is None
-            or end_time is None
-        ):
+        if start_time is None or end_time is None:
             raise ValueError(
-                "Для рабочего дня необходимо "
-                "указать время начала и окончания"
+                "Для рабочего дня необходимо указать время начала и окончания"
             )
 
         if start_time >= end_time:
-            raise ValueError(
-                "Время начала должно быть раньше "
-                "времени окончания"
-            )
-
-        
+            raise ValueError("Время начала должно быть раньше времени окончания")

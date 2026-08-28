@@ -6,7 +6,6 @@ def test_send_booking_reminder_task():
         "src.tasks.booking_tasks._send_booking_reminders",
         new_callable=AsyncMock,
     ) as send_reminders:
-
         from src.tasks.booking_tasks import (
             send_booking_reminder,
         )

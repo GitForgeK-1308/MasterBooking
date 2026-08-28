@@ -175,15 +175,11 @@ async def seed_locations(
 ) -> None:
     for location_data in LOCATIONS:
         city = await session.scalar(
-            select(City).where(
-                City.name == location_data["city"]
-            )
+            select(City).where(City.name == location_data["city"])
         )
 
         if city is None:
-            city = City(
-                name=location_data["city"]
-            )
+            city = City(name=location_data["city"])
 
             session.add(city)
             await session.flush()
@@ -202,9 +198,7 @@ async def seed_locations(
             )
 
             if district is not None:
-                print(
-                    f"[skip] Район: {district_name}"
-                )
+                print(f"[skip] Район: {district_name}")
                 continue
 
             session.add(
@@ -214,9 +208,7 @@ async def seed_locations(
                 )
             )
 
-            print(
-                f"[create] Район: {district_name}"
-            )
+            print(f"[create] Район: {district_name}")
 
 
 async def get_or_create_user(
@@ -228,11 +220,7 @@ async def get_or_create_user(
     phone: str,
     role: UserRole,
 ) -> User:
-    user = await session.scalar(
-        select(User).where(
-            User.email == email
-        )
-    )
+    user = await session.scalar(select(User).where(User.email == email))
 
     if user is not None:
         print(f"[skip] Пользователь: {email}")
@@ -240,9 +228,7 @@ async def get_or_create_user(
 
     user = User(
         email=email,
-        hashed_password=hash_password(
-            DEMO_PASSWORD
-        ),
+        hashed_password=hash_password(DEMO_PASSWORD),
         first_name=first_name,
         last_name=last_name,
         phone=phone,
@@ -311,16 +297,10 @@ async def get_location(
     city_name: str,
     district_name: str,
 ) -> tuple[City, District]:
-    city = await session.scalar(
-        select(City).where(
-            City.name == city_name
-        )
-    )
+    city = await session.scalar(select(City).where(City.name == city_name))
 
     if city is None:
-        raise RuntimeError(
-            f"Город {city_name} не найден"
-        )
+        raise RuntimeError(f"Город {city_name} не найден")
 
     district = await session.scalar(
         select(District).where(
@@ -330,9 +310,7 @@ async def get_location(
     )
 
     if district is None:
-        raise RuntimeError(
-            f"Район {district_name} не найден"
-        )
+        raise RuntimeError(f"Район {district_name} не найден")
 
     return city, district
 
@@ -347,17 +325,10 @@ async def get_or_create_master(
     district_name: str,
     address: str,
 ) -> Master:
-    master = await session.scalar(
-        select(Master).where(
-            Master.user_id == user.id
-        )
-    )
+    master = await session.scalar(select(Master).where(Master.user_id == user.id))
 
     if master is not None:
-        print(
-            f"[skip] Мастер: "
-            f"{user.first_name} {user.last_name}"
-        )
+        print(f"[skip] Мастер: {user.first_name} {user.last_name}")
         return master
 
     city, district = await get_location(
@@ -384,10 +355,7 @@ async def get_or_create_master(
     session.add(master)
     await session.flush()
 
-    print(
-        f"[create] Мастер: "
-        f"{user.first_name} {user.last_name}"
-    )
+    print(f"[create] Мастер: {user.first_name} {user.last_name}")
 
     return master
 
@@ -405,10 +373,7 @@ async def seed_masters(
             "мужских и женских стрижках."
         ),
         experience=6,
-        education=(
-            "Профессиональная подготовка "
-            "по парикмахерскому искусству."
-        ),
+        education=("Профессиональная подготовка по парикмахерскому искусству."),
         district_name="Центральный",
         address="ул. Ленина, 10",
     )
@@ -417,15 +382,11 @@ async def seed_masters(
         session,
         user=users["massage"],
         description=(
-            "Массажист с опытом работы "
-            "со спортивными и "
-            "восстановительными программами."
+            "Массажист с опытом работы со спортивными и восстановительными программами."
         ),
         experience=5,
         education=(
-            "Профессиональная подготовка "
-            "по классическому и "
-            "спортивному массажу."
+            "Профессиональная подготовка по классическому и спортивному массажу."
         ),
         district_name="Советский",
         address="пр. Мира, 25",
@@ -441,16 +402,10 @@ async def get_category(
     session: AsyncSession,
     slug: str,
 ) -> Category:
-    category = await session.scalar(
-        select(Category).where(
-            Category.slug == slug
-        )
-    )
+    category = await session.scalar(select(Category).where(Category.slug == slug))
 
     if category is None:
-        raise RuntimeError(
-            f"Категория {slug} не найдена"
-        )
+        raise RuntimeError(f"Категория {slug} не найдена")
 
     return category
 
@@ -459,11 +414,7 @@ async def get_tags(
     session: AsyncSession,
     slugs: list[str],
 ) -> list[Tag]:
-    result = await session.scalars(
-        select(Tag).where(
-            Tag.slug.in_(slugs)
-        )
-    )
+    result = await session.scalars(select(Tag).where(Tag.slug.in_(slugs)))
 
     return list(result.all())
 
@@ -530,9 +481,7 @@ async def seed_offerings(
         master=masters["barber"],
         category_slug="mens-haircut",
         title="Мужская стрижка",
-        description=(
-            "Подбор формы, стрижка и укладка."
-        ),
+        description=("Подбор формы, стрижка и укладка."),
         price="1500.00",
         discount_percent=10,
         duration_minutes=60,
@@ -544,10 +493,7 @@ async def seed_offerings(
         master=masters["barber"],
         category_slug="womens-haircut",
         title="Женская стрижка",
-        description=(
-            "Консультация, стрижка и "
-            "финальная укладка."
-        ),
+        description=("Консультация, стрижка и финальная укладка."),
         price="2200.00",
         discount_percent=0,
         duration_minutes=90,
@@ -559,10 +505,7 @@ async def seed_offerings(
         master=masters["massage"],
         category_slug="sports-massage",
         title="Спортивный массаж",
-        description=(
-            "Массаж для восстановления "
-            "после физических нагрузок."
-        ),
+        description=("Массаж для восстановления после физических нагрузок."),
         price="2500.00",
         discount_percent=15,
         duration_minutes=60,
@@ -574,10 +517,7 @@ async def seed_offerings(
         master=masters["massage"],
         category_slug="relaxing-massage",
         title="Расслабляющий массаж",
-        description=(
-            "Мягкая техника для снятия "
-            "напряжения и восстановления."
-        ),
+        description=("Мягкая техника для снятия напряжения и восстановления."),
         price="2200.00",
         discount_percent=0,
         duration_minutes=60,
@@ -601,19 +541,13 @@ async def seed_schedules(
         for day in working_days:
             schedule = await session.scalar(
                 select(MasterSchedule).where(
-                    MasterSchedule.master_id
-                    == master.id,
-                    MasterSchedule.day_of_week
-                    == day,
+                    MasterSchedule.master_id == master.id,
+                    MasterSchedule.day_of_week == day,
                 )
             )
 
             if schedule is not None:
-                print(
-                    f"[skip] Расписание: "
-                    f"{master.first_name} "
-                    f"{day.value}"
-                )
+                print(f"[skip] Расписание: {master.first_name} {day.value}")
                 continue
 
             session.add(
@@ -626,11 +560,7 @@ async def seed_schedules(
                 )
             )
 
-            print(
-                f"[create] Расписание: "
-                f"{master.first_name} "
-                f"{day.value}"
-            )
+            print(f"[create] Расписание: {master.first_name} {day.value}")
 
 
 async def main() -> None:
@@ -667,25 +597,11 @@ async def main() -> None:
     print("Demo-данные успешно подготовлены.")
     print()
     print("Demo-аккаунты:")
-    print(
-        "Клиент: "
-        "demo.client@example.com"
-    )
-    print(
-        "Мастер: "
-        "demo.barber@example.com"
-    )
-    print(
-        "Мастер: "
-        "demo.massage@example.com"
-    )
-    print(
-        "Админ: "
-        "demo.admin@example.com"
-    )
-    print(
-        f"Пароль для всех: {DEMO_PASSWORD}"
-    )
+    print("Клиент: demo.client@example.com")
+    print("Мастер: demo.barber@example.com")
+    print("Мастер: demo.massage@example.com")
+    print("Админ: demo.admin@example.com")
+    print(f"Пароль для всех: {DEMO_PASSWORD}")
 
 
 if __name__ == "__main__":

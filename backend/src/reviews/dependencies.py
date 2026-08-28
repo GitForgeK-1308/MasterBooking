@@ -8,17 +8,11 @@ from src.reviews.service import ReviewService
 
 
 def get_review_service(
-    session: AsyncSession = Depends(
-        get_async_session
-    ),
+    session: AsyncSession = Depends(get_async_session),
 ) -> ReviewService:
-    review_repository = ReviewRepository(
-        session
-    )
+    review_repository = ReviewRepository(session)
 
-    booking_repository = BookingRepository(
-        session
-    )
+    booking_repository = BookingRepository(session)
 
     return ReviewService(
         repository=review_repository,

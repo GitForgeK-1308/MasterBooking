@@ -13,9 +13,7 @@ from src.database.session import AsyncSessionLocal
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description=(
-            "Проверить пароль существующего пользователя."
-        )
+        description=("Проверить пароль существующего пользователя.")
     )
 
     parser.add_argument(
@@ -31,21 +29,13 @@ async def main(
 ) -> None:
     normalized_email = email.strip().lower()
 
-    password = getpass(
-        "Пароль: "
-    )
+    password = getpass("Пароль: ")
 
     async with AsyncSessionLocal() as session:
-        user = await session.scalar(
-            select(User).where(
-                User.email == normalized_email
-            )
-        )
+        user = await session.scalar(select(User).where(User.email == normalized_email))
 
         if user is None:
-            print(
-                f"Пользователь {normalized_email} не найден."
-            )
+            print(f"Пользователь {normalized_email} не найден.")
             return
 
         password_is_valid = verify_password(
@@ -53,19 +43,10 @@ async def main(
             hashed_password=user.hashed_password,
         )
 
-        print(
-            f"Email: {user.email}"
-        )
-        print(
-            f"Роль: {user.role.value}"
-        )
-        print(
-            f"Активен: {user.is_active}"
-        )
-        print(
-            "Пароль совпадает: "
-            f"{'Да' if password_is_valid else 'Нет'}"
-        )
+        print(f"Email: {user.email}")
+        print(f"Роль: {user.role.value}")
+        print(f"Активен: {user.is_active}")
+        print(f"Пароль совпадает: {'Да' if password_is_valid else 'Нет'}")
 
 
 if __name__ == "__main__":

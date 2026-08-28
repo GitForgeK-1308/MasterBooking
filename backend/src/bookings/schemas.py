@@ -7,9 +7,7 @@ from src.bookings.models import BookingStatus
 
 
 class BookingCreate(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid"
-    )
+    model_config = ConfigDict(extra="forbid")
 
     offering_id: uuid.UUID
     booking_date: date
@@ -17,17 +15,13 @@ class BookingCreate(BaseModel):
 
 
 class BookingStatusUpdate(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid"
-    )
+    model_config = ConfigDict(extra="forbid")
 
     status: BookingStatus
 
 
 class BookingResponse(BaseModel):
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     client_id: uuid.UUID | None

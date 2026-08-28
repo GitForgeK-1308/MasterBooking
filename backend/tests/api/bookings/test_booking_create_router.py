@@ -33,12 +33,8 @@ async def test_create_booking(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
@@ -47,66 +43,34 @@ async def test_create_booking(
 
     data = response.json()
 
-    assert data["client_id"] == str(
-        user.id
-    )
+    assert data["client_id"] == str(user.id)
 
-    assert data["master_id"] == str(
-        master.id
-    )
+    assert data["master_id"] == str(master.id)
 
-    assert data["offering_id"] == str(
-        offering.id
-    )
+    assert data["offering_id"] == str(offering.id)
 
-    assert (
-        data["booking_date"]
-        == future_booking_date.isoformat()
-    )
+    assert data["booking_date"] == future_booking_date.isoformat()
 
     assert data["start_time"] == "10:00:00"
     assert data["end_time"] == "11:00:00"
 
-    assert (
-        data["client_name"]
-        == (
-            f"{user.first_name} "
-            f"{user.last_name}"
-        )
-    )
+    assert data["client_name"] == (f"{user.first_name} {user.last_name}")
 
-    assert (
-        data["client_phone"]
-        == user.phone
-    )
+    assert data["client_phone"] == user.phone
 
-    assert (
-        data["client_email"]
-        == user.email
-    )
+    assert data["client_email"] == user.email
 
     assert data["status"] == "pending"
 
-    booking_id = uuid.UUID(
-        data["id"]
-    )
+    booking_id = uuid.UUID(data["id"])
 
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
-    booking_from_database = (
-        await repository.get_by_id(
-            booking_id
-        )
-    )
+    booking_from_database = await repository.get_by_id(booking_id)
 
     assert booking_from_database is not None
 
-    assert (
-        booking_from_database.end_time.isoformat()
-        == "11:00:00"
-    )
+    assert booking_from_database.end_time.isoformat() == "11:00:00"
 
 
 @pytest.mark.anyio
@@ -119,12 +83,8 @@ async def test_create_booking_without_token(
     response = await ac.post(
         f"/masters/{master.id}/bookings",
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
@@ -144,24 +104,16 @@ async def test_create_booking_on_own_service_forbidden(
         f"/masters/{master.id}/bookings",
         headers=master_auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Нельзя записаться "
-            "на собственную услугу!"
-        )
-    }
+    assert response.json() == {"detail": ("Нельзя записаться на собственную услугу!")}
+
 
 @pytest.mark.anyio
 async def test_create_booking_phone_required(
@@ -175,12 +127,8 @@ async def test_create_booking_phone_required(
         f"/masters/{master.id}/bookings",
         headers=no_phone_auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
@@ -188,10 +136,7 @@ async def test_create_booking_phone_required(
     assert response.status_code == 409
 
     assert response.json() == {
-        "detail": (
-            "Для бронирования необходимо "
-            "указать номер телефона!"
-        )
+        "detail": ("Для бронирования необходимо указать номер телефона!")
     }
 
 
@@ -203,27 +148,18 @@ async def test_create_booking_master_not_found(
     auth_headers: dict[str, str],
 ):
     response = await ac.post(
-        (
-            f"/masters/"
-            f"{uuid.uuid4()}/bookings"
-        ),
+        (f"/masters/{uuid.uuid4()}/bookings"),
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Мастер не найден!"
-    }
+    assert response.json() == {"detail": "Мастер не найден!"}
 
 
 @pytest.mark.anyio
@@ -235,29 +171,18 @@ async def test_create_booking_inactive_master(
     auth_headers: dict[str, str],
 ):
     response = await ac.post(
-        (
-            f"/masters/"
-            f"{inactive_master.id}/bookings"
-        ),
+        (f"/masters/{inactive_master.id}/bookings"),
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Мастер сейчас не принимает записи!"
-        )
-    }
+    assert response.json() == {"detail": ("Мастер сейчас не принимает записи!")}
 
 
 @pytest.mark.anyio
@@ -271,21 +196,15 @@ async def test_create_booking_offering_not_found(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                uuid.uuid4()
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(uuid.uuid4()),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Услуга не найдена!"
-    }
+    assert response.json() == {"detail": "Услуга не найдена!"}
 
 
 @pytest.mark.anyio
@@ -300,23 +219,15 @@ async def test_create_booking_inactive_offering(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                inactive_offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(inactive_offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Услуга сейчас недоступна!"
-        )
-    }
+    assert response.json() == {"detail": ("Услуга сейчас недоступна!")}
 
 
 @pytest.mark.anyio
@@ -331,24 +242,15 @@ async def test_create_booking_offering_from_other_master(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                second_master_offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(second_master_offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Услуга не принадлежит "
-            "выбранному мастеру!"
-        )
-    }
+    assert response.json() == {"detail": ("Услуга не принадлежит выбранному мастеру!")}
 
 
 @pytest.mark.anyio
@@ -363,24 +265,15 @@ async def test_create_booking_schedule_unavailable(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Мастер не работает "
-            "в выбранный день!"
-        )
-    }
+    assert response.json() == {"detail": ("Мастер не работает в выбранный день!")}
 
 
 @pytest.mark.anyio
@@ -390,35 +283,21 @@ async def test_create_booking_in_past(
     offering: MasterOffering,
     auth_headers: dict[str, str],
 ):
-    past_date = (
-        date.today()
-        - timedelta(
-            days=1
-        )
-    )
+    past_date = date.today() - timedelta(days=1)
 
     response = await ac.post(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                past_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (past_date.isoformat()),
             "start_time": "10:00:00",
         },
     )
 
     assert response.status_code == 422
 
-    assert response.json() == {
-        "detail": (
-            "Нельзя создать запись "
-            "на прошедшее время!"
-        )
-    }
+    assert response.json() == {"detail": ("Нельзя создать запись на прошедшее время!")}
 
 
 @pytest.mark.anyio
@@ -434,12 +313,8 @@ async def test_create_booking_before_working_hours(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "08:30:00",
         },
     )
@@ -447,10 +322,7 @@ async def test_create_booking_before_working_hours(
     assert response.status_code == 409
 
     assert response.json() == {
-        "detail": (
-            "Выбранное время находится вне "
-            "рабочего времени мастера!"
-        )
+        "detail": ("Выбранное время находится вне рабочего времени мастера!")
     }
 
 
@@ -467,12 +339,8 @@ async def test_create_booking_ends_after_working_hours(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "16:30:00",
         },
     )
@@ -480,10 +348,7 @@ async def test_create_booking_ends_after_working_hours(
     assert response.status_code == 409
 
     assert response.json() == {
-        "detail": (
-            "Выбранное время находится вне "
-            "рабочего времени мастера!"
-        )
+        "detail": ("Выбранное время находится вне рабочего времени мастера!")
     }
 
 
@@ -500,12 +365,8 @@ async def test_create_booking_invalid_slot_start(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "09:15:00",
         },
     )
@@ -513,10 +374,7 @@ async def test_create_booking_invalid_slot_start(
     assert response.status_code == 422
 
     assert response.json() == {
-        "detail": (
-            "Выбранное время не соответствует "
-            "доступному шагу записи!"
-        )
+        "detail": ("Выбранное время не соответствует доступному шагу записи!")
     }
 
 
@@ -534,23 +392,15 @@ async def test_create_booking_time_conflict(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:30:00",
         },
     )
 
     assert response.status_code == 409
 
-    assert response.json() == {
-        "detail": (
-            "Выбранное время уже занято!"
-        )
-    }
+    assert response.json() == {"detail": ("Выбранное время уже занято!")}
 
 
 @pytest.mark.anyio
@@ -567,12 +417,8 @@ async def test_create_booking_adjacent_time_is_allowed(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "11:00:00",
         },
     )
@@ -597,12 +443,8 @@ async def test_create_booking_rejects_extra_fields(
         f"/masters/{master.id}/bookings",
         headers=auth_headers,
         json={
-            "offering_id": str(
-                offering.id
-            ),
-            "booking_date": (
-                future_booking_date.isoformat()
-            ),
+            "offering_id": str(offering.id),
+            "booking_date": (future_booking_date.isoformat()),
             "start_time": "10:00:00",
             "unexpected": "value",
         },

@@ -20,19 +20,12 @@ def offering_payload(
     tag_ids: list[uuid.UUID] | None = None,
 ) -> dict:
     return {
-        "category_id": str(
-            category_id
-        ),
+        "category_id": str(category_id),
         "title": "Hair Styling",
-        "description": (
-            "Professional hair styling."
-        ),
+        "description": ("Professional hair styling."),
         "price": "35.50",
         "duration_minutes": 60,
-        "tag_ids": [
-            str(tag_id)
-            for tag_id in (tag_ids or [])
-        ],
+        "tag_ids": [str(tag_id) for tag_id in (tag_ids or [])],
     }
 
 
@@ -62,42 +55,23 @@ async def test_create_offering(
 
     data = response.json()
 
-    assert data["master_id"] == str(
-        master.id
-    )
-    assert data["category_id"] == str(
-        category.id
-    )
+    assert data["master_id"] == str(master.id)
+    assert data["category_id"] == str(category.id)
     assert data["title"] == "Hair Styling"
-    assert (
-        Decimal(data["price"])
-        == Decimal("35.50")
-    )
+    assert Decimal(data["price"]) == Decimal("35.50")
     assert data["duration_minutes"] == 60
     assert data["is_active"] is True
 
-    assert {
-        item["id"]
-        for item in data["tags"]
-    } == {
+    assert {item["id"] for item in data["tags"]} == {
         str(tag.id),
         str(second_tag.id),
     }
 
-    assert (
-        data["master"]["id"]
-        == str(master.id)
-    )
+    assert data["master"]["id"] == str(master.id)
 
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    offering = await repository.get_by_id(
-        uuid.UUID(
-            data["id"]
-        )
-    )
+    offering = await repository.get_by_id(uuid.UUID(data["id"]))
 
     assert offering is not None
     assert offering.master_id == master.id
@@ -111,9 +85,7 @@ async def test_create_offering_without_token(
 ):
     response = await ac.post(
         "/masters/me/offerings",
-        json=offering_payload(
-            category_id=category.id
-        ),
+        json=offering_payload(category_id=category.id),
     )
 
     assert response.status_code == 401
@@ -128,9 +100,7 @@ async def test_create_offering_as_client_forbidden(
     response = await ac.post(
         "/masters/me/offerings",
         headers=auth_headers,
-        json=offering_payload(
-            category_id=category.id
-        ),
+        json=offering_payload(category_id=category.id),
     )
 
     assert response.status_code == 403
@@ -145,9 +115,7 @@ async def test_create_offering_master_without_profile(
     response = await ac.post(
         "/masters/me/offerings",
         headers=master_without_profile_headers,
-        json=offering_payload(
-            category_id=category.id
-        ),
+        json=offering_payload(category_id=category.id),
     )
 
     assert response.status_code == 404
@@ -162,15 +130,11 @@ async def test_create_offering_category_not_found(
     response = await ac.post(
         "/masters/me/offerings",
         headers=master_auth_headers,
-        json=offering_payload(
-            category_id=uuid.uuid4()
-        ),
+        json=offering_payload(category_id=uuid.uuid4()),
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Категория не найдена!"
-    }
+    assert response.json() == {"detail": "Категория не найдена!"}
 
 
 @pytest.mark.anyio
@@ -183,18 +147,11 @@ async def test_create_offering_inactive_category(
     response = await ac.post(
         "/masters/me/offerings",
         headers=master_auth_headers,
-        json=offering_payload(
-            category_id=inactive_category.id
-        ),
+        json=offering_payload(category_id=inactive_category.id),
     )
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": (
-            "Выбранная категория "
-            "недоступна!"
-        )
-    }
+    assert response.json() == {"detail": ("Выбранная категория недоступна!")}
 
 
 @pytest.mark.anyio
@@ -216,12 +173,7 @@ async def test_create_offering_tag_not_found(
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": (
-            "Один или несколько тегов "
-            "не найдены!"
-        )
-    }
+    assert response.json() == {"detail": ("Один или несколько тегов не найдены!")}
 
 
 @pytest.mark.anyio
@@ -244,12 +196,7 @@ async def test_create_offering_inactive_tag(
     )
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": (
-            "Один или несколько тегов "
-            "неактивны!"
-        )
-    }
+    assert response.json() == {"detail": ("Один или несколько тегов неактивны!")}
 
 
 @pytest.mark.anyio
@@ -276,14 +223,9 @@ async def test_create_offering_deduplicates_tags(
 
     data = response.json()
 
-    assert len(
-        data["tags"]
-    ) == 1
+    assert len(data["tags"]) == 1
 
-    assert (
-        data["tags"][0]["id"]
-        == str(tag.id)
-    )
+    assert data["tags"][0]["id"] == str(tag.id)
 
 
 @pytest.mark.anyio
@@ -315,9 +257,7 @@ async def test_create_offering_invalid_data(
     field: str,
     value,
 ):
-    payload = offering_payload(
-        category_id=category.id
-    )
+    payload = offering_payload(category_id=category.id)
 
     payload[field] = value
 
@@ -344,18 +284,11 @@ async def test_get_my_offerings_includes_inactive(
 
     assert response.status_code == 200
 
-    ids = {
-        item["id"]
-        for item in response.json()
-    }
+    ids = {item["id"] for item in response.json()}
 
-    assert str(
-        offering.id
-    ) in ids
+    assert str(offering.id) in ids
 
-    assert str(
-        inactive_offering.id
-    ) in ids
+    assert str(inactive_offering.id) in ids
 
 
 @pytest.mark.anyio
@@ -365,24 +298,15 @@ async def test_get_master_offerings_returns_only_active(
     offering: MasterOffering,
     inactive_offering: MasterOffering,
 ):
-    response = await ac.get(
-        f"/masters/{master.id}/offerings"
-    )
+    response = await ac.get(f"/masters/{master.id}/offerings")
 
     assert response.status_code == 200
 
-    ids = {
-        item["id"]
-        for item in response.json()
-    }
+    ids = {item["id"] for item in response.json()}
 
-    assert str(
-        offering.id
-    ) in ids
+    assert str(offering.id) in ids
 
-    assert str(
-        inactive_offering.id
-    ) not in ids
+    assert str(inactive_offering.id) not in ids
 
 
 @pytest.mark.anyio
@@ -397,9 +321,7 @@ async def test_update_offering(
         f"/offerings/{offering.id}",
         headers=master_auth_headers,
         json={
-            "category_id": str(
-                second_category.id
-            ),
+            "category_id": str(second_category.id),
             "title": "Updated Service",
             "price": "45.75",
             "duration_minutes": 90,
@@ -414,21 +336,11 @@ async def test_update_offering(
     data = response.json()
 
     assert data["title"] == "Updated Service"
-    assert (
-        Decimal(data["price"])
-        == Decimal("45.75")
-    )
+    assert Decimal(data["price"]) == Decimal("45.75")
     assert data["duration_minutes"] == 90
-    assert data["category_id"] == str(
-        second_category.id
-    )
+    assert data["category_id"] == str(second_category.id)
 
-    assert [
-        item["id"]
-        for item in data["tags"]
-    ] == [
-        str(second_tag.id)
-    ]
+    assert [item["id"] for item in data["tags"]] == [str(second_tag.id)]
 
 
 @pytest.mark.anyio
@@ -446,9 +358,7 @@ async def test_update_offering_not_found(
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Услуга не найдена!"
-    }
+    assert response.json() == {"detail": "Услуга не найдена!"}
 
 
 @pytest.mark.anyio
@@ -459,10 +369,7 @@ async def test_update_foreign_offering_forbidden(
     master_auth_headers: dict[str, str],
 ):
     response = await ac.patch(
-        (
-            "/offerings/"
-            f"{second_master_offering.id}"
-        ),
+        (f"/offerings/{second_master_offering.id}"),
         headers=master_auth_headers,
         json={
             "title": "Updated Service",
@@ -470,12 +377,7 @@ async def test_update_foreign_offering_forbidden(
     )
 
     assert response.status_code == 403
-    assert response.json() == {
-        "detail": (
-            "Вы не можете изменять "
-            "чужую услугу!"
-        )
-    }
+    assert response.json() == {"detail": ("Вы не можете изменять чужую услугу!")}
 
 
 @pytest.mark.anyio
@@ -489,9 +391,7 @@ async def test_update_offering_inactive_category(
         f"/offerings/{offering.id}",
         headers=master_auth_headers,
         json={
-            "category_id": str(
-                inactive_category.id
-            ),
+            "category_id": str(inactive_category.id),
         },
     )
 
@@ -509,9 +409,7 @@ async def test_update_offering_tag_not_found(
         headers=master_auth_headers,
         json={
             "tag_ids": [
-                str(
-                    uuid.uuid4()
-                ),
+                str(uuid.uuid4()),
             ],
         },
     )
@@ -531,9 +429,7 @@ async def test_update_offering_inactive_tag(
         headers=master_auth_headers,
         json={
             "tag_ids": [
-                str(
-                    inactive_tag.id
-                ),
+                str(inactive_tag.id),
             ],
         },
     )
@@ -576,15 +472,9 @@ async def test_delete_offering_without_bookings(
     assert response.status_code == 204
     assert response.text == ""
 
-    repository = MasterOfferingRepository(
-        db_session
-    )
+    repository = MasterOfferingRepository(db_session)
 
-    offering_from_database = (
-        await repository.get_by_id(
-            offering_id
-        )
-    )
+    offering_from_database = await repository.get_by_id(offering_id)
 
     assert offering_from_database is None
 
@@ -601,9 +491,7 @@ async def test_delete_offering_not_found(
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Услуга не найдена!"
-    }
+    assert response.json() == {"detail": "Услуга не найдена!"}
 
 
 @pytest.mark.anyio
@@ -614,17 +502,9 @@ async def test_delete_foreign_offering_forbidden(
     master_auth_headers: dict[str, str],
 ):
     response = await ac.delete(
-        (
-            "/offerings/"
-            f"{second_master_offering.id}"
-        ),
+        (f"/offerings/{second_master_offering.id}"),
         headers=master_auth_headers,
     )
 
     assert response.status_code == 403
-    assert response.json() == {
-        "detail": (
-            "Вы не можете удалять "
-            "чужую услугу!"
-        )
-    }
+    assert response.json() == {"detail": ("Вы не можете удалять чужую услугу!")}

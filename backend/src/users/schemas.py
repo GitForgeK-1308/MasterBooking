@@ -61,9 +61,7 @@ class UserAvatarResponse(BaseModel):
 
 
 class UserResponse(BaseModel):
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     email: EmailStr
@@ -74,6 +72,7 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: datetime
     avatar_url: str | None
+
 
 class TokenResponse(BaseModel):
     access_token: str

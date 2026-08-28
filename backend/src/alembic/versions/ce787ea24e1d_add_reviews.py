@@ -20,77 +20,62 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         "reviews",
-
         sa.Column(
             "id",
             sa.UUID(),
             nullable=False,
         ),
-
         sa.Column(
             "booking_id",
             sa.UUID(),
             nullable=False,
         ),
-
         sa.Column(
             "master_id",
             sa.UUID(),
             nullable=False,
         ),
-
         sa.Column(
             "client_id",
             sa.UUID(),
             nullable=True,
         ),
-
         sa.Column(
             "rating",
             sa.Integer(),
             nullable=False,
         ),
-
         sa.Column(
             "comment",
             sa.Text(),
             nullable=True,
         ),
-
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
             server_default=sa.text("now()"),
             nullable=False,
         ),
-
         sa.CheckConstraint(
             "rating >= 1 AND rating <= 5",
             name="ck_reviews_rating_range",
         ),
-
         sa.ForeignKeyConstraint(
             ["booking_id"],
             ["bookings.id"],
             ondelete="CASCADE",
         ),
-
         sa.ForeignKeyConstraint(
             ["client_id"],
             ["users.id"],
             ondelete="SET NULL",
         ),
-
         sa.ForeignKeyConstraint(
             ["master_id"],
             ["masters.id"],
             ondelete="CASCADE",
         ),
-
-        sa.PrimaryKeyConstraint(
-            "id"
-        ),
-
+        sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
             "booking_id",
             name="uq_reviews_booking_id",
@@ -123,6 +108,4 @@ def downgrade() -> None:
         table_name="reviews",
     )
 
-    op.drop_table(
-        "reviews"
-    )
+    op.drop_table("reviews")

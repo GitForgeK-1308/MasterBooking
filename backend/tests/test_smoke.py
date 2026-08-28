@@ -6,9 +6,7 @@ from httpx import AsyncClient
 async def test_get_cities_empty(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        "/locations/cities"
-    )
+    response = await ac.get("/locations/cities")
 
     assert response.status_code == 200
     assert response.json() == []

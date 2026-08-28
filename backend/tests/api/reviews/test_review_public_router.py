@@ -14,44 +14,30 @@ async def test_get_public_master_reviews(
     review: Review,
     second_review: Review,
 ):
-    response = await ac.get(
-        f"/masters/{master.id}/reviews"
-    )
+    response = await ac.get(f"/masters/{master.id}/reviews")
 
     assert response.status_code == 200
 
     data = response.json()
 
-    assert [
-        item["id"]
-        for item in data
-    ] == [
+    assert [item["id"] for item in data] == [
         str(second_review.id),
         str(review.id),
     ]
 
-    assert [
-        item["rating"]
-        for item in data
-    ] == [
+    assert [item["rating"] for item in data] == [
         4,
         5,
     ]
 
-    assert all(
-        item["client_name"]
-        == "Ivan Ivanov"
-        for item in data
-    )
+    assert all(item["client_name"] == "Ivan Ivanov" for item in data)
 
 
 @pytest.mark.anyio
 async def test_get_public_master_reviews_empty(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        f"/masters/{uuid.uuid4()}/reviews"
-    )
+    response = await ac.get(f"/masters/{uuid.uuid4()}/reviews")
 
     assert response.status_code == 200
     assert response.json() == []
@@ -63,9 +49,7 @@ async def test_public_review_deleted_user_name(
     master: Master,
     deleted_user_review: Review,
 ):
-    response = await ac.get(
-        f"/masters/{master.id}/reviews"
-    )
+    response = await ac.get(f"/masters/{master.id}/reviews")
 
     assert response.status_code == 200
 
@@ -73,15 +57,9 @@ async def test_public_review_deleted_user_name(
 
     assert len(data) == 1
 
-    assert (
-        data[0]["id"]
-        == str(deleted_user_review.id)
-    )
+    assert data[0]["id"] == str(deleted_user_review.id)
 
-    assert (
-        data[0]["client_name"]
-        == "Удалённый пользователь"
-    )
+    assert data[0]["client_name"] == "Удалённый пользователь"
 
 
 @pytest.mark.anyio
@@ -92,12 +70,7 @@ async def test_get_master_review_stats(
     second_review: Review,
     deleted_user_review: Review,
 ):
-    response = await ac.get(
-        (
-            f"/masters/{master.id}"
-            "/reviews/stats"
-        )
-    )
+    response = await ac.get((f"/masters/{master.id}/reviews/stats"))
 
     assert response.status_code == 200
 
@@ -111,12 +84,7 @@ async def test_get_master_review_stats(
 async def test_get_master_review_stats_empty(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        (
-            f"/masters/{uuid.uuid4()}"
-            "/reviews/stats"
-        )
-    )
+    response = await ac.get((f"/masters/{uuid.uuid4()}/reviews/stats"))
 
     assert response.status_code == 200
 
@@ -134,12 +102,7 @@ async def test_get_master_reviews_full(
     second_review: Review,
     deleted_user_review: Review,
 ):
-    response = await ac.get(
-        (
-            f"/masters/{master.id}"
-            "/reviews/full"
-        )
-    )
+    response = await ac.get((f"/masters/{master.id}/reviews/full"))
 
     assert response.status_code == 200
 
@@ -156,10 +119,7 @@ async def test_get_master_reviews_full(
         "5": 1,
     }
 
-    assert [
-        item["id"]
-        for item in data["reviews"]
-    ] == [
+    assert [item["id"] for item in data["reviews"]] == [
         str(deleted_user_review.id),
         str(second_review.id),
         str(review.id),
@@ -170,12 +130,7 @@ async def test_get_master_reviews_full(
 async def test_get_master_reviews_full_empty(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        (
-            f"/masters/{uuid.uuid4()}"
-            "/reviews/full"
-        )
-    )
+    response = await ac.get((f"/masters/{uuid.uuid4()}/reviews/full"))
 
     assert response.status_code == 200
 
@@ -197,9 +152,7 @@ async def test_get_master_reviews_full_empty(
 async def test_get_master_reviews_invalid_uuid(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        "/masters/not-a-uuid/reviews"
-    )
+    response = await ac.get("/masters/not-a-uuid/reviews")
 
     assert response.status_code == 422
 
@@ -208,9 +161,7 @@ async def test_get_master_reviews_invalid_uuid(
 async def test_get_master_review_stats_invalid_uuid(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        "/masters/not-a-uuid/reviews/stats"
-    )
+    response = await ac.get("/masters/not-a-uuid/reviews/stats")
 
     assert response.status_code == 422
 
@@ -219,8 +170,6 @@ async def test_get_master_review_stats_invalid_uuid(
 async def test_get_master_reviews_full_invalid_uuid(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        "/masters/not-a-uuid/reviews/full"
-    )
+    response = await ac.get("/masters/not-a-uuid/reviews/full")
 
     assert response.status_code == 422

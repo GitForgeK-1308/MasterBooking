@@ -26,9 +26,7 @@ class UserService:
         self,
         user_id: uuid.UUID,
     ) -> User:
-        user = await self.repository.get_by_id(
-            user_id
-        )
+        user = await self.repository.get_by_id(user_id)
 
         if user is None:
             raise UserNotFoundError
@@ -39,22 +37,14 @@ class UserService:
         self,
         data: UserRegister,
     ) -> User:
-        normalized_email = (
-            str(data.email)
-            .strip()
-            .lower()
-        )
+        normalized_email = str(data.email).strip().lower()
 
-        existing_user = await self.repository.get_by_email(
-            normalized_email
-        )
+        existing_user = await self.repository.get_by_email(normalized_email)
 
         if existing_user is not None:
             raise EmailAlreadyExistsError
 
-        hashed_password = hash_password(
-            data.password
-        )
+        hashed_password = hash_password(data.password)
 
         new_user = User(
             email=normalized_email,
@@ -64,24 +54,16 @@ class UserService:
             phone=data.phone,
         )
 
-        return await self.repository.create(
-            new_user
-        )
+        return await self.repository.create(new_user)
 
     async def authenticate_user(
         self,
         email: str,
         password: str,
     ) -> User:
-        normalized_email = (
-            email
-            .strip()
-            .lower()
-        )
+        normalized_email = email.strip().lower()
 
-        user = await self.repository.get_by_email(
-            normalized_email
-        )
+        user = await self.repository.get_by_email(normalized_email)
 
         if user is None:
             raise InvalidCredentialsError
@@ -108,12 +90,8 @@ class UserService:
             exclude_unset=True,
         )
 
-        first_name = data_dict.get(
-            "first_name"
-        )
-        last_name = data_dict.get(
-            "last_name"
-        )
+        first_name = data_dict.get("first_name")
+        last_name = data_dict.get("last_name")
 
         if first_name is not None:
             user.first_name = first_name
@@ -124,9 +102,7 @@ class UserService:
         if "phone" in data_dict:
             user.phone = data_dict["phone"]
 
-        master = await self.master_repository.get_by_user_id(
-            user.id
-        )
+        master = await self.master_repository.get_by_user_id(user.id)
 
         if master is not None:
             if first_name is not None:
@@ -135,6 +111,4 @@ class UserService:
             if last_name is not None:
                 master.last_name = last_name
 
-        return await self.repository.update(
-            user
-        )
+        return await self.repository.update(user)

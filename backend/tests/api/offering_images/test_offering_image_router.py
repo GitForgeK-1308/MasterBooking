@@ -44,42 +44,24 @@ async def test_upload_first_offering_image(
 
     data = response.json()
 
-    assert (
-        data["offering_id"]
-        == str(offering.id)
-    )
+    assert data["offering_id"] == str(offering.id)
     assert data["is_primary"] is True
     assert data["sort_order"] == 0
-    assert data["image_url"].startswith(
-        "/uploads/offerings/"
-    )
+    assert data["image_url"].startswith("/uploads/offerings/")
 
-    image_id = uuid.UUID(
-        data["id"]
-    )
+    image_id = uuid.UUID(data["id"])
 
-    repository = OfferingImageRepository(
-        db_session
-    )
+    repository = OfferingImageRepository(db_session)
 
-    image = await repository.get_by_id(
-        image_id
-    )
+    image = await repository.get_by_id(image_id)
 
     assert image is not None
     assert image.is_primary is True
     assert image.sort_order == 0
 
-    storage_key = data[
-        "image_url"
-    ].removeprefix(
-        "/uploads/"
-    )
+    storage_key = data["image_url"].removeprefix("/uploads/")
 
-    file_path = (
-        image_storage.uploads_dir
-        / storage_key
-    )
+    file_path = image_storage.uploads_dir / storage_key
 
     assert file_path.exists()
 
@@ -177,9 +159,7 @@ async def test_upload_image_offering_not_found(
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Услуга не найдена!"
-    }
+    assert response.json() == {"detail": "Услуга не найдена!"}
 
 
 @pytest.mark.anyio
@@ -191,10 +171,7 @@ async def test_upload_image_to_foreign_offering_forbidden(
     png_bytes: bytes,
 ):
     response = await ac.post(
-        (
-            f"/offerings/"
-            f"{second_master_offering.id}/images"
-        ),
+        (f"/offerings/{second_master_offering.id}/images"),
         headers=master_auth_headers,
         files={
             "file": (
@@ -208,10 +185,7 @@ async def test_upload_image_to_foreign_offering_forbidden(
     assert response.status_code == 403
 
     assert response.json() == {
-        "detail": (
-            "Вы не можете загружать фотографии "
-            "для чужой услуги!"
-        )
+        "detail": ("Вы не можете загружать фотографии для чужой услуги!")
     }
 
 
@@ -237,10 +211,7 @@ async def test_upload_invalid_image_type(
     assert response.status_code == 415
 
     assert response.json() == {
-        "detail": (
-            "Разрешены только JPEG, PNG "
-            "и WEBP изображения!"
-        )
+        "detail": ("Разрешены только JPEG, PNG и WEBP изображения!")
     }
 
 
@@ -257,9 +228,7 @@ async def test_upload_image_too_large(
         files={
             "file": (
                 "large.png",
-                b"x" * (
-                    MAX_IMAGE_SIZE + 1
-                ),
+                b"x" * (MAX_IMAGE_SIZE + 1),
                 "image/png",
             ),
         },
@@ -268,10 +237,7 @@ async def test_upload_image_too_large(
     assert response.status_code == 413
 
     assert response.json() == {
-        "detail": (
-            "Размер фотографии не должен "
-            "превышать 5 MB!"
-        )
+        "detail": ("Размер фотографии не должен превышать 5 MB!")
     }
 
 
@@ -282,57 +248,33 @@ async def test_get_offering_images_sorted(
     offering_image: OfferingImage,
     second_offering_image: OfferingImage,
 ):
-    response = await ac.get(
-        f"/offerings/{offering.id}/images"
-    )
+    response = await ac.get(f"/offerings/{offering.id}/images")
 
     assert response.status_code == 200
 
     data = response.json()
 
-    assert [
-        item["id"]
-        for item in data
-    ] == [
+    assert [item["id"] for item in data] == [
         str(offering_image.id),
         str(second_offering_image.id),
     ]
 
-    assert (
-        data[0]["is_primary"]
-        is True
-    )
+    assert data[0]["is_primary"] is True
 
-    assert (
-        data[1]["is_primary"]
-        is False
-    )
+    assert data[1]["is_primary"] is False
 
-    assert (
-        data[0]["image_url"]
-        == (
-            "/uploads/"
-            f"{offering_image.storage_key}"
-        )
-    )
+    assert data[0]["image_url"] == (f"/uploads/{offering_image.storage_key}")
 
 
 @pytest.mark.anyio
 async def test_get_images_offering_not_found(
     ac: AsyncClient,
 ):
-    response = await ac.get(
-        (
-            f"/offerings/"
-            f"{uuid.uuid4()}/images"
-        )
-    )
+    response = await ac.get((f"/offerings/{uuid.uuid4()}/images"))
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Услуга не найдена!"
-    }
+    assert response.json() == {"detail": "Услуга не найдена!"}
 
 
 @pytest.mark.anyio
@@ -346,10 +288,7 @@ async def test_set_primary_image(
     db_session: AsyncSession,
 ):
     response = await ac.patch(
-        (
-            f"/offerings/{offering.id}/images/"
-            f"{second_offering_image.id}/primary"
-        ),
+        (f"/offerings/{offering.id}/images/{second_offering_image.id}/primary"),
         headers=master_auth_headers,
     )
 
@@ -357,25 +296,15 @@ async def test_set_primary_image(
 
     data = response.json()
 
-    assert (
-        data["id"]
-        == str(second_offering_image.id)
-    )
+    assert data["id"] == str(second_offering_image.id)
     assert data["is_primary"] is True
 
-    repository = OfferingImageRepository(
-        db_session
-    )
+    repository = OfferingImageRepository(db_session)
 
-    primary = await repository.get_primary(
-        offering.id
-    )
+    primary = await repository.get_primary(offering.id)
 
     assert primary is not None
-    assert (
-        primary.id
-        == second_offering_image.id
-    )
+    assert primary.id == second_offering_image.id
 
 
 @pytest.mark.anyio
@@ -386,18 +315,13 @@ async def test_set_primary_image_not_found(
     master_auth_headers: dict[str, str],
 ):
     response = await ac.patch(
-        (
-            f"/offerings/{offering.id}/images/"
-            f"{uuid.uuid4()}/primary"
-        ),
+        (f"/offerings/{offering.id}/images/{uuid.uuid4()}/primary"),
         headers=master_auth_headers,
     )
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Фотография не найдена!"
-    }
+    assert response.json() == {"detail": "Фотография не найдена!"}
 
 
 @pytest.mark.anyio
@@ -409,18 +333,13 @@ async def test_set_primary_image_from_other_offering_returns_404(
     master_auth_headers: dict[str, str],
 ):
     response = await ac.patch(
-        (
-            f"/offerings/{offering.id}/images/"
-            f"{foreign_offering_image.id}/primary"
-        ),
+        (f"/offerings/{offering.id}/images/{foreign_offering_image.id}/primary"),
         headers=master_auth_headers,
     )
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Фотография не найдена!"
-    }
+    assert response.json() == {"detail": "Фотография не найдена!"}
 
 
 @pytest.mark.anyio
@@ -443,10 +362,7 @@ async def test_set_primary_foreign_offering_forbidden(
     assert response.status_code == 403
 
     assert response.json() == {
-        "detail": (
-            "Вы не можете изменять фотографии "
-            "чужой услуги!"
-        )
+        "detail": ("Вы не можете изменять фотографии чужой услуги!")
     }
 
 
@@ -462,33 +378,21 @@ async def test_delete_image_removes_database_and_file(
 ):
     image_id = stored_offering_image.id
 
-    file_path = (
-        image_storage.uploads_dir
-        / stored_offering_image.storage_key
-    )
+    file_path = image_storage.uploads_dir / stored_offering_image.storage_key
 
     assert file_path.exists()
 
     response = await ac.delete(
-        (
-            f"/offerings/{offering.id}/images/"
-            f"{image_id}"
-        ),
+        (f"/offerings/{offering.id}/images/{image_id}"),
         headers=master_auth_headers,
     )
 
     assert response.status_code == 204
     assert response.text == ""
 
-    repository = OfferingImageRepository(
-        db_session
-    )
+    repository = OfferingImageRepository(db_session)
 
-    image_from_database = (
-        await repository.get_by_id(
-            image_id
-        )
-    )
+    image_from_database = await repository.get_by_id(image_id)
 
     assert image_from_database is None
     assert not file_path.exists()
@@ -505,24 +409,15 @@ async def test_delete_primary_image_promotes_next(
     db_session: AsyncSession,
 ):
     response = await ac.delete(
-        (
-            f"/offerings/{offering.id}/images/"
-            f"{offering_image.id}"
-        ),
+        (f"/offerings/{offering.id}/images/{offering_image.id}"),
         headers=master_auth_headers,
     )
 
     assert response.status_code == 204
 
-    repository = OfferingImageRepository(
-        db_session
-    )
+    repository = OfferingImageRepository(db_session)
 
-    remaining_image = (
-        await repository.get_by_id(
-            second_offering_image.id
-        )
-    )
+    remaining_image = await repository.get_by_id(second_offering_image.id)
 
     assert remaining_image is not None
     assert remaining_image.is_primary is True
@@ -536,18 +431,13 @@ async def test_delete_image_not_found(
     master_auth_headers: dict[str, str],
 ):
     response = await ac.delete(
-        (
-            f"/offerings/{offering.id}/images/"
-            f"{uuid.uuid4()}"
-        ),
+        (f"/offerings/{offering.id}/images/{uuid.uuid4()}"),
         headers=master_auth_headers,
     )
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Фотография не найдена!"
-    }
+    assert response.json() == {"detail": "Фотография не найдена!"}
 
 
 @pytest.mark.anyio
@@ -559,19 +449,12 @@ async def test_delete_image_foreign_offering_forbidden(
     master_auth_headers: dict[str, str],
 ):
     response = await ac.delete(
-        (
-            f"/offerings/"
-            f"{second_master_offering.id}/images/"
-            f"{foreign_offering_image.id}"
-        ),
+        (f"/offerings/{second_master_offering.id}/images/{foreign_offering_image.id}"),
         headers=master_auth_headers,
     )
 
     assert response.status_code == 403
 
     assert response.json() == {
-        "detail": (
-            "Вы не можете удалять фотографии "
-            "чужой услуги!"
-        )
+        "detail": ("Вы не можете удалять фотографии чужой услуги!")
     }

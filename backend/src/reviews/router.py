@@ -30,9 +30,7 @@ from src.reviews.schemas import (
 from src.reviews.service import ReviewService
 from src.users.models import User
 
-router = APIRouter(
-    tags=["Reviews"]
-)
+router = APIRouter(tags=["Reviews"])
 
 
 @router.post(
@@ -43,12 +41,8 @@ router = APIRouter(
 async def create_review(
     booking_id: uuid.UUID,
     data: ReviewCreate,
-    current_customer: User = Depends(
-        get_current_customer
-    ),
-    service: ReviewService = Depends(
-        get_review_service
-    ),
+    current_customer: User = Depends(get_current_customer),
+    service: ReviewService = Depends(get_review_service),
 ):
     try:
         return await service.create_review(
@@ -66,28 +60,19 @@ async def create_review(
     except ReviewAccessDeniedError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "Вы не можете оставить отзыв "
-                "для чужой записи!"
-            ),
+            detail=("Вы не можете оставить отзыв для чужой записи!"),
         ) from None
 
     except BookingNotCompletedError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Отзыв можно оставить только "
-                "после завершения записи!"
-            ),
+            detail=("Отзыв можно оставить только после завершения записи!"),
         ) from None
 
     except ReviewAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Для этой записи отзыв "
-                "уже оставлен!"
-            ),
+            detail=("Для этой записи отзыв уже оставлен!"),
         ) from None
 
 
@@ -96,16 +81,10 @@ async def create_review(
     response_model=list[MasterReviewResponse],
 )
 async def get_my_reviews(
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: ReviewService = Depends(
-        get_review_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: ReviewService = Depends(get_review_service),
 ):
-    return await service.get_reviews_for_master_dashboard(
-        master_id=current_master.id
-    )
+    return await service.get_reviews_for_master_dashboard(master_id=current_master.id)
 
 
 @router.get(
@@ -114,13 +93,9 @@ async def get_my_reviews(
 )
 async def get_master_reviews(
     master_id: uuid.UUID,
-    service: ReviewService = Depends(
-        get_review_service
-    ),
+    service: ReviewService = Depends(get_review_service),
 ):
-    return await service.get_public_master_reviews(
-        master_id
-    )
+    return await service.get_public_master_reviews(master_id)
 
 
 @router.get(
@@ -129,13 +104,9 @@ async def get_master_reviews(
 )
 async def get_master_review_stats(
     master_id: uuid.UUID,
-    service: ReviewService = Depends(
-        get_review_service
-    ),
+    service: ReviewService = Depends(get_review_service),
 ):
-    return await service.get_master_stats(
-        master_id
-    )
+    return await service.get_master_stats(master_id)
 
 
 @router.get(
@@ -144,10 +115,6 @@ async def get_master_review_stats(
 )
 async def get_master_reviews_with_stats(
     master_id: uuid.UUID,
-    service: ReviewService = Depends(
-        get_review_service
-    ),
+    service: ReviewService = Depends(get_review_service),
 ):
-    return await service.get_master_reviews_with_stats(
-        master_id
-    )
+    return await service.get_master_reviews_with_stats(master_id)

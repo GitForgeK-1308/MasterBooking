@@ -26,9 +26,7 @@ from src.masters.repository import MasterRepository
 
 
 def future_date() -> date:
-    return date.today() + timedelta(
-        days=7
-    )
+    return date.today() + timedelta(days=7)
 
 
 def make_master(
@@ -85,30 +83,22 @@ def make_existing_booking(
 
 @pytest.fixture
 def booking_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=BookingRepository
-    )
+    return AsyncMock(spec=BookingRepository)
 
 
 @pytest.fixture
 def master_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterRepository
-    )
+    return AsyncMock(spec=MasterRepository)
 
 
 @pytest.fixture
 def offering_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterOfferingRepository
-    )
+    return AsyncMock(spec=MasterOfferingRepository)
 
 
 @pytest.fixture
 def schedule_repository() -> AsyncMock:
-    return AsyncMock(
-        spec=MasterScheduleRepository
-    )
+    return AsyncMock(spec=MasterScheduleRepository)
 
 
 @pytest.fixture
@@ -135,9 +125,7 @@ def prepare_available_slots(
     master_id: uuid.UUID,
     duration_minutes: int = 60,
 ):
-    master = make_master(
-        master_id=master_id
-    )
+    master = make_master(master_id=master_id)
 
     offering = make_offering(
         master_id=master_id,
@@ -146,21 +134,13 @@ def prepare_available_slots(
 
     schedule = make_schedule()
 
-    master_repository.get_by_id.return_value = (
-        master
-    )
+    master_repository.get_by_id.return_value = master
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    schedule_repository.get_by_master_and_day.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_master_and_day.return_value = schedule
 
-    booking_repository.get_active_by_master_and_date.return_value = (
-        []
-    )
+    booking_repository.get_active_by_master_and_date.return_value = []
 
     return (
         master,
@@ -261,34 +241,47 @@ async def test_available_slots_exclude_conflicts(
         booking_date=booking_date,
     )
 
-    assert time(
-        9,
-        0,
-    ) in result.slots
+    assert (
+        time(
+            9,
+            0,
+        )
+        in result.slots
+    )
 
-    assert time(
-        9,
-        30,
-    ) not in result.slots
+    assert (
+        time(
+            9,
+            30,
+        )
+        not in result.slots
+    )
 
-    assert time(
-        10,
-        0,
-    ) not in result.slots
+    assert (
+        time(
+            10,
+            0,
+        )
+        not in result.slots
+    )
 
-    assert time(
-        10,
-        30,
-    ) not in result.slots
+    assert (
+        time(
+            10,
+            30,
+        )
+        not in result.slots
+    )
 
-    assert time(
-        11,
-        0,
-    ) in result.slots
+    assert (
+        time(
+            11,
+            0,
+        )
+        in result.slots
+    )
 
-    assert len(
-        result.slots
-    ) == 12
+    assert len(result.slots) == 12
 
 
 @pytest.mark.anyio
@@ -341,25 +334,37 @@ async def test_available_slots_multiple_conflicts(
         booking_date=booking_date,
     )
 
-    assert time(
-        10,
-        0,
-    ) not in result.slots
+    assert (
+        time(
+            10,
+            0,
+        )
+        not in result.slots
+    )
 
-    assert time(
-        14,
-        0,
-    ) not in result.slots
+    assert (
+        time(
+            14,
+            0,
+        )
+        not in result.slots
+    )
 
-    assert time(
-        11,
-        0,
-    ) in result.slots
+    assert (
+        time(
+            11,
+            0,
+        )
+        in result.slots
+    )
 
-    assert time(
-        15,
-        0,
-    ) in result.slots
+    assert (
+        time(
+            15,
+            0,
+        )
+        in result.slots
+    )
 
 
 @pytest.mark.anyio
@@ -398,14 +403,15 @@ async def test_available_slots_respect_offering_duration(
         30,
     )
 
-    assert len(
-        result.slots
-    ) == 14
+    assert len(result.slots) == 14
 
-    assert time(
-        16,
-        0,
-    ) not in result.slots
+    assert (
+        time(
+            16,
+            0,
+        )
+        not in result.slots
+    )
 
 
 @pytest.mark.anyio
@@ -414,16 +420,9 @@ async def test_available_slots_in_past(
     booking_repository: AsyncMock,
     master_repository: AsyncMock,
 ):
-    booking_date = (
-        date.today()
-        - timedelta(
-            days=1
-        )
-    )
+    booking_date = date.today() - timedelta(days=1)
 
-    with pytest.raises(
-        BookingInPastError
-    ):
+    with pytest.raises(BookingInPastError):
         await booking_service.get_available_slots(
             master_id=uuid.uuid4(),
             offering_id=uuid.uuid4(),
@@ -444,9 +443,7 @@ async def test_available_slots_master_not_found(
 ):
     master_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        MasterNotFoundError
-    ):
+    with pytest.raises(MasterNotFoundError):
         await booking_service.get_available_slots(
             master_id=uuid.uuid4(),
             offering_id=uuid.uuid4(),
@@ -467,16 +464,12 @@ async def test_available_slots_master_inactive(
 ):
     master_id = uuid.uuid4()
 
-    master_repository.get_by_id.return_value = (
-        make_master(
-            master_id=master_id,
-            is_active=False,
-        )
+    master_repository.get_by_id.return_value = make_master(
+        master_id=master_id,
+        is_active=False,
     )
 
-    with pytest.raises(
-        MasterInactiveError
-    ):
+    with pytest.raises(MasterInactiveError):
         await booking_service.get_available_slots(
             master_id=master_id,
             offering_id=uuid.uuid4(),
@@ -497,17 +490,11 @@ async def test_available_slots_offering_not_found(
 ):
     master_id = uuid.uuid4()
 
-    master_repository.get_by_id.return_value = (
-        make_master(
-            master_id=master_id
-        )
-    )
+    master_repository.get_by_id.return_value = make_master(master_id=master_id)
 
     offering_repository.get_by_id.return_value = None
 
-    with pytest.raises(
-        OfferingNotFoundError
-    ):
+    with pytest.raises(OfferingNotFoundError):
         await booking_service.get_available_slots(
             master_id=master_id,
             offering_id=uuid.uuid4(),
@@ -526,22 +513,14 @@ async def test_available_slots_offering_inactive(
 ):
     master_id = uuid.uuid4()
 
-    master_repository.get_by_id.return_value = (
-        make_master(
-            master_id=master_id
-        )
+    master_repository.get_by_id.return_value = make_master(master_id=master_id)
+
+    offering_repository.get_by_id.return_value = make_offering(
+        master_id=master_id,
+        is_active=False,
     )
 
-    offering_repository.get_by_id.return_value = (
-        make_offering(
-            master_id=master_id,
-            is_active=False,
-        )
-    )
-
-    with pytest.raises(
-        OfferingInactiveError
-    ):
+    with pytest.raises(OfferingInactiveError):
         await booking_service.get_available_slots(
             master_id=master_id,
             offering_id=uuid.uuid4(),
@@ -560,21 +539,11 @@ async def test_available_slots_offering_from_other_master(
 ):
     master_id = uuid.uuid4()
 
-    master_repository.get_by_id.return_value = (
-        make_master(
-            master_id=master_id
-        )
-    )
+    master_repository.get_by_id.return_value = make_master(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        make_offering(
-            master_id=uuid.uuid4()
-        )
-    )
+    offering_repository.get_by_id.return_value = make_offering(master_id=uuid.uuid4())
 
-    with pytest.raises(
-        OfferingDoesNotBelongToMasterError
-    ):
+    with pytest.raises(OfferingDoesNotBelongToMasterError):
         await booking_service.get_available_slots(
             master_id=master_id,
             offering_id=uuid.uuid4(),
@@ -589,15 +558,9 @@ async def test_available_slots_offering_from_other_master(
     "schedule",
     [
         None,
-        make_schedule(
-            is_working=False
-        ),
-        make_schedule(
-            start_time=None
-        ),
-        make_schedule(
-            end_time=None
-        ),
+        make_schedule(is_working=False),
+        make_schedule(start_time=None),
+        make_schedule(end_time=None),
     ],
 )
 async def test_available_slots_schedule_unavailable(
@@ -610,27 +573,15 @@ async def test_available_slots_schedule_unavailable(
 ):
     master_id = uuid.uuid4()
 
-    master_repository.get_by_id.return_value = (
-        make_master(
-            master_id=master_id
-        )
-    )
+    master_repository.get_by_id.return_value = make_master(master_id=master_id)
 
-    offering = make_offering(
-        master_id=master_id
-    )
+    offering = make_offering(master_id=master_id)
 
-    offering_repository.get_by_id.return_value = (
-        offering
-    )
+    offering_repository.get_by_id.return_value = offering
 
-    schedule_repository.get_by_master_and_day.return_value = (
-        schedule
-    )
+    schedule_repository.get_by_master_and_day.return_value = schedule
 
-    with pytest.raises(
-        MasterScheduleUnavailableError
-    ):
+    with pytest.raises(MasterScheduleUnavailableError):
         await booking_service.get_available_slots(
             master_id=master_id,
             offering_id=offering.id,
@@ -732,12 +683,10 @@ def test_bookings_overlap(
 ):
     booking_date = future_date()
 
-    existing_booking = (
-        make_existing_booking(
-            booking_date=booking_date,
-            start_time=existing_start,
-            end_time=existing_end,
-        )
+    existing_booking = make_existing_booking(
+        booking_date=booking_date,
+        start_time=existing_start,
+        end_time=existing_end,
     )
 
     result = BookingService._bookings_overlap(

@@ -18,9 +18,7 @@ async def test_create_review(
     master: Master,
     completed_booking: Booking,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
     review = Review(
         booking_id=completed_booking.id,
@@ -30,9 +28,7 @@ async def test_create_review(
         comment="Отличный мастер!",
     )
 
-    result = await repository.create(
-        review
-    )
+    result = await repository.create(review)
 
     assert result.id is not None
     assert isinstance(
@@ -40,19 +36,13 @@ async def test_create_review(
         uuid.UUID,
     )
 
-    assert (
-        result.booking_id
-        == completed_booking.id
-    )
+    assert result.booking_id == completed_booking.id
 
     assert result.master_id == master.id
     assert result.client_id == user.id
     assert result.rating == 5
 
-    assert (
-        result.comment
-        == "Отличный мастер!"
-    )
+    assert result.comment == "Отличный мастер!"
 
     assert result.created_at is not None
 
@@ -62,41 +52,28 @@ async def test_get_review_by_id(
     db_session: AsyncSession,
     review: Review,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
     review_id = review.id
 
-    db_session.expunge(
-        review
-    )
+    db_session.expunge(review)
 
-    result = await repository.get_by_id(
-        review_id
-    )
+    result = await repository.get_by_id(review_id)
 
     assert result is not None
     assert result.id == review_id
     assert result.rating == 5
 
-    assert (
-        result.comment
-        == "Отличная работа!"
-    )
+    assert result.comment == "Отличная работа!"
 
 
 @pytest.mark.anyio
 async def test_get_review_by_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    result = await repository.get_by_id(
-        uuid.uuid4()
-    )
+    result = await repository.get_by_id(uuid.uuid4())
 
     assert result is None
 
@@ -107,38 +84,23 @@ async def test_get_review_by_booking_id(
     completed_booking: Booking,
     review: Review,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    result = (
-        await repository.get_by_booking_id(
-            completed_booking.id
-        )
-    )
+    result = await repository.get_by_booking_id(completed_booking.id)
 
     assert result is not None
     assert result.id == review.id
 
-    assert (
-        result.booking_id
-        == completed_booking.id
-    )
+    assert result.booking_id == completed_booking.id
 
 
 @pytest.mark.anyio
 async def test_get_review_by_booking_id_not_found(
     db_session: AsyncSession,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    result = (
-        await repository.get_by_booking_id(
-            uuid.uuid4()
-        )
-    )
+    result = await repository.get_by_booking_id(uuid.uuid4())
 
     assert result is None
 
@@ -152,49 +114,28 @@ async def test_get_reviews_by_master_id_sorted_and_scoped(
     deleted_user_review: Review,
     foreign_master_review: Review,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    result = (
-        await repository.get_by_master_id(
-            master.id
-        )
-    )
+    result = await repository.get_by_master_id(master.id)
 
-    assert [
-        item.id
-        for item in result
-    ] == [
+    assert [item.id for item in result] == [
         deleted_user_review.id,
         second_review.id,
         review.id,
     ]
 
-    assert all(
-        item.master_id == master.id
-        for item in result
-    )
+    assert all(item.master_id == master.id for item in result)
 
-    assert foreign_master_review.id not in {
-        item.id
-        for item in result
-    }
+    assert foreign_master_review.id not in {item.id for item in result}
 
 
 @pytest.mark.anyio
 async def test_get_reviews_by_master_id_empty(
     db_session: AsyncSession,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    result = (
-        await repository.get_by_master_id(
-            uuid.uuid4()
-        )
-    )
+    result = await repository.get_by_master_id(uuid.uuid4())
 
     assert result == []
 
@@ -207,15 +148,9 @@ async def test_get_master_stats(
     second_review: Review,
     deleted_user_review: Review,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    average_rating, reviews_count = (
-        await repository.get_master_stats(
-            master.id
-        )
-    )
+    average_rating, reviews_count = await repository.get_master_stats(master.id)
 
     assert average_rating == 4.0
     assert reviews_count == 3
@@ -225,15 +160,9 @@ async def test_get_master_stats(
 async def test_get_master_stats_empty(
     db_session: AsyncSession,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    average_rating, reviews_count = (
-        await repository.get_master_stats(
-            uuid.uuid4()
-        )
-    )
+    average_rating, reviews_count = await repository.get_master_stats(uuid.uuid4())
 
     assert average_rating == 0.0
     assert reviews_count == 0
@@ -248,20 +177,11 @@ async def test_get_public_reviews_by_master_id(
     deleted_user_review: Review,
     foreign_master_review: Review,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    rows = (
-        await repository.get_public_by_master_id(
-            master.id
-        )
-    )
+    rows = await repository.get_public_by_master_id(master.id)
 
-    assert [
-        item[0].id
-        for item in rows
-    ] == [
+    assert [item[0].id for item in rows] == [
         deleted_user_review.id,
         second_review.id,
         review.id,
@@ -273,10 +193,7 @@ async def test_get_public_reviews_by_master_id(
         deleted_last_name,
     ) = rows[0]
 
-    assert (
-        deleted_review.id
-        == deleted_user_review.id
-    )
+    assert deleted_review.id == deleted_user_review.id
 
     assert deleted_first_name is None
     assert deleted_last_name is None
@@ -289,20 +206,11 @@ async def test_get_public_reviews_by_master_id(
 
     assert second_result.id == second_review.id
 
-    assert (
-        second_first_name
-        == "Ivan"
-    )
+    assert second_first_name == "Ivan"
 
-    assert (
-        second_last_name
-        == "Ivanov"
-    )
+    assert second_last_name == "Ivanov"
 
-    assert foreign_master_review.id not in {
-        item[0].id
-        for item in rows
-    }
+    assert foreign_master_review.id not in {item[0].id for item in rows}
 
 
 @pytest.mark.anyio
@@ -313,15 +221,9 @@ async def test_get_rating_distribution(
     second_review: Review,
     deleted_user_review: Review,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    result = (
-        await repository.get_rating_distribution(
-            master.id
-        )
-    )
+    result = await repository.get_rating_distribution(master.id)
 
     assert result == {
         1: 0,
@@ -336,15 +238,9 @@ async def test_get_rating_distribution(
 async def test_get_rating_distribution_empty(
     db_session: AsyncSession,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    result = (
-        await repository.get_rating_distribution(
-            uuid.uuid4()
-        )
-    )
+    result = await repository.get_rating_distribution(uuid.uuid4())
 
     assert result == {
         1: 0,
@@ -365,20 +261,11 @@ async def test_get_reviews_for_master_dashboard(
     deleted_user_review: Review,
     foreign_master_review: Review,
 ):
-    repository = ReviewRepository(
-        db_session
-    )
+    repository = ReviewRepository(db_session)
 
-    rows = (
-        await repository.get_for_master_dashboard(
-            master.id
-        )
-    )
+    rows = await repository.get_for_master_dashboard(master.id)
 
-    assert [
-        item[0].id
-        for item in rows
-    ] == [
+    assert [item[0].id for item in rows] == [
         deleted_user_review.id,
         second_review.id,
         review.id,
@@ -392,20 +279,11 @@ async def test_get_reviews_for_master_dashboard(
         deleted_last_name,
     ) = rows[0]
 
-    assert (
-        deleted_review.id
-        == deleted_user_review.id
-    )
+    assert deleted_review.id == deleted_user_review.id
 
-    assert (
-        deleted_offering_id
-        == offering.id
-    )
+    assert deleted_offering_id == offering.id
 
-    assert (
-        deleted_offering_title
-        == "Classic Cut"
-    )
+    assert deleted_offering_title == "Classic Cut"
 
     assert deleted_first_name is None
     assert deleted_last_name is None
@@ -418,25 +296,13 @@ async def test_get_reviews_for_master_dashboard(
         last_name,
     ) = rows[1]
 
-    assert (
-        normal_review.id
-        == second_review.id
-    )
+    assert normal_review.id == second_review.id
 
-    assert (
-        normal_offering_id
-        == offering.id
-    )
+    assert normal_offering_id == offering.id
 
-    assert (
-        normal_offering_title
-        == "Classic Cut"
-    )
+    assert normal_offering_title == "Classic Cut"
 
     assert first_name == "Ivan"
     assert last_name == "Ivanov"
 
-    assert foreign_master_review.id not in {
-        item[0].id
-        for item in rows
-    }
+    assert foreign_master_review.id not in {item[0].id for item in rows}

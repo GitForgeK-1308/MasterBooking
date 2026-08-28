@@ -14,9 +14,7 @@ from src.tasks.celery_app import celery_app
 
 async def _send_booking_reminders() -> None:
     async with get_celery_session() as session:
-        repository = BookingRepository(
-            session
-        )
+        repository = BookingRepository(session)
 
         service = BookingReminderService(
             booking_repository=repository,
@@ -27,6 +25,4 @@ async def _send_booking_reminders() -> None:
 
 @celery_app.task
 def send_booking_reminder() -> None:
-    asyncio.run(
-        _send_booking_reminders()
-    )
+    asyncio.run(_send_booking_reminders())

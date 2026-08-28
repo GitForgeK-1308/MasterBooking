@@ -39,13 +39,9 @@ async def test_register_user(
     assert "password" not in data
     assert "hashed_password" not in data
 
-    repository = UserRepository(
-        db_session
-    )
+    repository = UserRepository(db_session)
 
-    user = await repository.get_by_email(
-        "user@example.com"
-    )
+    user = await repository.get_by_email("user@example.com")
 
     assert user is not None
     assert user.email == "user@example.com"
@@ -68,12 +64,7 @@ async def test_register_duplicate_email(
     )
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": (
-            "Пользователь с таким email "
-            "уже существует!"
-        )
-    }
+    assert response.json() == {"detail": ("Пользователь с таким email уже существует!")}
 
 
 @pytest.mark.anyio
@@ -149,12 +140,8 @@ async def test_login_wrong_password(
     )
 
     assert response.status_code == 401
-    assert response.json() == {
-        "detail": "Неверный email или пароль!"
-    }
-    assert response.headers[
-        "www-authenticate"
-    ] == "Bearer"
+    assert response.json() == {"detail": "Неверный email или пароль!"}
+    assert response.headers["www-authenticate"] == "Bearer"
 
 
 @pytest.mark.anyio
@@ -170,9 +157,7 @@ async def test_login_user_not_found(
     )
 
     assert response.status_code == 401
-    assert response.json() == {
-        "detail": "Неверный email или пароль!"
-    }
+    assert response.json() == {"detail": "Неверный email или пароль!"}
 
 
 @pytest.mark.anyio
@@ -189,6 +174,4 @@ async def test_login_inactive_user(
     )
 
     assert response.status_code == 403
-    assert response.json() == {
-        "detail": "Аккаунт пользователя отключён!"
-    }
+    assert response.json() == {"detail": "Аккаунт пользователя отключён!"}

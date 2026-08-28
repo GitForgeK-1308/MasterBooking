@@ -23,20 +23,14 @@ class ReviewRepository:
         self,
         review_id: uuid.UUID,
     ) -> Review | None:
-        return await self.session.scalar(
-            select(Review).where(
-                Review.id == review_id
-            )
-        )
+        return await self.session.scalar(select(Review).where(Review.id == review_id))
 
     async def get_by_booking_id(
         self,
         booking_id: uuid.UUID,
     ) -> Review | None:
         return await self.session.scalar(
-            select(Review).where(
-                Review.booking_id == booking_id
-            )
+            select(Review).where(Review.booking_id == booking_id)
         )
 
     async def get_by_master_id(
@@ -45,9 +39,7 @@ class ReviewRepository:
     ) -> list[Review]:
         result = await self.session.scalars(
             select(Review)
-            .where(
-                Review.master_id == master_id
-            )
+            .where(Review.master_id == master_id)
             .order_by(
                 Review.created_at.desc(),
                 Review.id.desc(),
@@ -60,14 +52,10 @@ class ReviewRepository:
         self,
         review: Review,
     ) -> Review:
-        self.session.add(
-            review
-        )
+        self.session.add(review)
 
         await self.session.commit()
-        await self.session.refresh(
-            review
-        )
+        await self.session.refresh(review)
 
         return review
 
@@ -77,20 +65,12 @@ class ReviewRepository:
     ) -> tuple[float, int]:
         result = await self.session.execute(
             select(
-                func.avg(
-                    Review.rating
-                ),
-                func.count(
-                    Review.id
-                ),
-            ).where(
-                Review.master_id == master_id
-            )
+                func.avg(Review.rating),
+                func.count(Review.id),
+            ).where(Review.master_id == master_id)
         )
 
-        average_rating, reviews_count = (
-            result.one()
-        )
+        average_rating, reviews_count = result.one()
 
         return (
             (
@@ -118,9 +98,7 @@ class ReviewRepository:
                 User,
                 User.id == Review.client_id,
             )
-            .where(
-                Review.master_id == master_id
-            )
+            .where(Review.master_id == master_id)
             .order_by(
                 Review.created_at.desc(),
                 Review.id.desc(),
@@ -136,16 +114,10 @@ class ReviewRepository:
         result = await self.session.execute(
             select(
                 Review.rating,
-                func.count(
-                    Review.id
-                ),
+                func.count(Review.id),
             )
-            .where(
-                Review.master_id == master_id
-            )
-            .group_by(
-                Review.rating
-            )
+            .where(Review.master_id == master_id)
+            .group_by(Review.rating)
         )
 
         distribution = {
@@ -175,21 +147,17 @@ class ReviewRepository:
             )
             .join(
                 Booking,
-                Booking.id
-                == Review.booking_id,
+                Booking.id == Review.booking_id,
             )
             .join(
                 MasterOffering,
-                MasterOffering.id
-                == Booking.offering_id,
+                MasterOffering.id == Booking.offering_id,
             )
             .outerjoin(
                 User,
                 User.id == Review.client_id,
             )
-            .where(
-                Review.master_id == master_id
-            )
+            .where(Review.master_id == master_id)
             .order_by(
                 Review.created_at.desc(),
                 Review.id.desc(),

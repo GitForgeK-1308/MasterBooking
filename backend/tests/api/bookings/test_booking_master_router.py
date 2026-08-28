@@ -29,35 +29,21 @@ async def test_get_my_master_bookings(
     response = await ac.get(
         "/masters/me/bookings",
         headers=master_auth_headers,
-        params={
-            "booking_date": (
-                future_booking_date.isoformat()
-            )
-        },
+        params={"booking_date": (future_booking_date.isoformat())},
     )
 
     assert response.status_code == 200
 
     data = response.json()
 
-    assert [
-        item["id"]
-        for item in data
-    ] == [
+    assert [item["id"] for item in data] == [
         str(booking.id),
         str(second_booking.id),
     ]
 
-    assert all(
-        item["master_id"]
-        == str(master.id)
-        for item in data
-    )
+    assert all(item["master_id"] == str(master.id) for item in data)
 
-    assert [
-        item["start_time"]
-        for item in data
-    ] == [
+    assert [item["start_time"] for item in data] == [
         "10:00:00",
         "12:00:00",
     ]
@@ -71,21 +57,12 @@ async def test_get_my_master_bookings_other_date_empty(
     future_booking_date: date,
     master_auth_headers: dict[str, str],
 ):
-    other_date = (
-        future_booking_date
-        + timedelta(
-            days=1
-        )
-    )
+    other_date = future_booking_date + timedelta(days=1)
 
     response = await ac.get(
         "/masters/me/bookings",
         headers=master_auth_headers,
-        params={
-            "booking_date": (
-                other_date.isoformat()
-            )
-        },
+        params={"booking_date": (other_date.isoformat())},
     )
 
     assert response.status_code == 200
@@ -112,9 +89,7 @@ async def test_get_my_master_bookings_without_token(
 ):
     response = await ac.get(
         "/masters/me/bookings",
-        params={
-            "booking_date": "2030-01-01"
-        },
+        params={"booking_date": "2030-01-01"},
     )
 
     assert response.status_code == 401
@@ -128,9 +103,7 @@ async def test_get_my_master_bookings_as_client_forbidden(
     response = await ac.get(
         "/masters/me/bookings",
         headers=auth_headers,
-        params={
-            "booking_date": "2030-01-01"
-        },
+        params={"booking_date": "2030-01-01"},
     )
 
     assert response.status_code == 403
@@ -152,13 +125,9 @@ async def test_get_booking_by_id_as_master(
 
     data = response.json()
 
-    assert data["id"] == str(
-        booking.id
-    )
+    assert data["id"] == str(booking.id)
 
-    assert data["master_id"] == str(
-        master.id
-    )
+    assert data["master_id"] == str(master.id)
 
 
 @pytest.mark.anyio
@@ -175,12 +144,7 @@ async def test_get_booking_by_id_as_other_master_forbidden(
 
     assert response.status_code == 403
 
-    assert response.json() == {
-        "detail": (
-            "У вас нет доступа "
-            "к этому бронированию!"
-        )
-    }
+    assert response.json() == {"detail": ("У вас нет доступа к этому бронированию!")}
 
 
 @pytest.mark.anyio
@@ -222,41 +186,24 @@ async def test_update_booking_status_allowed(
     await db_session.commit()
 
     response = await ac.patch(
-        (
-            "/masters/me/bookings/"
-            f"{booking.id}/status"
-        ),
+        (f"/masters/me/bookings/{booking.id}/status"),
         headers=master_auth_headers,
-        json={
-            "status": new_status.value
-        },
+        json={"status": new_status.value},
     )
 
     assert response.status_code == 200
 
     data = response.json()
 
-    assert (
-        data["status"]
-        == new_status.value
-    )
+    assert data["status"] == new_status.value
 
-    repository = BookingRepository(
-        db_session
-    )
+    repository = BookingRepository(db_session)
 
-    booking_from_database = (
-        await repository.get_by_id(
-            booking.id
-        )
-    )
+    booking_from_database = await repository.get_by_id(booking.id)
 
     assert booking_from_database is not None
 
-    assert (
-        booking_from_database.status
-        == new_status
-    )
+    assert booking_from_database.status == new_status
 
 
 @pytest.mark.anyio
@@ -294,23 +241,15 @@ async def test_update_booking_status_invalid_transition(
     await db_session.commit()
 
     response = await ac.patch(
-        (
-            "/masters/me/bookings/"
-            f"{booking.id}/status"
-        ),
+        (f"/masters/me/bookings/{booking.id}/status"),
         headers=master_auth_headers,
-        json={
-            "status": new_status.value
-        },
+        json={"status": new_status.value},
     )
 
     assert response.status_code == 409
 
     assert response.json() == {
-        "detail": (
-            "Недопустимое изменение "
-            "статуса бронирования!"
-        )
+        "detail": ("Недопустимое изменение статуса бронирования!")
     }
 
 
@@ -321,21 +260,14 @@ async def test_update_booking_status_not_found(
     master_auth_headers: dict[str, str],
 ):
     response = await ac.patch(
-        (
-            "/masters/me/bookings/"
-            f"{uuid.uuid4()}/status"
-        ),
+        (f"/masters/me/bookings/{uuid.uuid4()}/status"),
         headers=master_auth_headers,
-        json={
-            "status": "confirmed"
-        },
+        json={"status": "confirmed"},
     )
 
     assert response.status_code == 404
 
-    assert response.json() == {
-        "detail": "Бронирование не найдено!"
-    }
+    assert response.json() == {"detail": "Бронирование не найдено!"}
 
 
 @pytest.mark.anyio
@@ -362,43 +294,26 @@ async def test_update_foreign_master_booking_forbidden(
             16,
             30,
         ),
-        client_name=(
-            f"{user.first_name} "
-            f"{user.last_name}"
-        ),
+        client_name=(f"{user.first_name} {user.last_name}"),
         client_phone=user.phone,
         client_email=user.email,
         status=BookingStatus.PENDING,
     )
 
-    db_session.add(
-        foreign_booking
-    )
+    db_session.add(foreign_booking)
 
     await db_session.commit()
-    await db_session.refresh(
-        foreign_booking
-    )
+    await db_session.refresh(foreign_booking)
 
     response = await ac.patch(
-        (
-            "/masters/me/bookings/"
-            f"{foreign_booking.id}/status"
-        ),
+        (f"/masters/me/bookings/{foreign_booking.id}/status"),
         headers=master_auth_headers,
-        json={
-            "status": "confirmed"
-        },
+        json={"status": "confirmed"},
     )
 
     assert response.status_code == 403
 
-    assert response.json() == {
-        "detail": (
-            "Вы не можете изменять "
-            "чужое бронирование!"
-        )
-    }
+    assert response.json() == {"detail": ("Вы не можете изменять чужое бронирование!")}
 
 
 @pytest.mark.anyio
@@ -407,13 +322,8 @@ async def test_update_booking_status_without_token(
     booking: Booking,
 ):
     response = await ac.patch(
-        (
-            "/masters/me/bookings/"
-            f"{booking.id}/status"
-        ),
-        json={
-            "status": "confirmed"
-        },
+        (f"/masters/me/bookings/{booking.id}/status"),
+        json={"status": "confirmed"},
     )
 
     assert response.status_code == 401
@@ -426,14 +336,9 @@ async def test_update_booking_status_as_client_forbidden(
     auth_headers: dict[str, str],
 ):
     response = await ac.patch(
-        (
-            "/masters/me/bookings/"
-            f"{booking.id}/status"
-        ),
+        (f"/masters/me/bookings/{booking.id}/status"),
         headers=auth_headers,
-        json={
-            "status": "confirmed"
-        },
+        json={"status": "confirmed"},
     )
 
     assert response.status_code == 403

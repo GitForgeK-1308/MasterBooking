@@ -15,33 +15,20 @@ async def test_get_cities_returns_only_active_sorted(
     second_city: City,
     inactive_city: City,
 ):
-    response = await ac.get(
-        "/locations/cities"
-    )
+    response = await ac.get("/locations/cities")
 
     assert response.status_code == 200
 
     data = response.json()
 
-    assert [
-        item["name"]
-        for item in data
-    ] == [
+    assert [item["name"] for item in data] == [
         "Jurmala",
         "Riga",
     ]
 
-    assert all(
-        item["is_active"]
-        for item in data
-    )
+    assert all(item["is_active"] for item in data)
 
-    assert str(
-        inactive_city.id
-    ) not in {
-        item["id"]
-        for item in data
-    }
+    assert str(inactive_city.id) not in {item["id"] for item in data}
 
 
 @pytest.mark.anyio
@@ -66,18 +53,12 @@ async def test_create_city_as_admin(
     assert data["is_active"] is True
     assert "id" in data
 
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city = await repository.get_city_by_name(
-        "Riga City"
-    )
+    city = await repository.get_city_by_name("Riga City")
 
     assert city is not None
-    assert city.id == uuid.UUID(
-        data["id"]
-    )
+    assert city.id == uuid.UUID(data["id"])
 
 
 @pytest.mark.anyio
@@ -108,12 +89,7 @@ async def test_create_city_as_client_forbidden(
     )
 
     assert response.status_code == 403
-    assert response.json() == {
-        "detail": (
-            "Доступ разрешён только "
-            "администраторам!"
-        )
-    }
+    assert response.json() == {"detail": ("Доступ разрешён только администраторам!")}
 
 
 @pytest.mark.anyio
@@ -131,11 +107,7 @@ async def test_create_city_duplicate(
     )
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": (
-            "Такой город уже существует!"
-        )
-    }
+    assert response.json() == {"detail": ("Такой город уже существует!")}
 
 
 @pytest.mark.anyio
@@ -174,44 +146,23 @@ async def test_update_city(
 
     data = response.json()
 
-    assert data["id"] == str(
-        city.id
-    )
+    assert data["id"] == str(city.id)
     assert data["name"] == "New Riga"
     assert data["is_active"] is False
 
-    repository = LocationRepository(
-        db_session
-    )
+    repository = LocationRepository(db_session)
 
-    city_from_database = (
-        await repository.get_city_by_id(
-            city.id
-        )
-    )
+    city_from_database = await repository.get_city_by_id(city.id)
 
     assert city_from_database is not None
-    assert (
-        city_from_database.name
-        == "New Riga"
-    )
-    assert (
-        city_from_database.is_active
-        is False
-    )
+    assert city_from_database.name == "New Riga"
+    assert city_from_database.is_active is False
 
-    public_response = await ac.get(
-        "/locations/cities"
-    )
+    public_response = await ac.get("/locations/cities")
 
     assert public_response.status_code == 200
 
-    assert str(
-        city.id
-    ) not in {
-        item["id"]
-        for item in public_response.json()
-    }
+    assert str(city.id) not in {item["id"] for item in public_response.json()}
 
 
 @pytest.mark.anyio
@@ -230,9 +181,7 @@ async def test_update_city_not_found(
     )
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Город не найден!"
-    }
+    assert response.json() == {"detail": "Город не найден!"}
 
 
 @pytest.mark.anyio
@@ -251,11 +200,7 @@ async def test_update_city_duplicate_name(
     )
 
     assert response.status_code == 409
-    assert response.json() == {
-        "detail": (
-            "Такой город уже существует!"
-        )
-    }
+    assert response.json() == {"detail": ("Такой город уже существует!")}
 
 
 @pytest.mark.anyio

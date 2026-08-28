@@ -42,9 +42,7 @@ router = APIRouter(
     response_model=list[MasterResponse],
 )
 async def get_masters(
-    service: MasterService = Depends(
-        get_master_service
-    ),
+    service: MasterService = Depends(get_master_service),
 ):
     return await service.get_masters()
 
@@ -56,12 +54,8 @@ async def get_masters(
 )
 async def create_master_profile(
     data: MasterProfileCreate,
-    current_user: User = Depends(
-        get_current_user
-    ),
-    service: MasterService = Depends(
-        get_master_service
-    ),
+    current_user: User = Depends(get_current_user),
+    service: MasterService = Depends(get_master_service),
 ):
     try:
         return await service.create_master_profile(
@@ -90,10 +84,7 @@ async def create_master_profile(
     except DistrictCityMismatchError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Выбранный район не относится "
-                "к выбранному городу!"
-            ),
+            detail=("Выбранный район не относится к выбранному городу!"),
         ) from None
 
     except ValueError as error:
@@ -108,9 +99,7 @@ async def create_master_profile(
     response_model=MasterResponse,
 )
 async def get_my_master_profile(
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
+    current_master: Master = Depends(get_current_master_profile),
 ):
     return current_master
 
@@ -121,12 +110,8 @@ async def get_my_master_profile(
 )
 async def update_my_master_profile(
     data: MasterUpdate,
-    current_master: Master = Depends(
-        get_current_master_profile
-    ),
-    service: MasterService = Depends(
-        get_master_service
-    ),
+    current_master: Master = Depends(get_current_master_profile),
+    service: MasterService = Depends(get_master_service),
 ):
     try:
         master = await service.update_master(
@@ -157,10 +142,7 @@ async def update_my_master_profile(
     except DistrictCityMismatchError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Выбранный район не относится "
-                "к выбранному городу!"
-            ),
+            detail=("Выбранный район не относится к выбранному городу!"),
         ) from None
 
     except ValueError as error:
@@ -176,18 +158,11 @@ async def update_my_master_profile(
 )
 async def get_master(
     master_id: uuid.UUID,
-    service: MasterService = Depends(
-        get_master_service
-    ),
+    service: MasterService = Depends(get_master_service),
 ):
-    master = await service.get_master_by_id(
-        master_id
-    )
+    master = await service.get_master_by_id(master_id)
 
-    if (
-        master is None
-        or not master.is_active
-    ):
+    if master is None or not master.is_active:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Мастер не найден!",
